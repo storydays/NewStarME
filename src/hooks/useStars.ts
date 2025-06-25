@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
 import { Star } from '../types';
-import { starsData } from '../data/stars';
+import { StarService } from '../services/starService';
 
 export function useStars(emotionId?: string) {
   const [stars, setStars] = useState<Star[]>([]);
@@ -14,41 +13,23 @@ export function useStars(emotionId?: string) {
         setLoading(true);
         setError(null);
 
-        let query = supabase.from('stars').select('*');
-        
         if (emotionId) {
-          query = query.eq('emotion_id', emotionId);
-        }
-
-        const { data, error: supabaseError } = await query;
-
-        if (supabaseError) {
-          // Fallback to local data if Supabase fails
-          console.warn('Supabase query failed, using local data:', supabaseError);
-          const filteredStars = emotionId 
-            ? starsData.filter(star => star.emotion_id === emotionId)
-            : starsData;
-          
-          setStars(filteredStars.map((star, index) => ({
-            id: `${star.emotion_id}-${index}`,
-            ...star
-          })));
+          // Use the new dynamic star fetching logic
+          console.log(`Fetching stars for emotion: ${emotionId}`);
+          const fetchedStars = await StarService.fetchStarsForEmotion(emotionId);
+          setStars(fetchedStars);
+          console.log(`Successfully loaded ${fetchedStars.length} stars for ${emotionId}`);
         } else {
-          setStars(data || []);
+          // If no emotion specified, return empty array
+          setStars([]);
         }
       } catch (err) {
-        console.error('Error fetching stars:', err);
-        setError('Failed to load stars');
+        console.error('Error in useStars:', err);
+        const errorMessage = err instanceof Error ? err.message : 'Failed to load stars';
+        setError(errorMessage);
         
-        // Fallback to local data
-        const filteredStars = emotionId 
-          ? starsData.filter(star => star.emotion_id === emotionId)
-          : starsData;
-        
-        setStars(filteredStars.map((star, index) => ({
-          id: `${star.emotion_id}-${index}`,
-          ...star
-        })));
+        // Set empty array on error
+        setStars([]);
       } finally {
         setLoading(false);
       }
@@ -58,4 +39,40 @@ export function useStars(emotionId?: string) {
   }, [emotionId]);
 
   return { stars, loading, error };
+}
+
+// Hook for getting a single star by ID
+export function useStar(starId?: string) {
+  const [star, setStar] = useState<Star | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function fetchStar() {
+      if (!starId) {
+        setStar(null);
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        setError(null);
+
+        const fetchedStar = await StarService.getStarById(starId);
+        setStar(fetchedStar);
+      } catch (err) {
+        console.error('Error fetching star:', err);
+        const errorMessage = err instanceof Error ? err.message : 'Failed to load star';
+        setError(errorMessage);
+        setStar(null);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchStar();
+  }, [starId]);
+
+  return { star, loading, error };
 }
