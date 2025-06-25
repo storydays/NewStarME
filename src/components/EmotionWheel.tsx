@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Heart, Users, Home, Trophy, Candle, Leaf, Compass, Palette, Sparkles } from 'lucide-react';
+import { Heart, Users, Home, Trophy, Candy as Candle, Leaf, Compass, Palette, Sparkles } from 'lucide-react';
 import { emotions } from '../data/emotions';
 import { Emotion } from '../types';
 
