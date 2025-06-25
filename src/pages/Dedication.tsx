@@ -34,22 +34,21 @@ export function Dedication() {
       navigate(`/star/${dedication.id}`);
     } catch (error) {
       console.error('Failed to create dedication:', error);
-      // Handle error (show toast, etc.)
     }
   };
 
   if (starsLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 relative">
-        <StarField density={100} />
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 relative">
+        <StarField density={60} className="opacity-30" />
         <div className="relative z-10 flex items-center justify-center min-h-screen">
           <motion.div
             className="text-center"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
           >
-            <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-white text-xl">Loading star information...</p>
+            <div className="w-12 h-12 border-2 border-blue-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-white text-lg font-light">Preparing your dedication...</p>
           </motion.div>
         </div>
       </div>
@@ -58,14 +57,14 @@ export function Dedication() {
 
   if (!star || !emotion) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 to-indigo-900 flex items-center justify-center">
         <div className="text-center">
-          <p className="text-red-400 text-xl mb-4">Star or emotion not found</p>
+          <p className="text-red-400 text-xl mb-4 font-light">Star not found</p>
           <button 
             onClick={() => navigate('/')}
-            className="text-blue-400 hover:text-blue-300 transition-colors"
+            className="text-blue-400 hover:text-blue-300 transition-colors font-light"
           >
-            ← Back to home
+            ← Start over
           </button>
         </div>
       </div>
@@ -73,31 +72,31 @@ export function Dedication() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 relative">
-      <StarField density={80} color={emotion.color} />
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 relative">
+      <StarField density={60} color={emotion.color} className="opacity-30" />
       
       <div className="relative z-10 container mx-auto px-6 py-12">
         {/* Header */}
         <motion.div
-          className="mb-12"
+          className="mb-16"
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
         >
           <button
             onClick={handleBack}
-            className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors mb-8 group"
+            className="flex items-center gap-2 text-blue-200 hover:text-white transition-colors mb-12 group font-light"
           >
             <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
-            Back to star selection
+            Back to stars
           </button>
           
-          <div className="text-center">
-            <h1 className="text-4xl md:text-6xl font-bold text-white mb-4">
-              Dedicate Your Star
+          <div className="text-center max-w-2xl mx-auto">
+            <h1 className="text-4xl md:text-5xl font-light text-white mb-6">
+              Create Your Dedication
             </h1>
             
-            <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-              Create a lasting dedication that will shine forever in the digital cosmos
+            <p className="text-xl text-blue-100 font-light leading-relaxed">
+              Write a message that will shine forever among the stars
             </p>
           </div>
         </motion.div>

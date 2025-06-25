@@ -1,7 +1,7 @@
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Sparkles } from 'lucide-react';
+import { ArrowLeft, Heart } from 'lucide-react';
 import { StarCard } from '../components/StarCard';
 import { StarField } from '../components/StarField';
 import { useStars } from '../hooks/useStars';
@@ -17,7 +17,7 @@ export function StarSelection() {
 
   if (!emotion) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 to-indigo-900 flex items-center justify-center">
         <p className="text-white text-xl">Emotion not found</p>
       </div>
     );
@@ -33,16 +33,16 @@ export function StarSelection() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 relative">
-        <StarField density={100} />
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 relative">
+        <StarField density={60} className="opacity-30" />
         <div className="relative z-10 flex items-center justify-center min-h-screen">
           <motion.div
             className="text-center"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
           >
-            <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-white text-xl">Finding stars that match your {emotion.name.toLowerCase()}...</p>
+            <div className="w-12 h-12 border-2 border-blue-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-white text-lg font-light">Finding your perfect stars...</p>
           </motion.div>
         </div>
       </div>
@@ -51,14 +51,14 @@ export function StarSelection() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 to-indigo-900 flex items-center justify-center">
         <div className="text-center">
-          <p className="text-red-400 text-xl mb-4">Error loading stars</p>
+          <p className="text-red-400 text-xl mb-4">Unable to load stars</p>
           <button 
             onClick={handleBack}
-            className="text-blue-400 hover:text-blue-300 transition-colors"
+            className="text-blue-400 hover:text-blue-300 transition-colors font-light"
           >
-            ← Back to emotions
+            ← Try again
           </button>
         </div>
       </div>
@@ -66,53 +66,49 @@ export function StarSelection() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 relative">
-      <StarField density={120} color={emotion.color} />
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 relative">
+      <StarField density={80} color={emotion.color} className="opacity-30" />
       
       <div className="relative z-10 container mx-auto px-6 py-12">
         {/* Header */}
         <motion.div
-          className="mb-12"
+          className="mb-16"
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
         >
           <button
             onClick={handleBack}
-            className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors mb-8 group"
+            className="flex items-center gap-2 text-blue-200 hover:text-white transition-colors mb-12 group font-light"
           >
             <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
             Back to emotions
           </button>
           
-          <div className="text-center">
+          <div className="text-center max-w-2xl mx-auto">
             <div
-              className="inline-flex items-center gap-3 px-6 py-3 rounded-full mb-6"
+              className="inline-flex items-center gap-3 px-6 py-3 rounded-full mb-8 backdrop-blur-sm border"
               style={{ 
-                backgroundColor: `${emotion.color}20`,
-                border: `2px solid ${emotion.color}40`
+                backgroundColor: `${emotion.color}15`,
+                borderColor: `${emotion.color}40`
               }}
             >
-              <Sparkles className="w-6 h-6" style={{ color: emotion.color }} />
-              <span className="text-white font-medium text-lg">{emotion.name}</span>
+              <Heart className="w-5 h-5" style={{ color: emotion.color }} />
+              <span className="text-white font-light text-lg">{emotion.name}</span>
             </div>
             
-            <h1 className="text-4xl md:text-6xl font-bold text-white mb-4">
+            <h1 className="text-4xl md:text-5xl font-light text-white mb-6">
               Choose Your Star
             </h1>
             
-            <p className="text-xl text-gray-300 max-w-3xl mx-auto mb-2">
-              {emotion.description}
-            </p>
-            
-            <p className="text-gray-400">
-              Select from {stars.length} carefully curated stars that embody {emotion.name.toLowerCase()}
+            <p className="text-xl text-blue-100 font-light leading-relaxed">
+              Each star has been carefully selected to reflect the beauty of {emotion.name.toLowerCase()}
             </p>
           </div>
         </motion.div>
 
         {/* Stars Grid */}
         <motion.div
-          className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto"
+          className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto"
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
@@ -135,7 +131,7 @@ export function StarSelection() {
             animate={{ opacity: 1 }}
             transition={{ delay: 0.3 }}
           >
-            <p className="text-gray-400 text-xl">No stars found for {emotion.name}</p>
+            <p className="text-blue-200 text-xl font-light">No stars available for {emotion.name}</p>
           </motion.div>
         )}
       </div>

@@ -2,287 +2,68 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Inter Variable Font with Cosmic Compression Settings */
-@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
+/* Inter Font Import */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
-/* Physics-based Animation Keyframes */
-@keyframes orbital {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-@keyframes gravitational-wave {
-  0%, 100% { 
-    transform: scale(1) rotate(0deg); 
-    opacity: 0.8; 
-  }
-  50% { 
-    transform: scale(1.05) rotate(180deg); 
-    opacity: 1; 
-  }
-}
-
-@keyframes particle-drift {
-  0%, 100% { transform: translateX(0) translateY(0); }
-  25% { transform: translateX(5px) translateY(-3px); }
-  50% { transform: translateX(-3px) translateY(5px); }
-  75% { transform: translateX(-5px) translateY(-2px); }
-}
-
-@keyframes quantum-fluctuation {
-  0%, 100% { 
-    opacity: 0.7; 
-    transform: scale(1); 
-  }
-  50% { 
-    opacity: 1; 
-    transform: scale(1.02); 
-  }
-}
-
-@keyframes cherenkov-pulse {
-  0%, 100% { 
-    box-shadow: 0 0 20px rgba(37, 99, 235, 0.3); 
-  }
-  50% { 
-    box-shadow: 0 0 40px rgba(37, 99, 235, 0.6), 0 0 60px rgba(37, 99, 235, 0.3); 
-  }
-}
-
-@keyframes redshift-fade {
-  0% { filter: hue-rotate(0deg); }
-  50% { filter: hue-rotate(30deg); }
-  100% { filter: hue-rotate(0deg); }
-}
-
-@keyframes spacetime-ripple {
-  0%, 100% { 
-    transform: scale(1); 
-    filter: blur(0px); 
-  }
-  50% { 
-    transform: scale(1.02); 
-    filter: blur(1px); 
-  }
-}
-
-@keyframes dark-matter-flow {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
-
-@keyframes cosmic-float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-5px); }
-}
-
-@keyframes field-distortion {
-  0%, 100% { backdrop-filter: blur(4px); }
-  50% { backdrop-filter: blur(8px); }
-}
-
-@keyframes supernova-burst {
-  0% { 
-    transform: scale(1); 
-    opacity: 1; 
-    box-shadow: 0 0 20px rgba(37, 99, 235, 0.3); 
-  }
-  50% { 
-    transform: scale(1.5); 
-    opacity: 0.8; 
-    box-shadow: 0 0 100px rgba(37, 99, 235, 0.8), 0 0 200px rgba(37, 99, 235, 0.4); 
-  }
-  100% { 
-    transform: scale(1); 
-    opacity: 1; 
-    box-shadow: 0 0 20px rgba(37, 99, 235, 0.3); 
-  }
-}
-
-@keyframes gravitational-lensing {
-  0%, 100% { 
-    filter: blur(0px) brightness(1); 
-    transform: scale(1); 
-  }
-  50% { 
-    filter: blur(2px) brightness(1.2); 
-    transform: scale(1.1); 
-  }
-}
-
-/* Base Styles with Cosmic Theme */
+/* Base Styles */
 * {
   box-sizing: border-box;
 }
 
 html {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
-  font-variation-settings: 'slnt' 0;
   scroll-behavior: smooth;
 }
 
 body {
   margin: 0;
   padding: 0;
-  background: #000000;
-  color: #F8FAFC;
-  font-size: 0.875rem;
+  background: #0f172a;
+  color: #f8fafc;
+  font-size: 1rem;
   line-height: 1.5;
-  letter-spacing: 0.01em;
+  font-weight: 300;
   overflow-x: hidden;
-  font-variation-settings: 'wght' 400, 'slnt' 0;
 }
 
-/* Cosmic Typography with Gravitational Effects */
+/* Typography */
 h1, h2, h3, h4, h5, h6 {
-  font-variation-settings: 'wght' 700, 'slnt' 0;
+  font-weight: 300;
   letter-spacing: -0.025em;
-  animation: cosmic-float 3s ease-in-out infinite;
 }
 
-h1 {
-  font-size: 2.5rem;
-  line-height: 2.75rem;
-  font-variation-settings: 'wght' 800, 'slnt' 0;
+/* Smooth animations */
+* {
+  transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
 }
 
-/* Cosmic Container System */
-.cosmic-viewport {
-  height: 100vh;
-  overflow: hidden;
-  position: relative;
-  display: grid;
-  grid-template-rows: auto 1fr auto;
+/* Focus styles */
+button:focus,
+input:focus,
+textarea:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
 }
 
-.cosmic-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 2rem;
-  position: relative;
-  z-index: 10;
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
 }
 
-/* Dark Energy Background Effects */
-.dark-energy-bg {
-  background: radial-gradient(ellipse at center, rgba(26, 26, 46, 0.3) 0%, #000000 70%);
-  position: relative;
+::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.1);
 }
 
-.dark-energy-bg::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: conic-gradient(from 0deg at 50% 50%, #0A0A0F, #1A1A2E, #0A0A0F);
-  opacity: 0.3;
-  animation: dark-matter-flow 12s linear infinite;
-  background-size: 200% 200%;
+::-webkit-scrollbar-thumb {
+  background: rgba(59, 130, 246, 0.3);
+  border-radius: 3px;
 }
 
-/* Gravitational Lensing Effects */
-.gravitational-lens {
-  position: relative;
-  overflow: hidden;
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(59, 130, 246, 0.5);
 }
 
-.gravitational-lens::before {
-  content: '';
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: radial-gradient(circle at 30% 70%, rgba(30, 27, 75, 0.4) 0%, transparent 50%), 
-              radial-gradient(circle at 70% 30%, rgba(55, 48, 163, 0.4) 0%, transparent 50%);
-  animation: gravitational-lensing 8s ease-in-out infinite;
-  pointer-events: none;
-}
-
-/* Cherenkov Radiation Interaction Feedback */
-.cherenkov-interaction {
-  position: relative;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.cherenkov-interaction:hover {
-  animation: cherenkov-pulse 1.5s ease-in-out infinite;
-}
-
-.cherenkov-interaction::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 100%;
-  width: 30px;
-  height: 2px;
-  background: linear-gradient(90deg, rgba(37, 99, 235, 0.8), transparent);
-  transform: translateY(-50%);
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  pointer-events: none;
-}
-
-.cherenkov-interaction:hover::after {
-  opacity: 1;
-  animation: particle-drift 2s ease-in-out infinite;
-}
-
-/* Quantum Field Effects */
-.quantum-field {
-  backdrop-filter: blur(8px);
-  background: rgba(26, 26, 46, 0.1);
-  border: 1px solid rgba(99, 102, 241, 0.2);
-  position: relative;
-}
-
-.quantum-field::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.05) 0%, transparent 50%, rgba(139, 92, 246, 0.05) 100%);
-  animation: quantum-fluctuation 2s ease-in-out infinite;
-  pointer-events: none;
-}
-
-/* Floating Interface Elements */
-.cosmic-float-card {
-  background: rgba(15, 15, 26, 0.8);
-  backdrop-filter: blur(16px);
-  border: 1px solid rgba(99, 102, 241, 0.2);
-  border-radius: 1rem;
-  box-shadow: 0 0 30px rgba(99, 102, 241, 0.2), inset 0 0 20px rgba(99, 102, 241, 0.05);
-  animation: cosmic-float 3s ease-in-out infinite;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.cosmic-float-card:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 0 50px rgba(99, 102, 241, 0.4), inset 0 0 30px rgba(99, 102, 241, 0.1);
-  animation: field-distortion 5s ease-in-out infinite;
-}
-
-/* Custom Cursor Effects */
-.cosmic-cursor {
-  cursor: none;
-}
-
-.cosmic-cursor-trail {
-  position: fixed;
-  width: 20px;
-  height: 20px;
-  background: radial-gradient(circle, rgba(37, 99, 235, 0.6) 0%, transparent 70%);
-  border-radius: 50%;
-  pointer-events: none;
-  z-index: 9999;
-  animation: quantum-fluctuation 1s ease-in-out infinite;
-}
-
-/* Accessibility Enhancements */
+/* Accessibility */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -293,56 +74,19 @@ h1 {
   }
 }
 
-/* High Contrast Mode Support */
+/* High contrast mode */
 @media (prefers-contrast: high) {
-  .cosmic-float-card {
-    border: 2px solid rgba(99, 102, 241, 0.8);
-    background: rgba(0, 0, 0, 0.9);
+  .bg-white\/5 {
+    background-color: rgba(255, 255, 255, 0.1) !important;
   }
   
-  .cherenkov-interaction:hover {
-    outline: 2px solid rgba(37, 99, 235, 0.8);
+  .border-white\/10 {
+    border-color: rgba(255, 255, 255, 0.3) !important;
   }
 }
 
-/* Focus Indicators for Accessibility */
-.cosmic-focus:focus {
-  outline: 2px solid rgba(37, 99, 235, 0.8);
-  outline-offset: 2px;
-  box-shadow: 0 0 20px rgba(37, 99, 235, 0.4);
-}
-
-/* Responsive Typography */
-@media (max-width: 768px) {
-  html {
-    font-size: 14px;
-  }
-  
-  h1 {
-    font-size: 2rem;
-    line-height: 2.25rem;
-  }
-}
-
-@media (max-width: 480px) {
-  html {
-    font-size: 13px;
-  }
-  
-  h1 {
-    font-size: 1.75rem;
-    line-height: 2rem;
-  }
-}
-
-/* Print Styles */
+/* Print styles */
 @media print {
-  .dark-energy-bg,
-  .gravitational-lens::before,
-  .quantum-field::before {
-    display: none;
-  }
-  
   body {
     background: white;
     color: black;
