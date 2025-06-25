@@ -1,6 +1,6 @@
-import React from 'react';
-import { motion } from 'framer-motion';
-import { Heart, Users, Home, Trophy, Candy as Candle, Leaf, Compass, Palette } from 'lucide-react';
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Heart, Users, Home, Trophy, Candle, Leaf, Compass, Palette, Sparkles } from 'lucide-react';
 import { emotions } from '../data/emotions';
 import { Emotion } from '../types';
 
@@ -20,96 +20,230 @@ interface EmotionWheelProps {
 }
 
 export function EmotionWheel({ onEmotionSelect }: EmotionWheelProps) {
-  const radius = 140;
-  const centerX = 200;
-  const centerY = 200;
+  const [selectedEmotion, setSelectedEmotion] = useState<string | null>(null);
+  const [isSupernova, setIsSupernova] = useState(false);
+  
+  // Reduced size for single-viewport containment (80vh max)
+  const radius = 120; // Reduced from 140
+  const centerX = 180;  // Reduced from 200
+  const centerY = 180;  // Reduced from 200
+
+  const handleEmotionClick = (emotion: Emotion) => {
+    setSelectedEmotion(emotion.id);
+    setIsSupernova(true);
+    
+    // Supernova effect duration
+    setTimeout(() => {
+      onEmotionSelect(emotion);
+    }, 800);
+  };
 
   return (
-    <div className="relative w-[400px] h-[400px] mx-auto">
-      {/* Outer glow ring */}
-      <div className="absolute inset-4 rounded-full bg-gradient-radial from-blue-500/10 to-transparent animate-pulse" />
+    <div className="relative w-[360px] h-[360px] mx-auto max-h-[80vh] cosmic-container">
+      {/* Dark matter background field */}
+      <div className="absolute inset-0 dark-energy-bg rounded-full opacity-20" />
       
-      {/* Center hub */}
+      {/* Gravitational lensing effects */}
+      <div className="absolute inset-2 gravitational-lens rounded-full" />
+      
+      {/* Quantum field fluctuations */}
       <motion.div 
-        className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-16 h-16 rounded-full bg-gradient-to-br from-indigo-600 to-purple-700 flex items-center justify-center shadow-2xl"
-        animate={{ rotate: 360 }}
-        transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+        className="absolute inset-6 rounded-full bg-gradient-to-r from-cosmic-quantum-field/10 to-cosmic-particle-trace/10"
+        animate={{ 
+          scale: [1, 1.02, 1],
+          opacity: [0.3, 0.5, 0.3]
+        }}
+        transition={{ 
+          duration: 4, 
+          repeat: Infinity,
+          ease: "easeInOut"
+        }}
+      />
+      
+      {/* Central hub with research-inspired design */}
+      <motion.div 
+        className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-20 h-20 rounded-full gravitational-center quantum-field"
+        animate={{ 
+          rotate: isSupernova ? [0, 360] : 360,
+          scale: isSupernova ? [1, 1.5, 1] : 1
+        }}
+        transition={{ 
+          rotate: { duration: isSupernova ? 0.8 : 30, repeat: isSupernova ? 1 : Infinity, ease: "linear" },
+          scale: { duration: 0.8, ease: "easeOut" }
+        }}
       >
-        <div className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm" />
+        <div className="w-full h-full rounded-full bg-gradient-to-br from-cosmic-energy-flux to-cosmic-cherenkov-blue flex items-center justify-center relative overflow-hidden">
+          {/* Particle collision effect */}
+          <div className="absolute inset-0 bg-gradient-conic from-cosmic-void via-cosmic-cherenkov-blue to-cosmic-void opacity-30 animate-orbital-fast" />
+          
+          {/* Central text */}
+          <div className="relative z-10 text-center">
+            <Sparkles className="w-6 h-6 text-cosmic-observation mx-auto mb-1 animate-quantum-fluctuation" />
+            <span className="text-cosmic-xs font-medium text-cosmic-observation tracking-wider">
+              ETERNALIZE
+            </span>
+          </div>
+        </div>
       </motion.div>
 
-      {/* Emotion segments */}
-      {emotions.map((emotion, index) => {
-        const angle = (index * 360) / emotions.length;
-        const radians = (angle * Math.PI) / 180;
-        const x = centerX + Math.cos(radians) * radius;
-        const y = centerY + Math.sin(radians) * radius;
-        
-        const IconComponent = iconMap[emotion.icon as keyof typeof iconMap];
+      {/* Emotion orbital segments */}
+      <AnimatePresence>
+        {emotions.map((emotion, index) => {
+          const angle = (index * 360) / emotions.length;
+          const radians = (angle * Math.PI) / 180;
+          const x = centerX + Math.cos(radians) * radius;
+          const y = centerY + Math.sin(radians) * radius;
+          
+          const IconComponent = iconMap[emotion.icon as keyof typeof iconMap];
+          const isSelected = selectedEmotion === emotion.id;
 
-        return (
-          <motion.div
-            key={emotion.id}
-            className="absolute transform -translate-x-1/2 -translate-y-1/2 cursor-pointer group"
-            style={{ left: x, top: y }}
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: index * 0.1 }}
-            whileHover={{ scale: 1.2 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => onEmotionSelect(emotion)}
-          >
-            {/* Halo effect */}
-            <div 
-              className="absolute inset-0 rounded-full animate-ping opacity-30"
-              style={{ 
-                backgroundColor: emotion.color,
-                transform: 'scale(1.5)',
-                animationDuration: '3s'
-              }}
-            />
-            
-            {/* Main emotion circle */}
-            <div
-              className="relative w-20 h-20 rounded-full flex items-center justify-center transition-all duration-300 shadow-xl group-hover:shadow-2xl"
-              style={{
-                backgroundColor: emotion.color,
-                boxShadow: `0 0 30px ${emotion.color}60`
-              }}
-            >
-              <IconComponent className="w-8 h-8 text-white drop-shadow-lg" />
-              
-              {/* Sparkle effects */}
-              <div className="absolute -top-1 -right-1 w-3 h-3 bg-white rounded-full opacity-80 animate-bounce" style={{ animationDelay: `${index * 0.2}s` }} />
-              <div className="absolute -bottom-1 -left-1 w-2 h-2 bg-white rounded-full opacity-60 animate-bounce" style={{ animationDelay: `${index * 0.2 + 0.5}s` }} />
-            </div>
-
-            {/* Emotion label */}
+          return (
             <motion.div
-              className="absolute top-full mt-3 left-1/2 transform -translate-x-1/2 text-center"
-              initial={{ opacity: 0 }}
-              whileHover={{ opacity: 1 }}
+              key={emotion.id}
+              className="absolute transform -translate-x-1/2 -translate-y-1/2 cursor-pointer group cosmic-cursor"
+              style={{ left: x, top: y }}
+              initial={{ scale: 0, opacity: 0, rotate: -180 }}
+              animate={{ 
+                scale: isSelected ? [1, 1.5, 1] : 1, 
+                opacity: 1, 
+                rotate: 0,
+                y: isSelected ? [0, -10, 0] : 0
+              }}
+              transition={{ 
+                initial: { delay: index * 0.1, duration: 0.8, ease: "backOut" },
+                scale: { duration: 0.6, ease: "easeOut" },
+                y: { duration: 0.6, ease: "easeOut" }
+              }}
+              whileHover={{ 
+                scale: 1.15,
+                y: -5,
+                transition: { duration: 0.2 }
+              }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => handleEmotionClick(emotion)}
             >
-              <div className="bg-gray-900/90 backdrop-blur-sm text-white px-3 py-1 rounded-full text-sm font-medium whitespace-nowrap">
-                {emotion.name}
-              </div>
-            </motion.div>
+              {/* Dark matter halo effect */}
+              <motion.div 
+                className="absolute inset-0 rounded-full opacity-20 animate-gravitational-wave"
+                style={{ 
+                  backgroundColor: emotion.color,
+                  transform: 'scale(2)',
+                  filter: 'blur(15px)'
+                }}
+                animate={{
+                  scale: [2, 2.5, 2],
+                  opacity: [0.2, 0.4, 0.2]
+                }}
+                transition={{
+                  duration: 3,
+                  delay: index * 0.2,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }}
+              />
+              
+              {/* Cherenkov radiation ring */}
+              <motion.div
+                className="absolute inset-0 rounded-full border-2 opacity-0 group-hover:opacity-60"
+                style={{ 
+                  borderColor: emotion.color,
+                  transform: 'scale(1.5)'
+                }}
+                animate={{
+                  rotate: [0, 360],
+                  scale: [1.5, 1.8, 1.5]
+                }}
+                transition={{
+                  rotate: { duration: 8, repeat: Infinity, ease: "linear" },
+                  scale: { duration: 2, repeat: Infinity, ease: "easeInOut" }
+                }}
+              />
+              
+              {/* Main emotion orb with particle physics styling */}
+              <motion.div
+                className="relative w-16 h-16 rounded-full flex items-center justify-center transition-all duration-300 cosmic-float-card cherenkov-interaction"
+                style={{
+                  backgroundColor: emotion.color,
+                  boxShadow: `0 0 30px ${emotion.color}60, inset 0 0 20px ${emotion.color}20`
+                }}
+                animate={isSelected ? {
+                  boxShadow: [
+                    `0 0 30px ${emotion.color}60`,
+                    `0 0 100px ${emotion.color}80, 0 0 200px ${emotion.color}40`,
+                    `0 0 30px ${emotion.color}60`
+                  ]
+                } : {}}
+                transition={{ duration: 0.8 }}
+              >
+                <IconComponent className="w-6 h-6 text-cosmic-observation drop-shadow-lg relative z-10" />
+                
+                {/* Quantum fluctuation particles */}
+                {[...Array(3)].map((_, i) => (
+                  <motion.div
+                    key={i}
+                    className="absolute w-1 h-1 bg-cosmic-observation rounded-full"
+                    style={{
+                      top: `${20 + i * 20}%`,
+                      left: `${25 + i * 15}%`
+                    }}
+                    animate={{
+                      opacity: [0, 1, 0],
+                      scale: [0, 1.5, 0],
+                      x: [0, Math.cos(i * 60) * 10, 0],
+                      y: [0, Math.sin(i * 60) * 10, 0]
+                    }}
+                    transition={{
+                      duration: 2,
+                      delay: i * 0.3 + index * 0.1,
+                      repeat: Infinity,
+                      ease: "easeInOut"
+                    }}
+                  />
+                ))}
+              </motion.div>
 
-            {/* Tooltip */}
-            <motion.div 
-              className="absolute bottom-full mb-6 left-1/2 transform -translate-x-1/2 bg-gray-900/95 backdrop-blur-sm text-white p-3 rounded-lg text-sm max-w-48 text-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
-              initial={{ y: 10 }}
-              whileHover={{ y: 0 }}
-            >
-              {emotion.description}
-              <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900/95" />
+              {/* Research-inspired tooltip */}
+              <motion.div 
+                className="absolute bottom-full mb-6 left-1/2 transform -translate-x-1/2 quantum-field text-cosmic-observation p-3 rounded-lg text-cosmic-sm max-w-48 text-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+                initial={{ y: 10, opacity: 0 }}
+                whileHover={{ y: 0, opacity: 1 }}
+              >
+                <div className="font-medium text-cosmic-base mb-1" style={{ color: emotion.color }}>
+                  {emotion.name.toUpperCase()}
+                </div>
+                <div className="text-cosmic-xs text-cosmic-cosmic-ray leading-relaxed">
+                  {emotion.description}
+                </div>
+                
+                {/* Tooltip arrow with field effect */}
+                <div 
+                  className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent"
+                  style={{ borderTopColor: 'rgba(26, 26, 46, 0.8)' }}
+                />
+              </motion.div>
             </motion.div>
-          </motion.div>
-        );
-      })}
+          );
+        })}
+      </AnimatePresence>
 
-      {/* Connecting lines */}
-      <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-20">
+      {/* Gravitational field lines connecting to center */}
+      <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-10">
+        <defs>
+          <linearGradient id="fieldGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="transparent" />
+            <stop offset="50%" stopColor="#2563EB" />
+            <stop offset="100%" stopColor="transparent" />
+          </linearGradient>
+          
+          <filter id="glow">
+            <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+            <feMerge> 
+              <feMergeNode in="coloredBlur"/>
+              <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+          </filter>
+        </defs>
+        
         {emotions.map((_, index) => {
           const angle = (index * 360) / emotions.length;
           const radians = (angle * Math.PI) / 180;
@@ -123,21 +257,38 @@ export function EmotionWheel({ onEmotionSelect }: EmotionWheelProps) {
               y1={centerY}
               x2={x}
               y2={y}
-              stroke="url(#gradient)"
+              stroke="url(#fieldGradient)"
               strokeWidth="1"
-              initial={{ pathLength: 0 }}
-              animate={{ pathLength: 1 }}
-              transition={{ delay: index * 0.1, duration: 1 }}
+              filter="url(#glow)"
+              initial={{ pathLength: 0, opacity: 0 }}
+              animate={{ pathLength: 1, opacity: 0.3 }}
+              transition={{ 
+                delay: index * 0.1, 
+                duration: 1.5,
+                ease: "easeOut"
+              }}
             />
           );
         })}
-        <defs>
-          <linearGradient id="gradient">
-            <stop offset="0%" stopColor="#6366F1" />
-            <stop offset="100%" stopColor="#8B5CF6" />
-          </linearGradient>
-        </defs>
       </svg>
+
+      {/* Supernova burst effect */}
+      <AnimatePresence>
+        {isSupernova && (
+          <motion.div
+            className="absolute inset-0 rounded-full pointer-events-none"
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ 
+              scale: [0, 3, 5], 
+              opacity: [0, 0.8, 0] 
+            }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+          >
+            <div className="w-full h-full rounded-full bg-gradient-radial from-cosmic-cherenkov-blue via-cosmic-plasma-glow to-transparent" />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
