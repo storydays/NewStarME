@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { EmotionWheel } from '../components/EmotionWheel';
+import { StarViewCanvas } from '../components/StarViewCanvas';
 import { Emotion } from '../types';
 
 export function Home() {
@@ -13,6 +14,8 @@ export function Home() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-cosmic-dark-matter via-cosmic-deep-space to-cosmic-quantum-field relative overflow-hidden">
+      {/* R3F Background Canvas */}
+      <StarViewCanvas />
       
       {/* Gravitational lensing effect overlay */}
       <div className="absolute inset-0 bg-gravitational-lensing opacity-20 pointer-events-none" />

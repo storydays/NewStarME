@@ -3,6 +3,7 @@ import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft } from 'lucide-react';
 import { DedicationForm } from '../components/DedicationForm';
+import { StarViewCanvas } from '../components/StarViewCanvas';
 import { useStar } from '../hooks/useStars';
 import { useDedications } from '../hooks/useDedications';
 import { emotions } from '../data/emotions';
@@ -38,6 +39,7 @@ export function Dedication() {
   if (starLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-cosmic-dark-matter via-cosmic-deep-space to-cosmic-quantum-field relative">
+        <StarViewCanvas />
         <div className="relative z-10 flex items-center justify-center min-h-screen">
           <motion.div
             className="text-center"
@@ -70,6 +72,7 @@ export function Dedication() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-cosmic-dark-matter via-cosmic-deep-space to-cosmic-quantum-field relative">
+      <StarViewCanvas />
       
       {/* Gravitational lensing effect */}
       <div className="absolute inset-0 bg-gravitational-lensing opacity-15 pointer-events-none" />
