@@ -19,7 +19,7 @@ function App() {
         setCatalogLoading(true);
         
         // Load the HYG catalog from the public directory
-        const catalog = await HygStarsCatalog.fromUrl('/hygdata_v41.csv.gz', true);
+        const catalog = await HygStarsCatalog.fromUrl('/hygdata_v41.csv.gz', false);
         
         console.log(`HYG catalog loaded successfully: ${catalog.getTotalStars()} stars`);
         setHygCatalog(catalog);
