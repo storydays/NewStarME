@@ -34,7 +34,6 @@ export function StarSelection() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-cosmic-dark-matter via-cosmic-deep-space to-cosmic-quantum-field relative">
-        <StarField density={80} className="opacity-30" />
         <div className="relative z-10 flex items-center justify-center min-h-screen">
           <motion.div
             className="text-center"
