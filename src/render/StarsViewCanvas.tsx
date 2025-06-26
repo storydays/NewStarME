@@ -12,9 +12,9 @@ import * as THREE from 'three';
  * Renders the main 3D star visualization canvas using react-three-fiber,
  * manages camera controls, star selection, and overlays the star info panel.
  * 
- * Follows exact specifications for props, ref API, and behavior.
+ * Enhanced with automatic Sun orbiting functionality.
  * 
- * Confidence Rating: High - Complete implementation following specifications exactly
+ * Confidence Rating: High - Complete implementation with Sun orbiting feature
  */
 
 export interface StarsViewCanvasProps {
@@ -91,23 +91,109 @@ function StarInfoPanel({ star }: { star: HygRecord | null }) {
 
 /**
  * Camera Controller Component
- * Manages camera animations and controls
+ * Manages camera animations and controls with Sun orbiting functionality
  */
 function CameraController({ 
   selectedStar, 
   orbitEnabled, 
-  returnToOrigin 
+  returnToOrigin,
+  starsCatalog
 }: { 
   selectedStar: HygRecord | null;
   orbitEnabled: boolean;
   returnToOrigin: boolean;
+  starsCatalog: HygStarsCatalog | null;
 }) {
   const { camera } = useThree();
   const controlsRef = useRef<any>(null);
+  const [sunPosition, setSunPosition] = useState<THREE.Vector3 | null>(null);
+  const [isOrbitingAroundSun, setIsOrbitingAroundSun] = useState(false);
+
+  // Find the Sun in the catalog and calculate its position
+  useEffect(() => {
+    if (!starsCatalog) return;
+
+    console.log('CameraController: Looking for the Sun in catalog...');
+    
+    // Find the Sun by proper name or by being very close to Earth (distance near 0)
+    const allStars = starsCatalog.getStars();
+    let sun = allStars.find(star => 
+      star.proper && star.proper.toLowerCase().includes('sun')
+    );
+    
+    // If not found by name, look for the closest star (should be the Sun)
+    if (!sun) {
+      sun = allStars.find(star => star.dist < 0.1); // Very close distance
+    }
+    
+    // If still not found, look for a G-type star very close to us
+    if (!sun) {
+      sun = allStars.find(star => 
+        star.spect && star.spect.startsWith('G') && star.dist < 1
+      );
+    }
+
+    if (sun) {
+      console.log('CameraController: Found Sun:', sun.proper || `HYG ${sun.id}`, 'Distance:', sun.dist);
+      
+      // Calculate Sun's 3D position (it should be very close to origin)
+      const distance = Math.max(0.1, sun.dist / 10); // Ensure minimum distance for visibility
+      const raRad = sun.rarad;
+      const decRad = sun.decrad;
+      
+      const x = distance * Math.cos(decRad) * Math.cos(raRad);
+      const y = distance * Math.cos(decRad) * Math.sin(raRad);
+      const z = distance * Math.sin(decRad);
+      
+      const sunPos = new THREE.Vector3(x, y, z);
+      setSunPosition(sunPos);
+      
+      // Start orbiting around the Sun immediately
+      setIsOrbitingAroundSun(true);
+      
+      console.log('CameraController: Sun position set to:', sunPos);
+    } else {
+      console.log('CameraController: Sun not found in catalog, orbiting around origin');
+      setSunPosition(new THREE.Vector3(0, 0, 0));
+      setIsOrbitingAroundSun(true);
+    }
+  }, [starsCatalog]);
+
+  // Set up camera to orbit around the Sun
+  useEffect(() => {
+    if (sunPosition && controlsRef.current && isOrbitingAroundSun) {
+      console.log('CameraController: Setting up orbit around Sun at position:', sunPosition);
+      
+      // Set the orbit target to the Sun's position
+      controlsRef.current.target.copy(sunPosition);
+      
+      // Position camera at a good distance from the Sun
+      const orbitRadius = 5;
+      camera.position.set(
+        sunPosition.x + orbitRadius,
+        sunPosition.y + 2,
+        sunPosition.z + 2
+      );
+      
+      // Enable auto-rotation around the Sun
+      controlsRef.current.autoRotate = true;
+      controlsRef.current.autoRotateSpeed = 1.0; // Moderate rotation speed
+      controlsRef.current.enableDamping = true;
+      controlsRef.current.dampingFactor = 0.05;
+      
+      controlsRef.current.update();
+      
+      console.log('CameraController: Camera now orbiting around Sun');
+    }
+  }, [sunPosition, isOrbitingAroundSun, camera]);
 
   useEffect(() => {
     if (returnToOrigin && controlsRef.current) {
       console.log('CameraController: Returning camera to origin');
+      // Stop orbiting and return to origin
+      setIsOrbitingAroundSun(false);
+      controlsRef.current.autoRotate = false;
+      
       // Animate camera back to origin
       camera.position.set(0, 0, 8);
       camera.lookAt(0, 0, 0);
@@ -119,6 +205,10 @@ function CameraController({
   useEffect(() => {
     if (selectedStar && controlsRef.current) {
       console.log('CameraController: Focusing camera on selected star');
+      // Stop orbiting around Sun when a star is selected
+      setIsOrbitingAroundSun(false);
+      controlsRef.current.autoRotate = orbitEnabled;
+      
       // Convert star coordinates to 3D position for camera targeting
       const distance = Math.min(selectedStar.dist, 100) / 10;
       const raRad = selectedStar.rarad;
@@ -131,8 +221,12 @@ function CameraController({
       // Set camera target to selected star
       controlsRef.current.target.set(x, y, z);
       controlsRef.current.update();
+    } else if (!selectedStar && sunPosition && !returnToOrigin) {
+      // Resume orbiting around Sun when no star is selected
+      console.log('CameraController: Resuming orbit around Sun');
+      setIsOrbitingAroundSun(true);
     }
-  }, [selectedStar]);
+  }, [selectedStar, orbitEnabled, sunPosition, returnToOrigin]);
 
   return (
     <OrbitControls
@@ -140,10 +234,12 @@ function CameraController({
       enablePan={true}
       enableZoom={true}
       enableRotate={true}
-      autoRotate={orbitEnabled}
-      autoRotateSpeed={0.5}
+      autoRotate={isOrbitingAroundSun || orbitEnabled}
+      autoRotateSpeed={isOrbitingAroundSun ? 1.0 : 0.5}
       minDistance={1}
       maxDistance={50}
+      enableDamping={true}
+      dampingFactor={0.05}
     />
   );
 }
@@ -233,6 +329,7 @@ function SceneContent({
  * Renders a full-window 3D canvas with stars, using the StarField component.
  * Handles camera controls, star selection/deselection, and displays StarInfoPanel overlay.
  * Manages label refreshes for performance and visual consistency.
+ * Features automatic camera orbiting around the Sun.
  */
 export const StarsViewCanvas = forwardRef<StarsViewCanvasRef, StarsViewCanvasProps>(
   ({ starsCatalog, controlSettings, selectedStar, onStarSelect }, ref) => {
@@ -330,11 +427,12 @@ export const StarsViewCanvas = forwardRef<StarsViewCanvasRef, StarsViewCanvasPro
             labelRefreshTick={labelRefreshTick}
           />
           
-          {/* Camera controls */}
+          {/* Camera controls with Sun orbiting functionality */}
           <CameraController
             selectedStar={selectedStar}
             orbitEnabled={orbitEnabled}
             returnToOrigin={returnToOrigin}
+            starsCatalog={starsCatalog}
           />
         </Canvas>
         
@@ -350,13 +448,13 @@ export const StarsViewCanvas = forwardRef<StarsViewCanvasRef, StarsViewCanvasPro
         
         {starsCatalog && (
           <div className="absolute bottom-4 right-4 text-cosmic-stellar-wind text-xs font-light opacity-30 pointer-events-none">
-            {starsCatalog.getTotalStars().toLocaleString()} stars loaded
+            {starsCatalog.getTotalStars().toLocaleString()} stars loaded • Orbiting around Sun
           </div>
         )}
         
         {/* Controls hint */}
         <div className="absolute bottom-4 left-4 text-cosmic-stellar-wind text-xs font-light opacity-30 pointer-events-none">
-          Click stars to select • Drag to orbit • Scroll to zoom
+          Click stars to select • Drag to orbit • Scroll to zoom • Auto-orbiting Sun
         </div>
       </div>
     );
