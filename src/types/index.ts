@@ -49,6 +49,53 @@ export interface AIStarResponse {
   error?: string;
 }
 
+// HYG Catalog Types
+export interface HygRecord {
+  id: number;
+  hip?: number;
+  hd?: number;
+  hr?: number;
+  gl?: string;
+  bf?: string;
+  proper?: string;
+  ra: number;
+  dec: number;
+  dist: number;
+  pmra?: number;
+  pmdec?: number;
+  rv?: number;
+  mag: number;
+  absmag: number;
+  spect?: string;
+  ci?: number;
+  x: number;
+  y: number;
+  z: number;
+  vx?: number;
+  vy?: number;
+  vz?: number;
+  rarad: number;
+  decrad: number;
+  pmrarad?: number;
+  pmdecrad?: number;
+  bayer?: string;
+  flam?: number;
+  con?: string;
+  comp?: number;
+  comp_primary?: number;
+  base?: string;
+  lum?: number;
+  var?: string;
+  var_min?: number;
+  var_max?: number;
+}
+
+export interface HygData {
+  stars: HygRecord[];
+  headers: string[];
+  totalStars: number;
+}
+
 export interface CatalogStar {
   scientific_name: string;
   coordinates: string;
