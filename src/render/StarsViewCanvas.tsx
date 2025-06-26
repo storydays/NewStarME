@@ -1,9 +1,10 @@
 import React, { forwardRef, useImperativeHandle, useRef, useState, useCallback, useEffect } from 'react';
-import { Canvas, useThree } from '@react-three/fiber';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import { HygStarsCatalog } from '../data/StarsCatalog';
 import { HygRecord } from '../types';
 import { StarField } from './StarField';
+import * as THREE from 'three';
 
 /**
  * StarsViewCanvas Component
@@ -32,6 +33,35 @@ export interface StarsViewCanvasRef {
   orbitStop: () => void;
   returnToOrigin: () => void;
   getSelectedStar: () => HygRecord | null;
+}
+
+/**
+ * Testing Spinning Cube Component
+ * Simple cube that rotates to verify the 3D canvas is working
+ */
+function TestingCube() {
+  const meshRef = useRef<THREE.Mesh>(null);
+
+  useFrame((state, delta) => {
+    if (meshRef.current) {
+      meshRef.current.rotation.x += delta * 0.5;
+      meshRef.current.rotation.y += delta * 0.7;
+    }
+  });
+
+  return (
+    <mesh ref={meshRef} position={[3, 3, 0]}>
+      <boxGeometry args={[1, 1, 1]} />
+      <meshStandardMaterial 
+        color="#2563EB" 
+        transparent 
+        opacity={0.8}
+        wireframe={false}
+        roughness={0.3}
+        metalness={0.7}
+      />
+    </mesh>
+  );
 }
 
 /**
@@ -149,7 +179,7 @@ function CameraController({
 
 /**
  * Scene Content Component
- * Contains all 3D scene elements including the StarField
+ * Contains all 3D scene elements including the StarField and testing cube
  */
 function SceneContent({ 
   starsCatalog, 
@@ -195,18 +225,23 @@ function SceneContent({
         color="#3B82F6"
       />
       
+      {/* Testing spinning cube - positioned to the side */}
+      <TestingCube />
+      
       {/* Main StarField component - renders all stars from catalog */}
-      <StarField
-        catalog={starsCatalog}
-        onStarSelect={handleStarSelect}
-        selectedStar={selectedStar}
-        maxMagnitude={6.5}
-        maxStars={10000}
-        starSize={controlSettings.starSize}
-        glowMultiplier={controlSettings.glowMultiplier}
-        showLabels={controlSettings.showLabels}
-        labelRefreshTick={labelRefreshTick}
-      />
+      {starsCatalog && (
+        <StarField
+          catalog={starsCatalog}
+          onStarSelect={handleStarSelect}
+          selectedStar={selectedStar}
+          maxMagnitude={6.5}
+          maxStars={10000}
+          starSize={controlSettings.starSize}
+          glowMultiplier={controlSettings.glowMultiplier}
+          showLabels={controlSettings.showLabels}
+          labelRefreshTick={labelRefreshTick}
+        />
+      )}
       
       {/* Cosmic fog for depth perception */}
       <fog attach="fog" args={['#0A0A0F', 10, 100]} />
@@ -318,7 +353,7 @@ export const StarsViewCanvas = forwardRef<StarsViewCanvasRef, StarsViewCanvasPro
             powerPreference: "high-performance"
           }}
         >
-          {/* Main scene content with StarField integration */}
+          {/* Main scene content with StarField integration and testing cube */}
           <SceneContent
             starsCatalog={starsCatalog}
             controlSettings={controlSettings}
@@ -354,6 +389,11 @@ export const StarsViewCanvas = forwardRef<StarsViewCanvasRef, StarsViewCanvasPro
         {/* Controls hint */}
         <div className="absolute bottom-4 left-4 text-cosmic-stellar-wind text-xs font-light opacity-30 pointer-events-none">
           Click stars to select • Drag to orbit • Scroll to zoom
+        </div>
+        
+        {/* Testing indicator */}
+        <div className="absolute top-4 right-4 text-cosmic-cherenkov-blue text-xs font-light opacity-70 pointer-events-none">
+          Testing: Blue spinning cube visible
         </div>
       </div>
     );
