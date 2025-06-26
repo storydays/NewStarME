@@ -20,7 +20,7 @@ html {
 body {
   margin: 0;
   padding: 0;
-  background: theme('colors.cosmic.void');
+  /* Removed background property to allow 3D canvas to show through */
   color: theme('colors.cosmic.observation');
   font-size: 0.875rem; /* Cosmic-inspired body size */
   line-height: 1.5;
