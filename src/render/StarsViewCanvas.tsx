@@ -145,7 +145,7 @@ function CameraController({
 
 /**
  * Scene Content Component
- * Contains all 3D scene elements
+ * Contains all 3D scene elements including the StarField
  */
 function SceneContent({ 
   starsCatalog, 
@@ -162,26 +162,40 @@ function SceneContent({
 }) {
   // Handle pointer miss (clicking on empty space)
   const handlePointerMissed = useCallback(() => {
+    console.log('Pointer missed - deselecting star');
     onStarSelect(null, null);
+  }, [onStarSelect]);
+
+  // Handle star selection from StarField
+  const handleStarSelect = useCallback((star: HygRecord, index: number) => {
+    console.log('Star selected in StarField:', star.proper || star.id, 'at index:', index);
+    onStarSelect(star, index);
   }, [onStarSelect]);
 
   return (
     <>
-      {/* Ambient lighting */}
+      {/* Ambient lighting for cosmic atmosphere */}
       <ambientLight intensity={0.3} color="#60A5FA" />
       
-      {/* Directional light */}
+      {/* Directional light for depth */}
       <directionalLight 
         position={[10, 10, 5]} 
         intensity={0.5} 
         color="#93C5FD"
       />
       
-      {/* Star field */}
+      {/* Point light for additional cosmic glow */}
+      <pointLight 
+        position={[-10, -10, -5]} 
+        intensity={0.3} 
+        color="#3B82F6"
+      />
+      
+      {/* Main StarField component - renders all stars from catalog */}
       {starsCatalog && (
         <StarField
           catalog={starsCatalog}
-          onStarSelect={(star: HygRecord, index: number) => onStarSelect(star, index)}
+          onStarSelect={handleStarSelect}
           selectedStar={selectedStar}
           maxMagnitude={6.5}
           maxStars={10000}
@@ -192,7 +206,7 @@ function SceneContent({
         />
       )}
       
-      {/* Cosmic fog for depth */}
+      {/* Cosmic fog for depth perception */}
       <fog attach="fog" args={['#0A0A0F', 10, 100]} />
       
       {/* Invisible plane for pointer miss detection */}
@@ -210,6 +224,9 @@ function SceneContent({
 
 /**
  * Main StarsViewCanvas Component
+ * 
+ * This component now properly integrates with the StarField component
+ * to display real star data from the HYG catalog in 3D space.
  */
 export const StarsViewCanvas = forwardRef<StarsViewCanvasRef, StarsViewCanvasProps>(
   ({ starsCatalog, controlSettings, selectedStar, onStarSelect }, ref) => {
@@ -217,10 +234,10 @@ export const StarsViewCanvas = forwardRef<StarsViewCanvasRef, StarsViewCanvasPro
     const [returnToOrigin, setReturnToOrigin] = useState(false);
     const [labelRefreshTick, setLabelRefreshTick] = useState(0);
 
-    // Expose methods via ref
+    // Expose methods via ref for external control
     useImperativeHandle(ref, () => ({
       orbitStart: () => {
-        console.log('Starting camera orbit');
+        console.log('Starting camera orbit around selected star');
         setOrbitEnabled(true);
       },
       
@@ -230,19 +247,19 @@ export const StarsViewCanvas = forwardRef<StarsViewCanvasRef, StarsViewCanvasPro
       },
       
       returnToOrigin: () => {
-        console.log('Returning camera to origin');
+        console.log('Returning camera to origin and deselecting star');
         setReturnToOrigin(true);
         setOrbitEnabled(false);
         onStarSelect(null, null);
         
-        // Reset the flag after animation
+        // Reset the flag after animation completes
         setTimeout(() => setReturnToOrigin(false), 1000);
       },
       
       getSelectedStar: () => selectedStar
     }), [selectedStar, onStarSelect]);
 
-    // Refresh labels periodically for performance
+    // Refresh labels periodically for performance optimization
     React.useEffect(() => {
       const interval = setInterval(() => {
         setLabelRefreshTick(prev => prev + 1);
@@ -250,6 +267,15 @@ export const StarsViewCanvas = forwardRef<StarsViewCanvasRef, StarsViewCanvasPro
 
       return () => clearInterval(interval);
     }, []);
+
+    // Log catalog status for debugging
+    React.useEffect(() => {
+      if (starsCatalog) {
+        console.log(`StarsViewCanvas: Catalog loaded with ${starsCatalog.getTotalStars()} stars`);
+      } else {
+        console.log('StarsViewCanvas: No catalog available');
+      }
+    }, [starsCatalog]);
 
     return (
       <div className="fixed inset-0 w-full h-full" style={{ zIndex: -1 }}>
@@ -271,7 +297,13 @@ export const StarsViewCanvas = forwardRef<StarsViewCanvasRef, StarsViewCanvasPro
             max: 1.0,
             debounce: 200
           }}
+          gl={{ 
+            antialias: true,
+            alpha: false,
+            powerPreference: "high-performance"
+          }}
         >
+          {/* Main scene content with StarField integration */}
           <SceneContent
             starsCatalog={starsCatalog}
             controlSettings={controlSettings}
@@ -280,6 +312,7 @@ export const StarsViewCanvas = forwardRef<StarsViewCanvasRef, StarsViewCanvasPro
             labelRefreshTick={labelRefreshTick}
           />
           
+          {/* Camera controls */}
           <CameraController
             selectedStar={selectedStar}
             orbitEnabled={orbitEnabled}
@@ -290,12 +323,23 @@ export const StarsViewCanvas = forwardRef<StarsViewCanvasRef, StarsViewCanvasPro
         {/* Star info panel overlay */}
         <StarInfoPanel star={selectedStar} />
         
-        {/* Loading indicator */}
+        {/* Loading/status indicators */}
         {!starsCatalog && (
           <div className="absolute bottom-4 right-4 text-cosmic-stellar-wind text-xs font-light opacity-50">
             Loading star catalog...
           </div>
         )}
+        
+        {starsCatalog && (
+          <div className="absolute bottom-4 right-4 text-cosmic-stellar-wind text-xs font-light opacity-30">
+            {starsCatalog.getTotalStars().toLocaleString()} stars loaded
+          </div>
+        )}
+        
+        {/* Controls hint */}
+        <div className="absolute bottom-4 left-4 text-cosmic-stellar-wind text-xs font-light opacity-30">
+          Click stars to select • Drag to orbit • Scroll to zoom
+        </div>
       </div>
     );
   }
