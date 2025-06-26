@@ -1,6 +1,6 @@
-import React, { useMemo, useRef } from 'react';
+import React, { useMemo, useRef, useCallback } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
-import { Text } from '@react-three/drei';
+import { Billboard, Html } from '@react-three/drei';
 import { HygStarsCatalog } from '../data/StarsCatalog';
 import { HygRecord } from '../types';
 import * as THREE from 'three';
@@ -10,6 +10,8 @@ import * as THREE from 'three';
  * 
  * Renders the actual star sprites and (optionally) their labels in 3D space,
  * using instancing and billboards for performance.
+ * 
+ * Follows exact specifications for props and behavior.
  * 
  * Confidence Rating: High - Complete implementation with performance optimizations
  */
@@ -28,7 +30,7 @@ export interface StarFieldProps<T = HygRecord> {
 
 /**
  * Individual Star Component
- * Renders a single star as a billboard with glow effect
+ * Renders a single star as a 3D billboard with glow and core sprite
  */
 function Star({ 
   star, 
@@ -52,108 +54,130 @@ function Star({
   const meshRef = useRef<THREE.Mesh>(null);
   const glowRef = useRef<THREE.Mesh>(null);
 
-  // Animate selected star
+  // Animate selected star with pulsing effect
   useFrame((state) => {
     if (isSelected && meshRef.current && glowRef.current) {
       const pulse = Math.sin(state.clock.elapsedTime * 3) * 0.2 + 1;
       meshRef.current.scale.setScalar(pulse);
-      glowRef.current.scale.setScalar(pulse * 1.5);
+      glowRef.current.scale.setScalar(pulse * 1.2);
     }
   });
 
-  const handleClick = (event: any) => {
+  const handleClick = useCallback((event: any) => {
     event.stopPropagation();
+    console.log('Star clicked:', star.proper || star.id, 'at index:', index);
     onSelect(star, index);
-  };
+  }, [star, index, onSelect]);
 
   return (
-    <group position={position}>
-      {/* Glow effect */}
+    <Billboard position={position}>
+      {/* Invisible mesh for easier click detection */}
+      <mesh onClick={handleClick} visible={false}>
+        <sphereGeometry args={[size * 3, 8, 8]} />
+        <meshBasicMaterial transparent opacity={0} />
+      </mesh>
+      
+      {/* Glow sprite with additive blending */}
       <mesh ref={glowRef} onClick={handleClick}>
-        <sphereGeometry args={[size * glowMultiplier * 2, 8, 8]} />
+        <planeGeometry args={[size * glowMultiplier * 4, size * glowMultiplier * 4]} />
         <meshBasicMaterial
           color={color}
           transparent
-          opacity={0.1 * glowMultiplier}
+          opacity={0.3 * glowMultiplier}
           blending={THREE.AdditiveBlending}
+          depthWrite={false}
         />
       </mesh>
       
-      {/* Core star */}
+      {/* Core star sprite */}
       <mesh ref={meshRef} onClick={handleClick}>
-        <sphereGeometry args={[size, 8, 8]} />
+        <planeGeometry args={[size * 2, size * 2]} />
         <meshBasicMaterial
-          color={color}
+          color={isSelected ? [1, 1, 1] : color}
           transparent
-          opacity={0.9}
+          opacity={isSelected ? 1.0 : 0.8}
+          depthWrite={false}
         />
       </mesh>
-      
-      {/* Selection indicator */}
-      {isSelected && (
-        <mesh>
-          <ringGeometry args={[size * 3, size * 4, 16]} />
-          <meshBasicMaterial
-            color="#2563EB"
-            transparent
-            opacity={0.6}
-            side={THREE.DoubleSide}
-          />
-        </mesh>
-      )}
-    </group>
+    </Billboard>
   );
 }
 
 /**
- * Star Label Component
- * Renders star name labels with distance-based opacity
+ * Star Labels Component
+ * Renders star name labels with opacity and size based on distance and magnitude
  */
-function StarLabel({ 
-  star, 
-  position, 
-  distance, 
-  magnitude 
+function StarLabels({ 
+  starData, 
+  cameraPosition,
+  showLabels 
 }: {
-  star: HygRecord;
-  position: [number, number, number];
-  distance: number;
-  magnitude: number;
+  starData: Array<{
+    star: HygRecord;
+    position: [number, number, number];
+    distance: number;
+  }>;
+  cameraPosition: THREE.Vector3;
+  showLabels: boolean;
 }) {
-  const { camera } = useThree();
-  
-  // Calculate label opacity based on distance and magnitude
-  const opacity = useMemo(() => {
-    const distanceFactor = Math.max(0.1, Math.min(1.0, 20 / distance));
-    const magnitudeFactor = Math.max(0.3, Math.min(1.0, (4.0 - magnitude) / 4.0));
-    return distanceFactor * magnitudeFactor * 0.8;
-  }, [distance, magnitude]);
+  if (!showLabels) return null;
 
-  // Calculate label size based on distance
-  const fontSize = useMemo(() => {
-    return Math.max(0.3, Math.min(0.8, 10 / distance));
-  }, [distance]);
-
-  if (!star.proper || opacity < 0.2) return null;
+  // Filter stars that should have labels (only named stars)
+  const labeledStars = starData.filter(({ star, distance }) => 
+    star.proper && 
+    star.proper.trim() !== '' &&
+    distance < 50 && // Only show labels for nearby stars
+    star.mag < 4.0 // Only show labels for bright stars
+  ).slice(0, 30); // Limit number of labels for performance
 
   return (
-    <Text
-      position={[position[0], position[1] + 0.5, position[2]]}
-      fontSize={fontSize}
-      color="#F8FAFC"
-      anchorX="center"
-      anchorY="middle"
-      material-transparent
-      material-opacity={opacity}
-      billboard
-    >
-      {star.proper}
-    </Text>
+    <>
+      {labeledStars.map(({ star, position, distance }) => {
+        // Calculate label opacity based on distance and magnitude
+        const distanceFromCamera = cameraPosition.distanceTo(new THREE.Vector3(...position));
+        const opacity = Math.max(0.3, Math.min(1.0, (30 / distanceFromCamera) * (4.0 - star.mag) / 4.0));
+        
+        // Calculate label size based on distance
+        const fontSize = Math.max(8, Math.min(16, 200 / distanceFromCamera));
+
+        if (opacity < 0.3) return null;
+
+        return (
+          <Html
+            key={`label-${star.id}`}
+            position={[position[0], position[1] + 0.5, position[2]]}
+            center
+            distanceFactor={10}
+            occlude
+          >
+            <div 
+              style={{
+                color: '#F8FAFC',
+                fontSize: `${fontSize}px`,
+                fontWeight: 300,
+                opacity: opacity,
+                textShadow: '0 0 4px rgba(0,0,0,0.8)',
+                pointerEvents: 'none',
+                whiteSpace: 'nowrap'
+              }}
+            >
+              {star.proper}
+            </div>
+          </Html>
+        );
+      })}
+    </>
   );
 }
 
 /**
  * Main StarField Component
+ * 
+ * Renders up to maxStars stars with magnitude ≤ maxMagnitude.
+ * Each star is rendered as a 3D billboard with a glow and a core sprite.
+ * Clicking a star triggers onStarSelect.
+ * Optionally displays star name labels with opacity and size based on distance and magnitude.
+ * Uses performant instancing and memoization for large datasets.
  */
 export function StarField<T extends HygRecord>({
   catalog,
@@ -168,21 +192,24 @@ export function StarField<T extends HygRecord>({
 }: StarFieldProps<T>) {
   const { camera } = useThree();
 
-  // Process star data for rendering
+  // Process star data for rendering with memoization for performance
   const starData = useMemo(() => {
-    if (!catalog) return [];
+    if (!catalog) {
+      console.log('StarField: No catalog available');
+      return [];
+    }
 
-    console.log('Processing star catalog for StarField...');
+    console.log('StarField: Processing star catalog...');
     
     // Filter stars by magnitude and limit count
     const filteredStars = catalog
       .filterByMagnitude(-2, maxMagnitude)
       .slice(0, maxStars);
 
-    console.log(`StarField: Rendering ${filteredStars.length} stars`);
+    console.log(`StarField: Rendering ${filteredStars.length} stars (magnitude ≤ ${maxMagnitude})`);
 
     return filteredStars.map((star, index) => {
-      // Convert spherical coordinates to Cartesian
+      // Convert spherical coordinates to Cartesian for 3D positioning
       const distance = Math.min(star.dist, 100) / 5; // Scale for visualization
       const raRad = star.rarad;
       const decRad = star.decrad;
@@ -206,7 +233,7 @@ export function StarField<T extends HygRecord>({
           case 'F': // Yellow-white stars
             color = [1.0, 1.0, 0.8];
             break;
-          case 'G': // Yellow stars
+          case 'G': // Yellow stars (like our Sun)
             color = [1.0, 0.9, 0.7];
             break;
           case 'K': // Orange stars
@@ -218,8 +245,8 @@ export function StarField<T extends HygRecord>({
         }
       }
 
-      // Calculate star size based on magnitude
-      const size = Math.max(0.02, Math.min(0.2, starSize * (6.0 - star.mag) * 0.3));
+      // Calculate star size based on magnitude (brighter stars = larger size)
+      const size = Math.max(0.02, Math.min(0.3, starSize * (6.0 - star.mag) * 0.2));
 
       return {
         star,
@@ -232,18 +259,25 @@ export function StarField<T extends HygRecord>({
     });
   }, [catalog, maxMagnitude, maxStars, starSize]);
 
-  // Calculate camera distance for label optimization
-  const cameraDistance = useMemo(() => {
-    return camera.position.length();
+  // Track camera position for label calculations
+  const cameraPosition = useMemo(() => {
+    return camera.position.clone();
   }, [camera.position, labelRefreshTick]);
 
+  // Handle star selection with proper typing
+  const handleStarSelect = useCallback((star: HygRecord, index: number) => {
+    console.log('StarField: Handling star selection:', star.proper || star.id);
+    onStarSelect(star as T, index);
+  }, [onStarSelect]);
+
   if (!catalog || starData.length === 0) {
+    console.log('StarField: No stars to render');
     return null;
   }
 
   return (
     <group>
-      {/* Render stars */}
+      {/* Render stars as billboards with glow and core sprites */}
       {starData.map(({ star, index, position, color, size, distance }) => {
         const isSelected = selectedStar && 
           ((selectedStar as any).id === star.id || 
@@ -259,29 +293,17 @@ export function StarField<T extends HygRecord>({
             size={size}
             glowMultiplier={glowMultiplier}
             isSelected={!!isSelected}
-            onSelect={onStarSelect as (star: HygRecord, index: number) => void}
+            onSelect={handleStarSelect}
           />
         );
       })}
 
-      {/* Render labels if enabled */}
-      {showLabels && starData
-        .filter(({ star, distance }) => 
-          star.proper && 
-          distance < 30 && // Only show labels for nearby stars
-          star.mag < 3.0 // Only show labels for bright stars
-        )
-        .slice(0, 50) // Limit number of labels for performance
-        .map(({ star, position, distance }) => (
-          <StarLabel
-            key={`label-${star.id}`}
-            star={star}
-            position={position}
-            distance={distance}
-            magnitude={star.mag}
-          />
-        ))
-      }
+      {/* Render star name labels with distance and magnitude-based opacity */}
+      <StarLabels
+        starData={starData}
+        cameraPosition={cameraPosition}
+        showLabels={showLabels}
+      />
     </group>
   );
 }

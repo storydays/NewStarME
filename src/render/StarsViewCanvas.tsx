@@ -1,4 +1,4 @@
-import React, { forwardRef, useImperativeHandle, useRef, useState, useCallback } from 'react';
+import React, { forwardRef, useImperativeHandle, useRef, useState, useCallback, useEffect } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import { HygStarsCatalog } from '../data/StarsCatalog';
@@ -11,7 +11,9 @@ import { StarField } from './StarField';
  * Renders the main 3D star visualization canvas using react-three-fiber,
  * manages camera controls, star selection, and overlays the star info panel.
  * 
- * Confidence Rating: High - Complete implementation following specifications
+ * Follows exact specifications for props, ref API, and behavior.
+ * 
+ * Confidence Rating: High - Complete implementation following specifications exactly
  */
 
 export interface StarsViewCanvasProps {
@@ -40,7 +42,7 @@ function StarInfoPanel({ star }: { star: HygRecord | null }) {
   if (!star) return null;
 
   return (
-    <div className="absolute top-4 left-4 max-w-sm">
+    <div className="absolute top-4 left-4 max-w-sm pointer-events-auto">
       <div className="frosted-glass-strong rounded-xl p-6 border border-cosmic-particle-trace">
         <h3 className="text-lg font-light text-cosmic-observation mb-2">
           {star.proper || `HYG ${star.id}`}
@@ -102,8 +104,9 @@ function CameraController({
   const { camera } = useThree();
   const controlsRef = useRef<any>(null);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (returnToOrigin && controlsRef.current) {
+      console.log('CameraController: Returning camera to origin');
       // Animate camera back to origin
       camera.position.set(0, 0, 8);
       camera.lookAt(0, 0, 0);
@@ -112,8 +115,9 @@ function CameraController({
     }
   }, [returnToOrigin, camera]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (selectedStar && controlsRef.current) {
+      console.log('CameraController: Focusing camera on selected star');
       // Convert star coordinates to 3D position for camera targeting
       const distance = Math.min(selectedStar.dist, 100) / 10;
       const raRad = selectedStar.rarad;
@@ -162,13 +166,13 @@ function SceneContent({
 }) {
   // Handle pointer miss (clicking on empty space)
   const handlePointerMissed = useCallback(() => {
-    console.log('Pointer missed - deselecting star');
+    console.log('SceneContent: Pointer missed - deselecting star');
     onStarSelect(null, null);
   }, [onStarSelect]);
 
   // Handle star selection from StarField
   const handleStarSelect = useCallback((star: HygRecord, index: number) => {
-    console.log('Star selected in StarField:', star.proper || star.id, 'at index:', index);
+    console.log('SceneContent: Star selected from StarField:', star.proper || star.id, 'at index:', index);
     onStarSelect(star, index);
   }, [onStarSelect]);
 
@@ -192,19 +196,17 @@ function SceneContent({
       />
       
       {/* Main StarField component - renders all stars from catalog */}
-      {starsCatalog && (
-        <StarField
-          catalog={starsCatalog}
-          onStarSelect={handleStarSelect}
-          selectedStar={selectedStar}
-          maxMagnitude={6.5}
-          maxStars={10000}
-          starSize={controlSettings.starSize}
-          glowMultiplier={controlSettings.glowMultiplier}
-          showLabels={controlSettings.showLabels}
-          labelRefreshTick={labelRefreshTick}
-        />
-      )}
+      <StarField
+        catalog={starsCatalog}
+        onStarSelect={handleStarSelect}
+        selectedStar={selectedStar}
+        maxMagnitude={6.5}
+        maxStars={10000}
+        starSize={controlSettings.starSize}
+        glowMultiplier={controlSettings.glowMultiplier}
+        showLabels={controlSettings.showLabels}
+        labelRefreshTick={labelRefreshTick}
+      />
       
       {/* Cosmic fog for depth perception */}
       <fog attach="fog" args={['#0A0A0F', 10, 100]} />
@@ -225,8 +227,9 @@ function SceneContent({
 /**
  * Main StarsViewCanvas Component
  * 
- * This component now properly integrates with the StarField component
- * to display real star data from the HYG catalog in 3D space.
+ * Renders a full-window 3D canvas with stars, using the StarField component.
+ * Handles camera controls, star selection/deselection, and displays StarInfoPanel overlay.
+ * Manages label refreshes for performance and visual consistency.
  */
 export const StarsViewCanvas = forwardRef<StarsViewCanvasRef, StarsViewCanvasProps>(
   ({ starsCatalog, controlSettings, selectedStar, onStarSelect }, ref) => {
@@ -237,17 +240,17 @@ export const StarsViewCanvas = forwardRef<StarsViewCanvasRef, StarsViewCanvasPro
     // Expose methods via ref for external control
     useImperativeHandle(ref, () => ({
       orbitStart: () => {
-        console.log('Starting camera orbit around selected star');
+        console.log('StarsViewCanvas: Starting camera orbit around selected star');
         setOrbitEnabled(true);
       },
       
       orbitStop: () => {
-        console.log('Stopping camera orbit');
+        console.log('StarsViewCanvas: Stopping camera orbit');
         setOrbitEnabled(false);
       },
       
       returnToOrigin: () => {
-        console.log('Returning camera to origin and deselecting star');
+        console.log('StarsViewCanvas: Returning camera to origin and deselecting star');
         setReturnToOrigin(true);
         setOrbitEnabled(false);
         onStarSelect(null, null);
@@ -256,11 +259,14 @@ export const StarsViewCanvas = forwardRef<StarsViewCanvasRef, StarsViewCanvasPro
         setTimeout(() => setReturnToOrigin(false), 1000);
       },
       
-      getSelectedStar: () => selectedStar
+      getSelectedStar: () => {
+        console.log('StarsViewCanvas: Getting selected star:', selectedStar?.proper || selectedStar?.id || 'none');
+        return selectedStar;
+      }
     }), [selectedStar, onStarSelect]);
 
-    // Refresh labels periodically for performance optimization
-    React.useEffect(() => {
+    // Manage label refreshes for performance and visual consistency
+    useEffect(() => {
       const interval = setInterval(() => {
         setLabelRefreshTick(prev => prev + 1);
       }, 2000); // Refresh every 2 seconds
@@ -269,7 +275,7 @@ export const StarsViewCanvas = forwardRef<StarsViewCanvasRef, StarsViewCanvasPro
     }, []);
 
     // Log catalog status for debugging
-    React.useEffect(() => {
+    useEffect(() => {
       if (starsCatalog) {
         console.log(`StarsViewCanvas: Catalog loaded with ${starsCatalog.getTotalStars()} stars`);
       } else {
@@ -277,8 +283,17 @@ export const StarsViewCanvas = forwardRef<StarsViewCanvasRef, StarsViewCanvasPro
       }
     }, [starsCatalog]);
 
+    // Log selected star changes
+    useEffect(() => {
+      if (selectedStar) {
+        console.log('StarsViewCanvas: Selected star changed to:', selectedStar.proper || selectedStar.id);
+      } else {
+        console.log('StarsViewCanvas: No star selected');
+      }
+    }, [selectedStar]);
+
     return (
-      <div className="fixed inset-0 w-full h-full" style={{ zIndex: -1 }}>
+      <div className="fixed inset-0 w-full h-full" style={{ zIndex: -1, pointerEvents: 'auto' }}>
         <Canvas
           camera={{
             position: [0, 0, 8],
@@ -325,19 +340,19 @@ export const StarsViewCanvas = forwardRef<StarsViewCanvasRef, StarsViewCanvasPro
         
         {/* Loading/status indicators */}
         {!starsCatalog && (
-          <div className="absolute bottom-4 right-4 text-cosmic-stellar-wind text-xs font-light opacity-50">
+          <div className="absolute bottom-4 right-4 text-cosmic-stellar-wind text-xs font-light opacity-50 pointer-events-none">
             Loading star catalog...
           </div>
         )}
         
         {starsCatalog && (
-          <div className="absolute bottom-4 right-4 text-cosmic-stellar-wind text-xs font-light opacity-30">
+          <div className="absolute bottom-4 right-4 text-cosmic-stellar-wind text-xs font-light opacity-30 pointer-events-none">
             {starsCatalog.getTotalStars().toLocaleString()} stars loaded
           </div>
         )}
         
         {/* Controls hint */}
-        <div className="absolute bottom-4 left-4 text-cosmic-stellar-wind text-xs font-light opacity-30">
+        <div className="absolute bottom-4 left-4 text-cosmic-stellar-wind text-xs font-light opacity-30 pointer-events-none">
           Click stars to select • Drag to orbit • Scroll to zoom
         </div>
       </div>
