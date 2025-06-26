@@ -93,7 +93,7 @@ export function StarViewCanvas() {
           far: 1000 // Far clipping plane
         }}
         style={{
-          background: '#0A0A0F', // Dark cosmic background color
+          background: '#FFFFFF', // Dark cosmic background color
           width: '100vw',
           height: '100vh'
         }}
