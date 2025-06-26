@@ -89,7 +89,7 @@ export function Home() {
         </motion.div>
 
         {/* Particle effects */}
-        <div className="absolute inset-0 pointer-events-none">
+        {/*<div className="absolute inset-0 pointer-events-none">
           {[...Array(8)].map((_, i) => (
             <motion.div
               key={i}
@@ -111,7 +111,7 @@ export function Home() {
               }}
             />
           ))}
-        </div>
+        </div>*/}
 
       </div>
     </div>
