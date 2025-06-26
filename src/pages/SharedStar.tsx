@@ -38,8 +38,8 @@ export function SharedStar() {
     if (navigator.share) {
       try {
         await navigator.share({
-          title: `${dedication?.custom_name} - StarMe Dedication`,
-          text: `See this beautiful star dedication: ${dedication?.custom_name}`,
+          title: `${dedication?.custom_name} - StarMe Cosmic Dedication`,
+          text: `Witness this beautiful cosmic dedication: ${dedication?.custom_name}`,
           url: url
         });
       } catch (error) {
@@ -59,16 +59,20 @@ export function SharedStar() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 relative">
-        <StarField density={100} className="opacity-30" />
+      <div className="min-h-screen bg-gradient-to-br from-cosmic-dark-matter via-cosmic-deep-space to-cosmic-quantum-field relative">
+        <StarField density={120} className="opacity-40" />
         <div className="relative z-10 flex items-center justify-center min-h-screen">
           <motion.div
             className="text-center"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
           >
-            <div className="w-12 h-12 border-2 border-blue-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-white text-lg font-light">Loading dedication...</p>
+            <motion.div 
+              className="w-12 h-12 border-2 border-cosmic-cherenkov-blue border-t-transparent rounded-full mx-auto mb-4"
+              animate={{ rotate: 360 }}
+              transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+            />
+            <p className="text-cosmic-observation text-lg font-light">Accessing cosmic dedication...</p>
           </motion.div>
         </div>
       </div>
@@ -77,20 +81,21 @@ export function SharedStar() {
 
   if (!dedication) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 to-indigo-900 flex items-center justify-center relative">
-        <StarField density={80} className="opacity-30" />
+      <div className="min-h-screen bg-gradient-to-br from-cosmic-dark-matter to-cosmic-quantum-field flex items-center justify-center relative">
+        <StarField density={100} className="opacity-30" />
         <div className="relative z-10 text-center">
           <motion.div
+            className="frosted-glass-strong rounded-2xl p-12 max-w-md mx-auto"
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
           >
-            <h1 className="text-4xl font-light text-white mb-6">Star Not Found</h1>
-            <p className="text-blue-200 text-lg mb-8 font-light">This dedication doesn't exist or has been removed.</p>
+            <h1 className="text-4xl font-light text-cosmic-observation mb-6">Celestial Beacon Not Found</h1>
+            <p className="text-cosmic-stellar-wind text-lg mb-8 font-light">This cosmic dedication doesn't exist or has been absorbed into the void.</p>
             <button
               onClick={() => navigate('/')}
-              className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-8 py-3 rounded-xl font-light transition-all"
+              className="bg-gradient-to-r from-cosmic-cherenkov-blue to-cosmic-plasma-glow hover:from-cosmic-plasma-glow hover:to-cosmic-stellar-wind text-cosmic-observation px-8 py-3 rounded-xl font-light transition-all cherenkov-glow"
             >
-              Create Your Own Star
+              Create Your Own Cosmic Dedication
             </button>
           </motion.div>
         </div>
@@ -101,11 +106,14 @@ export function SharedStar() {
   const emotionColor = dedication.emotion?.color || '#6366F1';
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 relative overflow-hidden">
-      <StarField density={120} color={emotionColor} className="opacity-30" />
+    <div className="min-h-screen bg-gradient-to-br from-cosmic-dark-matter via-cosmic-deep-space to-cosmic-quantum-field relative overflow-hidden">
+      <StarField density={150} color={emotionColor} className="opacity-40" />
+
+      {/* Gravitational lensing effect */}
+      <div className="absolute inset-0 bg-gravitational-lensing opacity-20 pointer-events-none" />
 
       <div className="relative z-10 container mx-auto px-6 py-12">
-        {/* Header */}
+        {/* Enhanced Header */}
         <motion.div
           className="text-center mb-16"
           initial={{ opacity: 0, y: 50 }}
@@ -113,23 +121,22 @@ export function SharedStar() {
           transition={{ duration: 1 }}
         >
           <motion.div
-            className="inline-flex items-center gap-3 px-6 py-3 rounded-full mb-8 backdrop-blur-sm border"
+            className="inline-flex items-center gap-3 px-6 py-3 rounded-full mb-8 frosted-glass-strong border"
             style={{ 
-              backgroundColor: `${emotionColor}15`,
               borderColor: `${emotionColor}40`
             }}
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ delay: 0.5, type: "spring" }}
           >
-            <Sparkles className="w-6 h-6" style={{ color: emotionColor }} />
-            <span className="text-white font-light text-lg">
-              {dedication.emotion?.name || 'Star Dedication'}
+            <Sparkles className="w-6 h-6 cherenkov-glow" style={{ color: emotionColor }} />
+            <span className="text-cosmic-observation font-light text-lg">
+              {dedication.emotion?.name || 'Cosmic Dedication'}
             </span>
           </motion.div>
 
           <motion.h1 
-            className="text-5xl md:text-6xl font-light text-white mb-6"
+            className="text-5xl md:text-6xl font-light text-cosmic-observation mb-6 cosmic-float"
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ delay: 0.7, duration: 0.8 }}
@@ -138,18 +145,30 @@ export function SharedStar() {
           </motion.h1>
         </motion.div>
 
-        {/* Main Star Display */}
+        {/* Enhanced Main Star Display */}
         <motion.div
           className="max-w-3xl mx-auto mb-16"
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 1, duration: 0.8 }}
         >
-          <div className="bg-white/5 backdrop-blur-sm rounded-3xl p-12 border border-white/10 text-center">
-            {/* Star Visualization */}
-            <div className="relative mb-12 h-32 flex items-center justify-center">
+          <div className="frosted-glass-strong rounded-3xl p-12 border border-cosmic-particle-trace text-center cosmic-float-card">
+            {/* Enhanced Star Visualization */}
+            <div className="relative mb-12 h-40 flex items-center justify-center">
+              {/* Gravitational field effect */}
               <motion.div
                 className="absolute inset-0 rounded-full opacity-20"
+                style={{ 
+                  background: `radial-gradient(circle, ${dedication.star.visual_data.color} 0%, transparent 70%)`,
+                  filter: 'blur(60px)'
+                }}
+                animate={{ scale: [1, 1.3, 1] }}
+                transition={{ duration: 5, repeat: Infinity }}
+              />
+              
+              {/* Cherenkov radiation glow */}
+              <motion.div
+                className="absolute inset-0 rounded-full opacity-30"
                 style={{ 
                   backgroundColor: dedication.star.visual_data.color,
                   filter: 'blur(40px)'
@@ -158,61 +177,85 @@ export function SharedStar() {
                 transition={{ duration: 4, repeat: Infinity }}
               />
               
+              {/* Main star with enhanced effects */}
               <motion.div
                 className="relative rounded-full flex items-center justify-center shadow-2xl"
                 style={{ 
                   backgroundColor: dedication.star.visual_data.color,
-                  width: dedication.star.visual_data.size * 48,
-                  height: dedication.star.visual_data.size * 48,
-                  boxShadow: `0 0 ${dedication.star.visual_data.size * 30}px ${dedication.star.visual_data.color}60`
+                  width: dedication.star.visual_data.size * 64,
+                  height: dedication.star.visual_data.size * 64,
+                  boxShadow: `0 0 ${dedication.star.visual_data.size * 40}px ${dedication.star.visual_data.color}80, 0 0 ${dedication.star.visual_data.size * 80}px ${dedication.star.visual_data.color}40`
                 }}
                 animate={{ 
-                  opacity: [dedication.star.visual_data.brightness, dedication.star.visual_data.brightness * 1.3, dedication.star.visual_data.brightness]
+                  opacity: [dedication.star.visual_data.brightness, dedication.star.visual_data.brightness * 1.4, dedication.star.visual_data.brightness],
+                  scale: [1, 1.05, 1]
                 }}
                 transition={{ 
                   duration: 3, 
-                  repeat: Infinity 
+                  repeat: Infinity,
+                  ease: "easeInOut"
                 }}
               >
-                <StarIcon className="w-8 h-8 text-white/90" />
+                <StarIcon className="w-12 h-12 text-cosmic-observation" />
+                
+                {/* Enhanced particle emission */}
+                {[...Array(8)].map((_, i) => (
+                  <motion.div
+                    key={i}
+                    className="absolute w-2 h-2 rounded-full"
+                    style={{ backgroundColor: dedication.star.visual_data.color }}
+                    animate={{
+                      x: [0, (Math.random() - 0.5) * 120],
+                      y: [0, (Math.random() - 0.5) * 120],
+                      opacity: [0, 1, 0],
+                      scale: [0, 2, 0]
+                    }}
+                    transition={{
+                      duration: 4,
+                      delay: i * 0.3,
+                      repeat: Infinity,
+                      ease: "easeOut"
+                    }}
+                  />
+                ))}
               </motion.div>
             </div>
 
-            {/* Star Information */}
+            {/* Enhanced Star Information */}
             <div className="space-y-6 mb-12">
               <div>
-                <h2 className="text-3xl font-light text-white mb-3">
+                <h2 className="text-3xl font-light text-cosmic-observation mb-3">
                   {dedication.star.scientific_name}
                 </h2>
-                <p className="text-blue-100 text-lg italic font-light">
+                <p className="text-cosmic-light-echo text-lg italic font-light">
                   {dedication.star.poetic_description}
                 </p>
               </div>
 
-              <div className="flex items-center justify-center gap-3 text-blue-200 font-light">
+              <div className="flex items-center justify-center gap-3 text-cosmic-stellar-wind font-light">
                 <MapPin className="w-4 h-4" />
-                <span className="font-mono text-sm">{dedication.star.coordinates}</span>
+                <span className="font-mono text-sm tracking-wide">{dedication.star.coordinates}</span>
               </div>
             </div>
 
-            {/* Dedication Message */}
+            {/* Enhanced Dedication Message */}
             <motion.div
-              className="bg-white/5 backdrop-blur-sm rounded-2xl p-8 mb-8 border border-white/10"
+              className="frosted-glass rounded-2xl p-8 mb-8 border border-cosmic-particle-trace"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 1.5 }}
             >
               <div className="flex items-center justify-center gap-2 mb-4">
-                <Heart className="w-5 h-5 text-red-400" />
-                <span className="text-blue-200 font-light">Dedication Message</span>
+                <Heart className="w-5 h-5 text-red-400 cherenkov-glow" />
+                <span className="text-cosmic-stellar-wind font-light">Cosmic Dedication Message</span>
               </div>
-              <p className="text-white text-lg leading-relaxed font-light">
+              <p className="text-cosmic-observation text-lg leading-relaxed font-light">
                 "{dedication.message}"
               </p>
             </motion.div>
 
-            {/* Metadata */}
-            <div className="flex items-center justify-center gap-6 text-blue-300 text-sm mb-8 font-light">
+            {/* Enhanced Metadata */}
+            <div className="flex items-center justify-center gap-6 text-cosmic-stellar-wind text-sm mb-8 font-light">
               <div className="flex items-center gap-2">
                 <Calendar className="w-4 h-4" />
                 <span>
@@ -225,22 +268,22 @@ export function SharedStar() {
               </div>
             </div>
 
-            {/* Action Buttons */}
+            {/* Enhanced Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <motion.button
                 onClick={handleShare}
-                className="flex items-center justify-center gap-3 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-8 py-3 rounded-xl font-light transition-all"
-                whileHover={{ scale: 1.05 }}
+                className="flex items-center justify-center gap-3 bg-gradient-to-r from-cosmic-cherenkov-blue to-cosmic-plasma-glow hover:from-cosmic-plasma-glow hover:to-cosmic-stellar-wind text-cosmic-observation px-8 py-3 rounded-xl font-light transition-all cherenkov-glow"
+                whileHover={{ scale: 1.05, y: -2 }}
                 whileTap={{ scale: 0.95 }}
               >
                 <Share2 className="w-5 h-5" />
-                Share This Star
+                Share This Cosmic Beacon
               </motion.button>
               
               <motion.button
                 onClick={() => navigate('/')}
-                className="flex items-center justify-center gap-3 bg-white/10 hover:bg-white/20 text-white px-8 py-3 rounded-xl font-light transition-all border border-white/20"
-                whileHover={{ scale: 1.05 }}
+                className="flex items-center justify-center gap-3 frosted-glass hover:frosted-glass-strong text-cosmic-observation px-8 py-3 rounded-xl font-light transition-all border border-cosmic-particle-trace"
+                whileHover={{ scale: 1.05, y: -2 }}
                 whileTap={{ scale: 0.95 }}
               >
                 <Sparkles className="w-5 h-5" />
@@ -248,40 +291,40 @@ export function SharedStar() {
               </motion.button>
             </div>
 
-            {/* Share confirmation */}
+            {/* Enhanced share confirmation */}
             {showShareConfirm && (
               <motion.div
-                className="mt-4 bg-green-500/20 border border-green-400/30 rounded-lg p-3 text-green-300 text-sm font-light"
+                className="mt-4 frosted-glass border border-green-400/30 rounded-lg p-3 text-green-300 text-sm font-light"
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.9 }}
               >
-                Link copied to clipboard!
+                Cosmic coordinates copied to clipboard!
               </motion.div>
             )}
           </div>
         </motion.div>
 
-        {/* Call to Action */}
+        {/* Enhanced Call to Action */}
         <motion.div
           className="text-center"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 2 }}
         >
-          <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-8 max-w-2xl mx-auto border border-white/10">
-            <h3 className="text-2xl font-light text-white mb-4">
-              Create Your Own Star Dedication
+          <div className="frosted-glass-strong rounded-2xl p-8 max-w-2xl mx-auto border border-cosmic-particle-trace cosmic-float-card">
+            <h3 className="text-2xl font-light text-cosmic-observation mb-4">
+              Create Your Own Cosmic Dedication
             </h3>
-            <p className="text-blue-100 mb-6 font-light leading-relaxed">
-              Connect your emotions to the cosmos with a personalized star dedication that lasts forever.
+            <p className="text-cosmic-light-echo mb-6 font-light leading-relaxed">
+              Connect your emotions to the infinite cosmos with a personalized star dedication that resonates through eternity.
             </p>
             <button
               onClick={() => navigate('/')}
-              className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-8 py-3 rounded-xl font-light transition-all flex items-center gap-2 mx-auto"
+              className="bg-gradient-to-r from-cosmic-cherenkov-blue to-cosmic-plasma-glow hover:from-cosmic-plasma-glow hover:to-cosmic-stellar-wind text-cosmic-observation px-8 py-3 rounded-xl font-light transition-all flex items-center gap-2 mx-auto cherenkov-glow"
             >
               <ExternalLink className="w-5 h-5" />
-              Start Your Journey
+              Begin Your Cosmic Journey
             </button>
           </div>
         </motion.div>

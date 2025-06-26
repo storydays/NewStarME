@@ -17,8 +17,8 @@ export function StarSelection() {
 
   if (!emotion) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 to-indigo-900 flex items-center justify-center">
-        <p className="text-white text-xl">Emotion not found</p>
+      <div className="min-h-screen bg-gradient-to-br from-cosmic-dark-matter to-cosmic-quantum-field flex items-center justify-center">
+        <p className="text-cosmic-observation text-xl">Emotion not found</p>
       </div>
     );
   }
@@ -33,16 +33,16 @@ export function StarSelection() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 relative">
-        <StarField density={60} className="opacity-30" />
+      <div className="min-h-screen bg-gradient-to-br from-cosmic-dark-matter via-cosmic-deep-space to-cosmic-quantum-field relative">
+        <StarField density={80} className="opacity-30" />
         <div className="relative z-10 flex items-center justify-center min-h-screen">
           <motion.div
             className="text-center"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
           >
-            <div className="w-12 h-12 border-2 border-blue-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-white text-lg font-light">Finding your perfect stars...</p>
+            <div className="w-12 h-12 border-2 border-cosmic-cherenkov-blue border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-cosmic-observation text-lg font-light">Scanning the cosmic depths...</p>
           </motion.div>
         </div>
       </div>
@@ -51,14 +51,14 @@ export function StarSelection() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 to-indigo-900 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-cosmic-dark-matter to-cosmic-quantum-field flex items-center justify-center">
         <div className="text-center">
-          <p className="text-red-400 text-xl mb-4">Unable to load stars</p>
+          <p className="text-red-400 text-xl mb-4">Unable to access star catalog</p>
           <button 
             onClick={handleBack}
-            className="text-blue-400 hover:text-blue-300 transition-colors font-light"
+            className="text-cosmic-cherenkov-blue hover:text-cosmic-plasma-glow transition-colors font-light"
           >
-            ← Try again
+            ← Return to emotion selection
           </button>
         </div>
       </div>
@@ -66,11 +66,14 @@ export function StarSelection() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 relative">
-      <StarField density={80} color={emotion.color} className="opacity-30" />
+    <div className="min-h-screen bg-gradient-to-br from-cosmic-dark-matter via-cosmic-deep-space to-cosmic-quantum-field relative">
+      <StarField density={100} color={emotion.color} className="opacity-40" />
+      
+      {/* Gravitational lensing effect */}
+      <div className="absolute inset-0 bg-gravitational-lensing opacity-15 pointer-events-none" />
       
       <div className="relative z-10 container mx-auto px-6 py-12">
-        {/* Header */}
+        {/* Enhanced Header */}
         <motion.div
           className="mb-16"
           initial={{ opacity: 0, y: 30 }}
@@ -78,37 +81,49 @@ export function StarSelection() {
         >
           <button
             onClick={handleBack}
-            className="flex items-center gap-2 text-blue-200 hover:text-white transition-colors mb-12 group font-light"
+            className="flex items-center gap-2 text-cosmic-stellar-wind hover:text-cosmic-observation transition-colors mb-12 group font-light frosted-glass px-4 py-2 rounded-lg"
           >
             <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
-            Back to emotions
+            Return to cosmic emotions
           </button>
           
           <div className="text-center max-w-2xl mx-auto">
-            <div
-              className="inline-flex items-center gap-3 px-6 py-3 rounded-full mb-8 backdrop-blur-sm border"
+            <motion.div
+              className="inline-flex items-center gap-3 px-6 py-3 rounded-full mb-8 frosted-glass-strong border"
               style={{ 
-                backgroundColor: `${emotion.color}15`,
                 borderColor: `${emotion.color}40`
               }}
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: 0.3, type: "spring" }}
             >
-              <Heart className="w-5 h-5" style={{ color: emotion.color }} />
-              <span className="text-white font-light text-lg">{emotion.name}</span>
-            </div>
+              <Heart className="w-5 h-5 cherenkov-glow" style={{ color: emotion.color }} />
+              <span className="text-cosmic-observation font-light text-lg">{emotion.name}</span>
+            </motion.div>
             
-            <h1 className="text-4xl md:text-5xl font-light text-white mb-6">
-              Choose Your Star
-            </h1>
+            <motion.h1 
+              className="text-4xl md:text-5xl font-light text-cosmic-observation mb-6 cosmic-float"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+            >
+              Choose Your Celestial Beacon
+            </motion.h1>
             
-            <p className="text-xl text-blue-100 font-light leading-relaxed">
-              Each star has been carefully selected to reflect the beauty of {emotion.name.toLowerCase()}
-            </p>
+            <motion.p 
+              className="text-xl text-cosmic-light-echo font-light leading-relaxed particle-drift"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.7 }}
+            >
+              Each star has been carefully selected to resonate with the cosmic frequency of {emotion.name.toLowerCase()}
+            </motion.p>
           </div>
         </motion.div>
 
-        {/* Stars Grid */}
+        {/* Enhanced Stars Grid */}
         <motion.div
-          className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto"
+          className="cosmic-grid max-w-6xl mx-auto"
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
@@ -123,7 +138,7 @@ export function StarSelection() {
           ))}
         </motion.div>
 
-        {/* Empty State */}
+        {/* Enhanced Empty State */}
         {stars.length === 0 && (
           <motion.div
             className="text-center py-20"
@@ -131,7 +146,14 @@ export function StarSelection() {
             animate={{ opacity: 1 }}
             transition={{ delay: 0.3 }}
           >
-            <p className="text-blue-200 text-xl font-light">No stars available for {emotion.name}</p>
+            <div className="frosted-glass rounded-2xl p-12 max-w-md mx-auto">
+              <p className="text-cosmic-stellar-wind text-xl font-light mb-4">
+                No celestial bodies detected for {emotion.name}
+              </p>
+              <p className="text-cosmic-light-echo text-sm font-light">
+                The cosmic algorithms are still processing this emotional frequency
+              </p>
+            </div>
           </motion.div>
         )}
       </div>

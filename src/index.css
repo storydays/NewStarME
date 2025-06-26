@@ -2,10 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Inter Font Import */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+/* Inter Font Import with Variable Font Features */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
-/* Base Styles */
+/* Base Styles with Cosmic Theme */
 * {
   box-sizing: border-box;
 }
@@ -13,57 +13,185 @@
 html {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   scroll-behavior: smooth;
+  font-variation-settings: 'wght' 400, 'slnt' 0;
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
 }
 
 body {
   margin: 0;
   padding: 0;
-  background: #0f172a;
-  color: #f8fafc;
-  font-size: 1rem;
+  background: theme('colors.cosmic.void');
+  color: theme('colors.cosmic.observation');
+  font-size: 0.875rem; /* Cosmic-inspired body size */
   line-height: 1.5;
   font-weight: 300;
   overflow-x: hidden;
 }
 
-/* Typography */
+/* Cosmic Viewport Containment */
+.cosmic-viewport {
+  min-height: 100vh;
+  max-height: 100vh;
+  overflow: hidden;
+}
+
+/* Typography with Cosmic Scale */
 h1, h2, h3, h4, h5, h6 {
   font-weight: 300;
   letter-spacing: -0.025em;
+  line-height: 1.2;
 }
 
-/* Smooth animations */
+h1 {
+  font-size: 2.5rem; /* Cosmic type scale */
+  line-height: 1.1;
+}
+
+/* Physics-Based Animations */
+@keyframes cosmic-float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-5px); }
+}
+
+@keyframes orbital {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes gravitational-wave {
+  0%, 100% { transform: scale(1); opacity: 0.8; }
+  50% { transform: scale(1.05); opacity: 1; }
+}
+
+@keyframes particle-drift {
+  0%, 100% { transform: translateX(0px) translateY(0px); }
+  25% { transform: translateX(2px) translateY(-1px); }
+  50% { transform: translateX(-1px) translateY(-2px); }
+  75% { transform: translateX(-2px) translateY(1px); }
+}
+
+@keyframes quantum-fluctuation {
+  0%, 100% { opacity: 0.7; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.02); }
+}
+
+@keyframes supernova-burst {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.3); opacity: 0.8; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* Cosmic Utility Classes */
+.cosmic-float {
+  animation: cosmic-float 3s ease-in-out infinite;
+}
+
+.cosmic-float-card {
+  animation: cosmic-float 3s ease-in-out infinite;
+  backdrop-filter: blur(16px);
+  background: rgba(248, 250, 252, 0.05);
+  border: 1px solid rgba(248, 250, 252, 0.1);
+}
+
+.orbital-slow {
+  animation: orbital 20s linear infinite;
+}
+
+.orbital-medium {
+  animation: orbital 10s linear infinite;
+}
+
+.orbital-fast {
+  animation: orbital 5s linear infinite;
+}
+
+.gravitational-wave {
+  animation: gravitational-wave 4s ease-in-out infinite;
+}
+
+.particle-drift {
+  animation: particle-drift 8s ease-in-out infinite;
+}
+
+.quantum-fluctuation {
+  animation: quantum-fluctuation 2s ease-in-out infinite;
+}
+
+.supernova-burst {
+  animation: supernova-burst 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* Frosted Glass Morphism */
+.frosted-glass {
+  backdrop-filter: blur(16px);
+  background: rgba(248, 250, 252, 0.05);
+  border: 1px solid rgba(248, 250, 252, 0.1);
+}
+
+.frosted-glass-strong {
+  backdrop-filter: blur(24px);
+  background: rgba(248, 250, 252, 0.08);
+  border: 1px solid rgba(248, 250, 252, 0.15);
+}
+
+/* Cosmic Grid System */
+.cosmic-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+}
+
+/* Cherenkov Radiation Effects */
+.cherenkov-glow {
+  box-shadow: 0 0 20px theme('colors.cosmic.cherenkov-blue'), 
+              0 0 40px theme('colors.cosmic.plasma-glow'),
+              0 0 60px theme('colors.cosmic.stellar-wind');
+}
+
+.cherenkov-trail {
+  background: linear-gradient(90deg, 
+    theme('colors.cosmic.cherenkov-blue') 0%, 
+    theme('colors.cosmic.plasma-glow') 50%, 
+    transparent 100%);
+}
+
+/* Smooth transitions with cubic-bezier timing */
 * {
-  transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
+  transition: color 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94), 
+              background-color 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94), 
+              border-color 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+              transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+              opacity 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
-/* Focus styles */
+/* Focus styles with cosmic theme */
 button:focus,
 input:focus,
 textarea:focus {
-  outline: 2px solid #3b82f6;
+  outline: 2px solid theme('colors.cosmic.cherenkov-blue');
   outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.2);
 }
 
-/* Scrollbar styling */
+/* Cosmic scrollbar styling */
 ::-webkit-scrollbar {
   width: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(15, 23, 42, 0.1);
+  background: theme('colors.cosmic.dark-matter');
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(59, 130, 246, 0.3);
+  background: theme('colors.cosmic.particle-trace');
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(59, 130, 246, 0.5);
+  background: theme('colors.cosmic.energy-flux');
 }
 
-/* Accessibility */
+/* Accessibility with cosmic theme */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -74,14 +202,16 @@ textarea:focus {
   }
 }
 
-/* High contrast mode */
+/* High contrast mode with cosmic colors */
 @media (prefers-contrast: high) {
-  .bg-white\/5 {
-    background-color: rgba(255, 255, 255, 0.1) !important;
+  .frosted-glass {
+    background: rgba(248, 250, 252, 0.15) !important;
+    border-color: rgba(248, 250, 252, 0.3) !important;
   }
   
-  .border-white\/10 {
-    border-color: rgba(255, 255, 255, 0.3) !important;
+  .cosmic-float-card {
+    background: rgba(248, 250, 252, 0.15) !important;
+    border-color: rgba(248, 250, 252, 0.3) !important;
   }
 }
 
@@ -91,4 +221,17 @@ textarea:focus {
     background: white;
     color: black;
   }
+}
+
+/* Performance optimizations */
+.will-change-transform {
+  will-change: transform;
+}
+
+.will-change-opacity {
+  will-change: opacity;
+}
+
+.will-change-auto {
+  will-change: auto;
 }

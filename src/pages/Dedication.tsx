@@ -38,16 +38,16 @@ export function Dedication() {
 
   if (starLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 relative">
-        <StarField density={60} className="opacity-30" />
+      <div className="min-h-screen bg-gradient-to-br from-cosmic-dark-matter via-cosmic-deep-space to-cosmic-quantum-field relative">
+        <StarField density={80} className="opacity-30" />
         <div className="relative z-10 flex items-center justify-center min-h-screen">
           <motion.div
             className="text-center"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
           >
-            <div className="w-12 h-12 border-2 border-blue-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-white text-lg font-light">Preparing your dedication...</p>
+            <div className="w-12 h-12 border-2 border-cosmic-cherenkov-blue border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-cosmic-observation text-lg font-light">Preparing cosmic dedication interface...</p>
           </motion.div>
         </div>
       </div>
@@ -56,14 +56,14 @@ export function Dedication() {
 
   if (!star || !emotion) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 to-indigo-900 flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-red-400 text-xl mb-4 font-light">Star not found</p>
+      <div className="min-h-screen bg-gradient-to-br from-cosmic-dark-matter to-cosmic-quantum-field flex items-center justify-center">
+        <div className="text-center frosted-glass rounded-2xl p-8">
+          <p className="text-red-400 text-xl mb-4 font-light">Celestial body not found</p>
           <button 
             onClick={() => navigate('/')}
-            className="text-blue-400 hover:text-blue-300 transition-colors font-light"
+            className="text-cosmic-cherenkov-blue hover:text-cosmic-plasma-glow transition-colors font-light"
           >
-            ← Start over
+            ← Return to cosmic emotions
           </button>
         </div>
       </div>
@@ -71,11 +71,14 @@ export function Dedication() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 relative">
-      <StarField density={60} color={emotion.color} className="opacity-30" />
+    <div className="min-h-screen bg-gradient-to-br from-cosmic-dark-matter via-cosmic-deep-space to-cosmic-quantum-field relative">
+      <StarField density={80} color={emotion.color} className="opacity-30" />
+      
+      {/* Gravitational lensing effect */}
+      <div className="absolute inset-0 bg-gravitational-lensing opacity-15 pointer-events-none" />
       
       <div className="relative z-10 container mx-auto px-6 py-12">
-        {/* Header */}
+        {/* Enhanced Header */}
         <motion.div
           className="mb-16"
           initial={{ opacity: 0, y: 30 }}
@@ -83,28 +86,39 @@ export function Dedication() {
         >
           <button
             onClick={handleBack}
-            className="flex items-center gap-2 text-blue-200 hover:text-white transition-colors mb-12 group font-light"
+            className="flex items-center gap-2 text-cosmic-stellar-wind hover:text-cosmic-observation transition-colors mb-12 group font-light frosted-glass px-4 py-2 rounded-lg"
           >
             <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
-            Back to stars
+            Return to star catalog
           </button>
           
           <div className="text-center max-w-2xl mx-auto">
-            <h1 className="text-4xl md:text-5xl font-light text-white mb-6">
-              Create Your Dedication
-            </h1>
+            <motion.h1 
+              className="text-4xl md:text-5xl font-light text-cosmic-observation mb-6 cosmic-float"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.3, duration: 0.8 }}
+            >
+              Create Your Cosmic Dedication
+            </motion.h1>
             
-            <p className="text-xl text-blue-100 font-light leading-relaxed">
-              Write a message that will shine forever among the stars
-            </p>
+            <motion.p 
+              className="text-xl text-cosmic-light-echo font-light leading-relaxed particle-drift"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.5 }}
+            >
+              Inscribe a message that will resonate through the cosmic void for eternity
+            </motion.p>
           </div>
         </motion.div>
 
-        {/* Dedication Form */}
+        {/* Enhanced Dedication Form */}
         <motion.div
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
+          className="cosmic-float-card"
         >
           <DedicationForm
             star={star}
