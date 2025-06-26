@@ -128,7 +128,7 @@ export class StarService {
         const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
         
         try {
-          const catalog = await HygStarsCatalog.fromUrl('/hygdata_v41.csv.gz', true);
+          const catalog = await HygStarsCatalog.fromUrl('/hygdata_v41.csv.gz', false);
           clearTimeout(timeoutId);
           
           this.hygCatalog = catalog;
