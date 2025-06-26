@@ -44,6 +44,8 @@ export type Database = {
           visual_data: any;
           emotion_id: string;
           created_at: string;
+          source: string;
+          generated_at: string;
         };
         Insert: {
           id?: string;
@@ -53,6 +55,8 @@ export type Database = {
           visual_data?: any;
           emotion_id: string;
           created_at?: string;
+          source?: string;
+          generated_at?: string;
         };
         Update: {
           id?: string;
@@ -62,6 +66,8 @@ export type Database = {
           visual_data?: any;
           emotion_id?: string;
           created_at?: string;
+          source?: string;
+          generated_at?: string;
         };
       };
       dedications: {

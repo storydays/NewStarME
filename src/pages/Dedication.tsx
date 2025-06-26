@@ -3,6 +3,7 @@ import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft } from 'lucide-react';
 import { DedicationForm } from '../components/DedicationForm';
+import { StarField } from '../components/StarField';
 import { useStar } from '../hooks/useStars';
 import { useDedications } from '../hooks/useDedications';
 import { emotions } from '../data/emotions';
