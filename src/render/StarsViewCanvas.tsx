@@ -36,35 +36,6 @@ export interface StarsViewCanvasRef {
 }
 
 /**
- * Testing Spinning Cube Component
- * Simple cube that rotates to verify the 3D canvas is working
- */
-function TestingCube() {
-  const meshRef = useRef<THREE.Mesh>(null);
-
-  useFrame((state, delta) => {
-    if (meshRef.current) {
-      meshRef.current.rotation.x += delta * 0.5;
-      meshRef.current.rotation.y += delta * 0.7;
-    }
-  });
-
-  return (
-    <mesh ref={meshRef} position={[3, 3, 0]}>
-      <boxGeometry args={[1, 1, 1]} />
-      <meshStandardMaterial 
-        color="#2563EB" 
-        transparent 
-        opacity={0.8}
-        wireframe={false}
-        roughness={0.3}
-        metalness={0.7}
-      />
-    </mesh>
-  );
-}
-
-/**
  * StarInfoPanel Component
  * Displays information about the selected star as an overlay
  */
@@ -179,7 +150,7 @@ function CameraController({
 
 /**
  * Scene Content Component
- * Contains all 3D scene elements including the StarField and testing cube
+ * Contains all 3D scene elements including the StarField
  */
 function SceneContent({ 
   starsCatalog, 
@@ -224,9 +195,6 @@ function SceneContent({
         intensity={0.3} 
         color="#3B82F6"
       />
-      
-      {/* Testing spinning cube - positioned to the side */}
-      <TestingCube />
       
       {/* Main StarField component - renders all stars from catalog */}
       {starsCatalog && (
@@ -353,7 +321,7 @@ export const StarsViewCanvas = forwardRef<StarsViewCanvasRef, StarsViewCanvasPro
             powerPreference: "high-performance"
           }}
         >
-          {/* Main scene content with StarField integration and testing cube */}
+          {/* Main scene content with StarField integration */}
           <SceneContent
             starsCatalog={starsCatalog}
             controlSettings={controlSettings}
@@ -389,11 +357,6 @@ export const StarsViewCanvas = forwardRef<StarsViewCanvasRef, StarsViewCanvasPro
         {/* Controls hint */}
         <div className="absolute bottom-4 left-4 text-cosmic-stellar-wind text-xs font-light opacity-30 pointer-events-none">
           Click stars to select • Drag to orbit • Scroll to zoom
-        </div>
-        
-        {/* Testing indicator */}
-        <div className="absolute top-4 right-4 text-cosmic-cherenkov-blue text-xs font-light opacity-70 pointer-events-none">
-          Testing: Blue spinning cube visible
         </div>
       </div>
     );
