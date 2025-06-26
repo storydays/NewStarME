@@ -17,6 +17,9 @@ import * as THREE from 'three';
  * Confidence Rating: High - Complete implementation with CameraControls and Sun orbiting
  */
 
+// DEBUG VARIABLE: Set to false to disable star labelling (default: disabled)
+const DEBUG_ENABLE_STAR_LABELS = false;
+
 export interface StarsViewCanvasProps {
   starsCatalog: HygStarsCatalog | null;
   controlSettings: {
@@ -391,7 +394,7 @@ function SceneContent({
           maxStars={10000}
           starSize={controlSettings.starSize}
           glowMultiplier={controlSettings.glowMultiplier}
-          showLabels={controlSettings.showLabels}
+          showLabels={DEBUG_ENABLE_STAR_LABELS && controlSettings.showLabels}
           labelRefreshTick={labelRefreshTick}
         />
       )}
@@ -553,6 +556,10 @@ export const StarsViewCanvas = forwardRef<StarsViewCanvasRef, StarsViewCanvasPro
                 🌟 Orbiting around {orbitStatus.target}
               </div>
             )}
+            {/* Debug indicator for star labels */}
+            <div className="text-cosmic-stellar-wind opacity-50">
+              Labels: {DEBUG_ENABLE_STAR_LABELS ? 'ON' : 'OFF'}
+            </div>
           </div>
         )}
         
