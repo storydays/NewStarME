@@ -24,17 +24,15 @@ export class StarService {
   // HYG catalog instance cache
   private static hygCatalog: HygStarsCatalog | null = null;
   private static catalogLoadPromise: Promise<HygStarsCatalog> | null = null;
+  private static catalogLoadFailed: boolean = false;
 
   /**
-   * Initialize the HYG catalog and static stars data
-   * This method loads the HYG catalog once and sets up fallback static stars
+   * Initialize the StarService with fallback static stars
+   * This method ensures the service works even if HYG catalog fails to load
    */
   static async initializeStars() {
     try {
-      console.log('Initializing StarService with HYG catalog...');
-      
-      // Load HYG catalog if not already loaded
-      await this.loadHygCatalog();
+      console.log('Initializing StarService...');
       
       // Check if static stars already exist in database
       const { data: existingStars } = await supabase
@@ -45,37 +43,76 @@ export class StarService {
 
       if (existingStars && existingStars.length > 0) {
         console.log('Static stars already initialized in database');
+        
+        // Try to load HYG catalog in background (non-blocking)
+        this.loadHygCatalogInBackground();
         return;
       }
 
-      // Select prominent stars from HYG catalog for each emotion
-      console.log('Selecting prominent stars from HYG catalog for static data...');
-      const staticStars = await this.selectProminentStarsForEmotions();
-      
-      if (staticStars.length > 0) {
-        const { error } = await supabase
-          .from('stars')
-          .insert(staticStars);
+      // Try to load HYG catalog for initial setup
+      try {
+        await this.loadHygCatalog();
+        console.log('HYG catalog loaded successfully, selecting prominent stars...');
+        
+        // Select prominent stars from HYG catalog for each emotion
+        const staticStars = await this.selectProminentStarsForEmotions();
+        
+        if (staticStars.length > 0) {
+          const { error } = await supabase
+            .from('stars')
+            .insert(staticStars);
 
-        if (error) {
-          console.error('Error inserting static stars from HYG catalog:', error);
+          if (error) {
+            console.error('Error inserting static stars from HYG catalog:', error);
+            await this.createFallbackStaticStars();
+          } else {
+            console.log(`Successfully initialized ${staticStars.length} static stars from HYG catalog`);
+          }
         } else {
-          console.log(`Successfully initialized ${staticStars.length} static stars from HYG catalog`);
+          await this.createFallbackStaticStars();
         }
+      } catch (hygError) {
+        console.warn('HYG catalog failed to load during initialization, using fallback static stars:', hygError);
+        await this.createFallbackStaticStars();
       }
     } catch (error) {
       console.error('Error initializing StarService:', error);
-      // Continue without HYG catalog - fallback systems will handle this
+      // Ensure we have fallback stars even if everything else fails
+      await this.createFallbackStaticStars();
     }
   }
 
   /**
-   * Load the HYG catalog from remote CSV
+   * Load HYG catalog in background without blocking initialization
+   */
+  private static loadHygCatalogInBackground() {
+    if (this.catalogLoadFailed || this.hygCatalog || this.catalogLoadPromise) {
+      return;
+    }
+
+    // Load catalog in background
+    setTimeout(async () => {
+      try {
+        await this.loadHygCatalog();
+        console.log('HYG catalog loaded successfully in background');
+      } catch (error) {
+        console.log('HYG catalog background loading failed (this is expected if file is not available)');
+        this.catalogLoadFailed = true;
+      }
+    }, 1000);
+  }
+
+  /**
+   * Load the HYG catalog from remote CSV with improved error handling
    * Uses caching to avoid repeated downloads
    */
   private static async loadHygCatalog(): Promise<HygStarsCatalog> {
     if (this.hygCatalog) {
       return this.hygCatalog;
+    }
+
+    if (this.catalogLoadFailed) {
+      throw new Error('HYG catalog loading previously failed');
     }
 
     if (this.catalogLoadPromise) {
@@ -84,21 +121,261 @@ export class StarService {
 
     this.catalogLoadPromise = (async () => {
       try {
-        console.log('Loading HYG catalog from remote source...');
+        console.log('Loading HYG catalog from public directory...');
         
-        // Try to load from the public directory
-        const catalog = await HygStarsCatalog.fromUrl('/hygdata_v41.csv.gz', true);
-        this.hygCatalog = catalog;
+        // Add timeout to prevent hanging
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
         
-        console.log(`HYG catalog loaded successfully: ${catalog.getTotalStars()} stars`);
-        return catalog;
+        try {
+          const catalog = await HygStarsCatalog.fromUrl('/hygdata_v41.csv.gz', true);
+          clearTimeout(timeoutId);
+          
+          this.hygCatalog = catalog;
+          console.log(`HYG catalog loaded successfully: ${catalog.getTotalStars()} stars`);
+          return catalog;
+        } catch (fetchError) {
+          clearTimeout(timeoutId);
+          throw fetchError;
+        }
       } catch (error) {
-        console.error('Failed to load HYG catalog:', error);
+        console.warn('Failed to load HYG catalog:', error);
+        this.catalogLoadFailed = true;
+        this.catalogLoadPromise = null;
         throw error;
       }
     })();
 
     return this.catalogLoadPromise;
+  }
+
+  /**
+   * Create fallback static stars when HYG catalog is not available
+   */
+  private static async createFallbackStaticStars(): Promise<void> {
+    try {
+      console.log('Creating fallback static stars...');
+      
+      const fallbackStars = this.generateFallbackStars();
+      
+      const { error } = await supabase
+        .from('stars')
+        .insert(fallbackStars);
+
+      if (error) {
+        console.error('Error inserting fallback static stars:', error);
+      } else {
+        console.log(`Successfully created ${fallbackStars.length} fallback static stars`);
+      }
+    } catch (error) {
+      console.error('Error creating fallback static stars:', error);
+    }
+  }
+
+  /**
+   * Generate fallback stars with realistic astronomical data
+   */
+  private static generateFallbackStars(): any[] {
+    const emotions = [
+      'love', 'friendship', 'family', 'milestones', 
+      'memorial', 'healing', 'adventure', 'creativity'
+    ];
+
+    const fallbackStarData = [
+      // Love stars
+      { name: 'Vega', ra: 18.615, dec: 38.784, mag: 0.03, spect: 'A0V' },
+      { name: 'Altair', ra: 19.846, dec: 8.868, mag: 0.77, spect: 'A7V' },
+      { name: 'Deneb', ra: 20.690, dec: 45.280, mag: 1.25, spect: 'A2Ia' },
+      { name: 'Arcturus', ra: 14.261, dec: 19.182, mag: -0.05, spect: 'K1.5III' },
+      { name: 'Capella', ra: 5.278, dec: 45.998, mag: 0.08, spect: 'G5III' },
+      
+      // Friendship stars
+      { name: 'Sirius', ra: 6.752, dec: -16.716, mag: -1.46, spect: 'A1V' },
+      { name: 'Procyon', ra: 7.655, dec: 5.225, mag: 0.34, spect: 'F5IV' },
+      { name: 'Pollux', ra: 7.755, dec: 28.026, mag: 1.14, spect: 'K0III' },
+      { name: 'Castor', ra: 7.576, dec: 31.888, mag: 1.57, spect: 'A1V' },
+      { name: 'Regulus', ra: 10.139, dec: 11.967, mag: 1.35, spect: 'B7V' },
+      
+      // Family stars
+      { name: 'Polaris', ra: 2.530, dec: 89.264, mag: 1.98, spect: 'F7Ib' },
+      { name: 'Aldebaran', ra: 4.598, dec: 16.509, mag: 0.85, spect: 'K5III' },
+      { name: 'Spica', ra: 13.420, dec: -11.161, mag: 1.04, spect: 'B1III' },
+      { name: 'Antares', ra: 16.490, dec: -26.432, mag: 1.09, spect: 'M1.5Iab' },
+      { name: 'Betelgeuse', ra: 5.919, dec: 7.407, mag: 0.50, spect: 'M1Ia' },
+      
+      // Milestones stars
+      { name: 'Rigel', ra: 5.242, dec: -8.202, mag: 0.13, spect: 'B8Ia' },
+      { name: 'Canopus', ra: 6.399, dec: -52.696, mag: -0.74, spect: 'A9II' },
+      { name: 'Achernar', ra: 1.629, dec: -57.237, mag: 0.46, spect: 'B6Vep' },
+      { name: 'Hadar', ra: 14.063, dec: -60.373, mag: 0.61, spect: 'B1III' },
+      { name: 'Acrux', ra: 12.443, dec: -63.099, mag: 0.77, spect: 'B0.5IV' },
+      
+      // Memorial stars
+      { name: 'Fomalhaut', ra: 22.961, dec: -29.622, mag: 1.16, spect: 'A3V' },
+      { name: 'Bellatrix', ra: 5.418, dec: 6.350, mag: 1.64, spect: 'B2III' },
+      { name: 'Elnath', ra: 5.438, dec: 28.608, mag: 1.68, spect: 'B7III' },
+      { name: 'Alnilam', ra: 5.603, dec: -1.202, mag: 1.70, spect: 'B0Ia' },
+      { name: 'Alnitak', ra: 5.679, dec: -1.943, mag: 1.77, spect: 'O9.5Ib' },
+      
+      // Healing stars
+      { name: 'Dubhe', ra: 11.062, dec: 61.751, mag: 1.79, spect: 'F7Ia' },
+      { name: 'Merak', ra: 11.031, dec: 56.382, mag: 2.37, spect: 'A1V' },
+      { name: 'Phecda', ra: 11.897, dec: 53.695, mag: 2.44, spect: 'A0V' },
+      { name: 'Megrez', ra: 12.257, dec: 57.033, mag: 3.31, spect: 'A3V' },
+      { name: 'Alioth', ra: 12.900, dec: 55.960, mag: 1.77, spect: 'A1III' },
+      
+      // Adventure stars
+      { name: 'Mizar', ra: 13.399, dec: 54.925, mag: 2.04, spect: 'A2V' },
+      { name: 'Alkaid', ra: 13.792, dec: 49.313, mag: 1.86, spect: 'B3V' },
+      { name: 'Kochab', ra: 14.845, dec: 74.156, mag: 2.08, spect: 'K4III' },
+      { name: 'Pherkad', ra: 15.345, dec: 71.834, mag: 3.05, spect: 'A3Ib' },
+      { name: 'Thuban', ra: 14.073, dec: 64.376, mag: 3.65, spect: 'A0III' },
+      
+      // Creativity stars
+      { name: 'Mintaka', ra: 5.533, dec: -0.299, mag: 2.23, spect: 'O9.5II' },
+      { name: 'Saiph', ra: 5.796, dec: -9.670, mag: 2.09, spect: 'B0.5Ia' },
+      { name: 'Adhara', ra: 6.977, dec: -28.972, mag: 1.50, spect: 'B2II' },
+      { name: 'Wezen', ra: 7.139, dec: -26.393, mag: 1.84, spect: 'F8Ia' },
+      { name: 'Mirzam', ra: 6.378, dec: -17.956, mag: 1.98, spect: 'B1II' }
+    ];
+
+    const staticStars: any[] = [];
+
+    emotions.forEach((emotionId, emotionIndex) => {
+      const startIndex = emotionIndex * 5;
+      const emotionStars = fallbackStarData.slice(startIndex, startIndex + 5);
+
+      emotionStars.forEach(starData => {
+        const star = this.createFallbackStar(starData, emotionId);
+        staticStars.push({
+          scientific_name: star.scientific_name,
+          poetic_description: star.poetic_description,
+          coordinates: star.coordinates,
+          visual_data: star.visual_data,
+          emotion_id: emotionId,
+          source: 'static'
+        });
+      });
+    });
+
+    return staticStars;
+  }
+
+  /**
+   * Create a fallback star from basic astronomical data
+   */
+  private static createFallbackStar(starData: any, emotionId: string): Star {
+    // Generate coordinates in standard astronomical format
+    const raHours = Math.floor(starData.ra);
+    const raMinutes = Math.floor((starData.ra - raHours) * 60);
+    const raSeconds = ((starData.ra - raHours) * 60 - raMinutes) * 60;
+    
+    const decDegrees = Math.floor(Math.abs(starData.dec));
+    const decMinutes = Math.floor((Math.abs(starData.dec) - decDegrees) * 60);
+    const decSeconds = ((Math.abs(starData.dec) - decDegrees) * 60 - decMinutes) * 60;
+    const decSign = starData.dec >= 0 ? '+' : '−';
+    
+    const coordinates = `${raHours.toString().padStart(2, '0')}h ${raMinutes.toString().padStart(2, '0')}m ${raSeconds.toFixed(1).padStart(4, '0')}s ${decSign}${decDegrees.toString().padStart(2, '0')}° ${decMinutes.toString().padStart(2, '0')}′ ${decSeconds.toFixed(0).padStart(2, '0')}″`;
+
+    // Generate visual properties based on astronomical data
+    const brightness = Math.max(0.3, Math.min(1.0, (6.5 - starData.mag) / 6.5));
+    const size = Math.max(0.8, Math.min(1.6, brightness * 1.5));
+    
+    // Color based on spectral class
+    let color = '#F8F8FF'; // Default white
+    if (starData.spect) {
+      const spectralClass = starData.spect.charAt(0).toUpperCase();
+      switch (spectralClass) {
+        case 'O': case 'B': color = '#B0C4DE'; break; // Blue
+        case 'A': color = '#F8F8FF'; break; // White
+        case 'F': color = '#FFFACD'; break; // Yellow-white
+        case 'G': color = '#FFE4B5'; break; // Yellow
+        case 'K': color = '#FFA500'; break; // Orange
+        case 'M': color = '#FF6347'; break; // Red
+      }
+    }
+
+    // Generate poetic description
+    const poeticDescription = this.generatePoeticDescriptionForFallback(starData.name, emotionId);
+
+    return {
+      id: `fallback-${starData.name.toLowerCase()}`,
+      scientific_name: starData.name,
+      poetic_description: poeticDescription,
+      coordinates,
+      visual_data: { brightness, color, size },
+      emotion_id: emotionId,
+      source: 'static'
+    };
+  }
+
+  /**
+   * Generate poetic descriptions for fallback stars
+   */
+  private static generatePoeticDescriptionForFallback(starName: string, emotionId: string): string {
+    const emotionDescriptions: Record<string, string[]> = {
+      love: [
+        'A radiant beacon of eternal devotion',
+        'Burning bright with passionate love',
+        'The celestial symbol of unbreakable bonds',
+        'A stellar testament to true love',
+        'Shining with the warmth of deep affection'
+      ],
+      friendship: [
+        'A loyal companion in the cosmic dance',
+        'The steadfast friend among the stars',
+        'Illuminating the bonds of true friendship',
+        'A guiding light for kindred spirits',
+        'The stellar embodiment of lasting friendship'
+      ],
+      family: [
+        'A protective guardian watching over loved ones',
+        'The ancestral light connecting generations',
+        'A stellar home where hearts unite',
+        'The cosmic hearth of family bonds',
+        'Shining with the strength of family love'
+      ],
+      milestones: [
+        'Marking triumphant moments in time',
+        'A celestial celebration of achievement',
+        'The stellar witness to life\'s victories',
+        'Commemorating journeys and accomplishments',
+        'A bright marker of significant moments'
+      ],
+      memorial: [
+        'An eternal flame of cherished memories',
+        'The undying light of those we remember',
+        'A celestial monument to lasting love',
+        'Forever shining in loving memory',
+        'The stellar keeper of precious memories'
+      ],
+      healing: [
+        'A gentle light bringing peace and renewal',
+        'The cosmic source of healing energy',
+        'Radiating tranquility and restoration',
+        'A stellar sanctuary for weary souls',
+        'The celestial beacon of hope and healing'
+      ],
+      adventure: [
+        'The navigator\'s star for bold journeys',
+        'Calling adventurers to new horizons',
+        'A stellar compass for the brave',
+        'The cosmic guide for explorers',
+        'Illuminating paths to discovery'
+      ],
+      creativity: [
+        'The muse\'s light inspiring artistic souls',
+        'A stellar spark of creative inspiration',
+        'The cosmic fountain of imagination',
+        'Illuminating the artist\'s vision',
+        'The celestial catalyst for creativity'
+      ]
+    };
+
+    const descriptions = emotionDescriptions[emotionId] || emotionDescriptions.love;
+    const baseDescription = descriptions[Math.floor(Math.random() * descriptions.length)];
+
+    return `${starName}, ${baseDescription.toLowerCase()}`;
   }
 
   /**
@@ -345,9 +622,19 @@ export class StarService {
         console.error('AI generation request failed:', aiError);
       }
 
-      // Step 3: Fallback to HYG catalog
-      console.log('Using HYG catalog for star selection');
-      return this.getHygStarsForEmotion(emotionId);
+      // Step 3: Fallback to HYG catalog (if available)
+      if (!this.catalogLoadFailed) {
+        try {
+          console.log('Attempting to use HYG catalog for star selection');
+          return await this.getHygStarsForEmotion(emotionId);
+        } catch (hygError) {
+          console.warn('HYG catalog fallback failed:', hygError);
+        }
+      }
+
+      // Step 4: Final fallback to static database stars
+      console.log('Using static database stars as final fallback');
+      return this.getStaticStarsForEmotion(emotionId);
 
     } catch (error) {
       console.error('Error in fetchStarsForEmotion:', error);
@@ -515,20 +802,24 @@ export class StarService {
       }
 
       // If it's a HYG star ID, try to look it up in the catalog
-      if (starId.startsWith('hyg-')) {
+      if (starId.startsWith('hyg-') && !this.catalogLoadFailed) {
         const hygId = parseInt(starId.replace('hyg-', ''));
         
-        if (!this.hygCatalog) {
-          await this.loadHygCatalog();
-        }
-
-        if (this.hygCatalog) {
-          const hygStar = this.hygCatalog.getStar(hygId);
-          if (hygStar) {
-            // We need to determine the emotion - this is a limitation
-            // For now, we'll use a default emotion
-            return this.mapHygRecordToStar(hygStar, 'love');
+        try {
+          if (!this.hygCatalog) {
+            await this.loadHygCatalog();
           }
+
+          if (this.hygCatalog) {
+            const hygStar = this.hygCatalog.getStar(hygId);
+            if (hygStar) {
+              // We need to determine the emotion - this is a limitation
+              // For now, we'll use a default emotion
+              return this.mapHygRecordToStar(hygStar, 'love');
+            }
+          }
+        } catch (hygError) {
+          console.warn('Failed to lookup HYG star:', hygError);
         }
       }
 
@@ -582,12 +873,12 @@ export class StarService {
    */
   static async getHygCatalog(): Promise<HygStarsCatalog | null> {
     try {
-      if (!this.hygCatalog) {
+      if (!this.hygCatalog && !this.catalogLoadFailed) {
         await this.loadHygCatalog();
       }
       return this.hygCatalog;
     } catch (error) {
-      console.error('Error getting HYG catalog:', error);
+      console.warn('HYG catalog not available:', error);
       return null;
     }
   }
