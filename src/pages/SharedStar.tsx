@@ -10,7 +10,6 @@ import {
   ExternalLink,
   Sparkles
 } from 'lucide-react';
-import { StarViewCanvas } from '../components/StarViewCanvas';
 import { useDedications } from '../hooks/useDedications';
 import { DedicationWithStar } from '../types';
 
@@ -60,7 +59,6 @@ export function SharedStar() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-cosmic-dark-matter via-cosmic-deep-space to-cosmic-quantum-field relative">
-        <StarViewCanvas />
         <div className="relative z-10 flex items-center justify-center min-h-screen">
           <motion.div
             className="text-center"
@@ -82,7 +80,6 @@ export function SharedStar() {
   if (!dedication) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-cosmic-dark-matter to-cosmic-quantum-field flex items-center justify-center relative">
-        <StarViewCanvas />
         <div className="relative z-10 text-center">
           <motion.div
             className="frosted-glass-strong rounded-2xl p-12 max-w-md mx-auto"
@@ -107,8 +104,6 @@ export function SharedStar() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-cosmic-dark-matter via-cosmic-deep-space to-cosmic-quantum-field relative overflow-hidden">
-      <StarViewCanvas />
-
       {/* Gravitational lensing effect */}
       <div className="absolute inset-0 bg-gravitational-lensing opacity-20 pointer-events-none" />
 

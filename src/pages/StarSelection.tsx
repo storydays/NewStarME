@@ -3,7 +3,6 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Heart } from 'lucide-react';
 import { StarCard } from '../components/StarCard';
-import { StarViewCanvas } from '../components/StarViewCanvas';
 import { useStars } from '../hooks/useStars';
 import { emotions } from '../data/emotions';
 import { Star } from '../types';
@@ -34,7 +33,6 @@ export function StarSelection() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-cosmic-dark-matter via-cosmic-deep-space to-cosmic-quantum-field relative">
-        <StarViewCanvas />
         <div className="relative z-10 flex items-center justify-center min-h-screen">
           <motion.div
             className="text-center"
@@ -67,8 +65,6 @@ export function StarSelection() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-cosmic-dark-matter via-cosmic-deep-space to-cosmic-quantum-field relative">
-      <StarViewCanvas />
-      
       {/* Gravitational lensing effect */}
       <div className="absolute inset-0 bg-gravitational-lensing opacity-15 pointer-events-none" />
       

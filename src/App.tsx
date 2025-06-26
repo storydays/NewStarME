@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { StarViewCanvas } from './components/StarViewCanvas';
 import { Home } from './pages/Home';
 import { StarSelection } from './pages/StarSelection';
 import { Dedication } from './pages/Dedication';
@@ -10,6 +11,9 @@ function App() {
   return (
     <Router>
       <div className="App cosmic-viewport">
+        {/* Global 3D background canvas - positioned at top level */}
+        <StarViewCanvas />
+        
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
