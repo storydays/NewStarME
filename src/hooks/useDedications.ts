@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { Dedication, DedicationWithStar } from '../types';
 
@@ -6,7 +6,7 @@ export function useDedications() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const createDedication = async (dedication: Omit<Dedication, 'id' | 'created_at'>) => {
+  const createDedication = useCallback(async (dedication: Omit<Dedication, 'id' | 'created_at'>) => {
     try {
       setLoading(true);
       setError(null);
@@ -34,9 +34,9 @@ export function useDedications() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const getDedication = async (id: string): Promise<DedicationWithStar | null> => {
+  const getDedication = useCallback(async (id: string): Promise<DedicationWithStar | null> => {
     try {
       setLoading(true);
       setError(null);
@@ -94,7 +94,7 @@ export function useDedications() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   return {
     createDedication,
