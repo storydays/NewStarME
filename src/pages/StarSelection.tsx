@@ -3,7 +3,6 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Heart } from 'lucide-react';
 import { StarCard } from '../components/StarCard';
-import { StarField } from '../components/StarField';
 import { useStars } from '../hooks/useStars';
 import { emotions } from '../data/emotions';
 import { Star } from '../types';
@@ -66,7 +65,6 @@ export function StarSelection() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-cosmic-dark-matter via-cosmic-deep-space to-cosmic-quantum-field relative">
-      <StarField density={100} color={emotion.color} className="opacity-40" />
       
       {/* Gravitational lensing effect */}
       <div className="absolute inset-0 bg-gravitational-lensing opacity-15 pointer-events-none" />
