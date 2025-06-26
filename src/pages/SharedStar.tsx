@@ -10,7 +10,7 @@ import {
   ExternalLink,
   Sparkles
 } from 'lucide-react';
-import { StarField } from '../components/StarField';
+//import { StarField } from '../components/StarField';
 import { useDedications } from '../hooks/useDedications';
 import { DedicationWithStar } from '../types';
 
@@ -60,7 +60,6 @@ export function SharedStar() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-cosmic-dark-matter via-cosmic-deep-space to-cosmic-quantum-field relative">
-        <StarField density={120} className="opacity-40" />
         <div className="relative z-10 flex items-center justify-center min-h-screen">
           <motion.div
             className="text-center"
