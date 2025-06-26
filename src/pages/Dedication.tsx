@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { ArrowLeft } from 'lucide-react';
 import { DedicationForm } from '../components/DedicationForm';
 import { StarField } from '../components/StarField';
-import { useStars } from '../hooks/useStars';
+import { useStar } from '../hooks/useStars';
 import { useDedications } from '../hooks/useDedications';
 import { emotions } from '../data/emotions';
 
@@ -14,10 +14,9 @@ export function Dedication() {
   const navigate = useNavigate();
   
   const emotionId = searchParams.get('emotion');
-  const { stars, loading: starsLoading } = useStars();
+  const { star, loading: starLoading } = useStar(starId);
   const { createDedication, loading: dedicationLoading } = useDedications();
   
-  const star = stars.find(s => s.id === starId);
   const emotion = emotions.find(e => e.id === emotionId);
 
   const handleBack = () => {
@@ -37,7 +36,7 @@ export function Dedication() {
     }
   };
 
-  if (starsLoading) {
+  if (starLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 relative">
         <StarField density={60} className="opacity-30" />
