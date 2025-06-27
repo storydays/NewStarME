@@ -250,7 +250,7 @@ function HighlightedStar({
       </sprite>
 
       {/* Star sprite */}
-      <sprite scale={[starSize, starSize, starSize]}>
+      <sprite scale={[starSize*2, starSize*2, starSize*2]}>
         <spriteMaterial
           map={starTexture}
           transparent
