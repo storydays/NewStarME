@@ -100,7 +100,7 @@ export function EmotionWheel({ onEmotionSelect }: EmotionWheelProps) {
         ))}
       </motion.div>
 
-      {/* Enhanced emotion segments with reduced hover effects */}
+      {/* Enhanced emotion segments with minimal size changes */}
       <AnimatePresence>
         {emotions.map((emotion, index) => {
           const angle = (index * 360) / emotions.length;
@@ -132,8 +132,8 @@ export function EmotionWheel({ onEmotionSelect }: EmotionWheelProps) {
                 stiffness: 100
               }}
               whileHover={{ 
-                scale: 1.05, // Reduced from 1.15 to 1.05
-                y: -4, // Reduced from -8 to -4
+                scale: 1.02, // Further reduced from 1.05 to 1.02
+                y: -2, // Further reduced from -4 to -2
                 transition: { duration: 0.3, ease: "easeOut" }
               }}
               whileTap={{ scale: 0.95 }}
@@ -150,16 +150,16 @@ export function EmotionWheel({ onEmotionSelect }: EmotionWheelProps) {
                   ease: "linear" 
                 }}
               >
-                {/* Gravitational lensing glow effect - reduced intensity */}
+                {/* Gravitational lensing glow effect - keeping intensity but smaller scale */}
                 <motion.div 
-                  className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-20 transition-opacity duration-300 blur-xl"
+                  className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-40 transition-opacity duration-300 blur-xl"
                   style={{ 
                     backgroundColor: emotion.color,
-                    transform: 'scale(2.5)', // Reduced from scale(3)
+                    transform: 'scale(2)', // Further reduced from 2.5 to 2
                   }}
                   animate={isHovered ? {
-                    scale: [2.5, 3, 2.5], // Reduced from [3, 3.5, 3]
-                    opacity: [0.2, 0.3, 0.2] // Reduced from [0.4, 0.6, 0.4]
+                    scale: [2, 2.2, 2], // Further reduced from [2.5, 3, 2.5] to [2, 2.2, 2]
+                    opacity: [0.4, 0.6, 0.4] // Keeping original intensity
                   } : {}}
                   transition={{ duration: 2, repeat: Infinity }}
                 />
@@ -175,20 +175,20 @@ export function EmotionWheel({ onEmotionSelect }: EmotionWheelProps) {
                   />
                 )}
                 
-                {/* Main emotion circle with reduced hover effects */}
+                {/* Main emotion circle with minimal size changes */}
                 <motion.div
                   className="relative w-20 h-20 rounded-full flex items-center justify-center transition-all duration-300 frosted-glass border-2"
                   style={{
                     borderColor: emotion.color,
                     boxShadow: isHovered 
-                      ? `0 0 15px ${emotion.color}40, 0 0 30px ${emotion.color}20` // Reduced from 30px/60px to 15px/30px
+                      ? `0 0 30px ${emotion.color}60, 0 0 60px ${emotion.color}30` // Keeping original intensity
                       : `0 0 15px ${emotion.color}30`
                   }}
                   animate={isSelected ? {
                     scale: [1, 1.5, 1],
                     rotate: [0, 180, 360],
                   } : isHovered ? {
-                    backgroundColor: `${emotion.color}15`, // Reduced opacity from 20 to 15
+                    backgroundColor: `${emotion.color}20`, // Keeping original intensity
                   } : {}}
                   transition={{ 
                     duration: isSelected ? 0.8 : 0.3,
@@ -198,13 +198,13 @@ export function EmotionWheel({ onEmotionSelect }: EmotionWheelProps) {
                   <IconComponent 
                     className="w-8 h-8 text-cosmic-observation drop-shadow-lg transition-all duration-300" 
                     style={{ 
-                      color: isHovered ? `${emotion.color}CC` : '#F8FAFC', // Added slight transparency when hovered
-                      filter: isHovered ? `drop-shadow(0 0 6px ${emotion.color})` : 'none' // Reduced from 8px to 6px
+                      color: isHovered ? emotion.color : '#F8FAFC', // Keeping original intensity
+                      filter: isHovered ? `drop-shadow(0 0 8px ${emotion.color})` : 'none' // Keeping original intensity
                     }}
                   />
                   
-                  {/* Quantum fluctuation particles - reduced count */}
-                  {isHovered && [...Array(3)].map((_, i) => ( // Reduced from 4 to 3 particles
+                  {/* Quantum fluctuation particles - smaller movement */}
+                  {isHovered && [...Array(3)].map((_, i) => (
                     <motion.div
                       key={i}
                       className="absolute w-1 h-1 rounded-full"
@@ -216,10 +216,10 @@ export function EmotionWheel({ onEmotionSelect }: EmotionWheelProps) {
                         scale: 0
                       }}
                       animate={{
-                        x: (Math.random() - 0.5) * 40, // Reduced from 60 to 40
-                        y: (Math.random() - 0.5) * 40, // Reduced from 60 to 40
-                        opacity: [0, 0.8, 0], // Reduced max opacity from 1 to 0.8
-                        scale: [0, 1.2, 0] // Reduced from 1.5 to 1.2
+                        x: (Math.random() - 0.5) * 30, // Further reduced from 40 to 30
+                        y: (Math.random() - 0.5) * 30, // Further reduced from 40 to 30
+                        opacity: [0, 1, 0], // Keeping original intensity
+                        scale: [0, 1.5, 0] // Keeping original intensity
                       }}
                       transition={{
                         duration: 2,
