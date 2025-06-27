@@ -18,9 +18,9 @@ export function Home() {
       {/* Main content with physics-based layout - FIXED: Changed to fit screen */}
       <div className="relative z-10 flex flex-col items-center justify-between h-full px-6 py-8">
         
-        {/* Header with cosmic typography - REDUCED spacing */}
+        {/* Header with cosmic typography - REDUCED spacing and removed duplicate text */}
         <motion.div 
-          className="text-center mb-8 max-w-2xl"
+          className="text-center mb-6 max-w-2xl"
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: "easeOut" }}
@@ -32,26 +32,18 @@ export function Home() {
             StarMe
           </motion.h1>
           <motion.p 
-            className="text-lg md:text-xl text-cosmic-light-echo font-light leading-relaxed mb-2"
+            className="text-lg md:text-xl text-cosmic-light-echo font-light leading-relaxed"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.3, duration: 0.8 }}
           >
             Dedicate a star to someone special
           </motion.p>
-          <motion.p 
-            className="text-base text-cosmic-stellar-wind font-light particle-drift"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.5, duration: 0.8 }}
-          >
-            Choose the emotion that connects you to the cosmos
-          </motion.p>
         </motion.div>
 
-        {/* Enhanced Emotion Wheel - Central Focus - REDUCED container size */}
+        {/* Enhanced Emotion Wheel - Central Focus - OFFSET HIGHER with reduced margin */}
         <motion.div
-          className="mb-8 relative flex-shrink-0"
+          className="mb-4 relative flex-shrink-0"
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.4, duration: 0.8, ease: "backOut" }}
@@ -64,7 +56,7 @@ export function Home() {
           </div>
         </motion.div>
 
-        {/* Enhanced explanation with frosted glass - REDUCED padding */}
+        {/* Enhanced explanation with frosted glass - SMALLER text size */}
         <motion.div
           className="text-center max-w-lg"
           initial={{ opacity: 0 }}
@@ -80,7 +72,7 @@ export function Home() {
               Every star tells a story. Every dedication creates a lasting memory.
             </motion.p>
             <motion.p 
-              className="text-cosmic-stellar-wind text-sm font-light quantum-fluctuation"
+              className="text-cosmic-stellar-wind text-xs font-light quantum-fluctuation"
             >
               Select an emotion above to begin your cosmic journey
             </motion.p>
