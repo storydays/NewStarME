@@ -105,7 +105,7 @@ export function Star({
       {/* Enhanced invisible clickable mesh - larger for highlighted stars */}
       <mesh onClick={handleClick} visible={false}>
         <planeGeometry args={[clickAreaSize, clickAreaSize]} />
-        <meshBasicMaterial transparent opacity={0} />
+        <meshBasicMaterial transparent visible={false} />
       </mesh>
       
       {/* Enhanced glow sprite with emotion-based coloring */}
