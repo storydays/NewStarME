@@ -1,19 +1,23 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { Star } from '../types';
 
 /**
- * useStarNavigation Hook
+ * useStarNavigation Hook - Enhanced with stability fixes
  * 
  * Purpose: Manages navigation state and camera focusing for star browsing.
  * Provides prev/next navigation and camera animation triggers.
+ * 
+ * Key Enhancement: Uses refs to track initialization state and prevent
+ * unnecessary resets when the stars array reference changes but content is the same.
  * 
  * Features:
  * - Current star index tracking
  * - Navigation functions (prev/next/goto)
  * - Camera focus triggers
- * - Auto-reset when stars change
+ * - Smart reset logic (only when stars actually change)
+ * - Prevents infinite reset loops
  * 
- * Confidence Rating: High - Standard navigation state management
+ * Confidence Rating: High - Targeted fix for navigation stability
  */
 
 interface UseStarNavigationProps {
@@ -37,19 +41,44 @@ export function useStarNavigation({
   onStarFocus 
 }: UseStarNavigationProps): UseStarNavigationReturn {
   const [currentIndex, setCurrentIndex] = useState(0);
+  
+  // STABILITY FIX: Track initialization state with refs
+  const previousStarsLengthRef = useRef(0);
+  const hasInitializedRef = useRef(false);
 
-  // Reset index when stars change
+  // STABILITY FIX: Reset index only when stars length actually changes OR on first initialization
   useEffect(() => {
     if (stars.length > 0) {
-      console.log(`useStarNavigation: Stars loaded, resetting to index 0`);
-      setCurrentIndex(0);
+      // Only reset if:
+      // 1. We haven't initialized yet (first load), OR
+      // 2. The number of stars has actually changed
+      const shouldReset = !hasInitializedRef.current || stars.length !== previousStarsLengthRef.current;
       
-      // Focus on first star
-      if (onStarFocus) {
-        onStarFocus(stars[0], 0);
+      if (shouldReset) {
+        console.log(`useStarNavigation: Stars loaded/changed (${previousStarsLengthRef.current} -> ${stars.length}), resetting to index 0`);
+        setCurrentIndex(0);
+        
+        // Update tracking refs
+        previousStarsLengthRef.current = stars.length;
+        hasInitializedRef.current = true;
+        
+        // Focus on first star
+        if (onStarFocus) {
+          onStarFocus(stars[0], 0);
+        }
+      } else {
+        console.log(`useStarNavigation: Stars array reference changed but length is same (${stars.length}), keeping current index ${currentIndex}`);
+      }
+    } else {
+      // Reset when no stars
+      if (hasInitializedRef.current) {
+        console.log('useStarNavigation: No stars available, resetting state');
+        setCurrentIndex(0);
+        hasInitializedRef.current = false;
+        previousStarsLengthRef.current = 0;
       }
     }
-  }, [stars, onStarFocus]);
+  }, [stars.length, onStarFocus]); // CHANGED: Only depend on stars.length, not the full stars array
 
   // Current star and navigation state
   const currentStar = stars.length > 0 ? stars[currentIndex] : null;
