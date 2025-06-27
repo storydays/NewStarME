@@ -260,6 +260,7 @@ function HighlightedStar({
           opacity={colors.baseCoreOpacity}
           blending={THREE.AdditiveBlending}
           depthWrite={false}
+          visible={false}
         />
       </mesh>
 
