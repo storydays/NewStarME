@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Heart, Eye, MousePointer } from 'lucide-react';
+import { ArrowLeft, Heart } from 'lucide-react';
 import { useStars } from '../hooks/useStars';
 import { useSuggestedStars } from '../context/SuggestedStarsContext';
 import { emotions } from '../data/emotions';
@@ -115,47 +115,13 @@ export function StarSelection() {
             </motion.h1>
             
             <motion.p 
-              className="text-xl text-cosmic-light-echo font-light leading-relaxed particle-drift mb-8"
+              className="text-xl text-cosmic-light-echo font-light leading-relaxed particle-drift"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.7 }}
             >
               {stars.length} stars have been carefully selected to resonate with the cosmic frequency of {emotion.name.toLowerCase()}
             </motion.p>
-
-            {/* 3D Interaction Guide */}
-            <motion.div
-              className="frosted-glass-strong rounded-2xl p-8 border border-cosmic-particle-trace max-w-lg mx-auto"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.9 }}
-            >
-              <div className="flex items-center justify-center gap-3 mb-6">
-                <Eye className="w-6 h-6 text-cosmic-cherenkov-blue" />
-                <h3 className="text-lg font-light text-cosmic-observation">3D Star Selection</h3>
-              </div>
-              
-              <div className="space-y-4 text-sm text-cosmic-light-echo font-light">
-                <div className="flex items-center gap-3">
-                  <div className="w-3 h-3 rounded-full bg-cosmic-cherenkov-blue animate-pulse"></div>
-                  <span>Highlighted stars are glowing in cyan blue</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <MousePointer className="w-4 h-4 text-cosmic-stellar-wind" />
-                  <span>Click any highlighted star to select it</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-3 h-3 rounded-full bg-yellow-400"></div>
-                  <span>Selected stars will glow in golden yellow</span>
-                </div>
-              </div>
-
-              <div className="mt-6 pt-4 border-t border-cosmic-particle-trace">
-                <p className="text-xs text-cosmic-stellar-wind">
-                  Use mouse to orbit • Scroll to zoom • Click stars to proceed to dedication
-                </p>
-              </div>
-            </motion.div>
           </div>
         </motion.div>
 
