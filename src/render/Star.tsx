@@ -69,7 +69,7 @@ export function Star({
       // Selected: Yellow core with enhanced yellow glow
       return {
         coreColor: new THREE.Color(1, 1, 0), // Yellow
-        glowColor: new Color('#dbe6ff').multiplyScalar(glowMultiplier), // Yellow-ish glow
+        glowColor: new THREE.Color('#dbe6ff').multiplyScalar(glowMultiplier), // Yellow-ish glow
         glowOpacity: 0.8 * glowMultiplier,
         coreOpacity: opacity
       };
