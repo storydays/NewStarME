@@ -16,7 +16,7 @@ export function StarSelection() {
 
   if (!emotion) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-cosmic-dark-matter to-cosmic-quantum-field flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <p className="text-cosmic-observation text-xl">Emotion not found</p>
       </div>
     );
@@ -32,7 +32,7 @@ export function StarSelection() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-cosmic-dark-matter via-cosmic-deep-space to-cosmic-quantum-field relative">
+      <div className="min-h-screen relative">
         <div className="relative z-10 flex items-center justify-center min-h-screen">
           <motion.div
             className="text-center"
@@ -49,7 +49,7 @@ export function StarSelection() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-cosmic-dark-matter to-cosmic-quantum-field flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <p className="text-red-400 text-xl mb-4">Unable to access star catalog</p>
           <button 
@@ -64,9 +64,7 @@ export function StarSelection() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-cosmic-dark-matter via-cosmic-deep-space to-cosmic-quantum-field relative">
-      {/* Removed gravitational lensing effect */}
-      
+    <div className="min-h-screen relative">
       <div className="relative z-10 container mx-auto px-6 py-12">
         {/* Enhanced Header */}
         <motion.div
