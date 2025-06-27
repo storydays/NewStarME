@@ -97,7 +97,7 @@ export function Star({
   const colors = getStarColors();
 
   // Enhanced click detection area for highlighted stars
-  const clickAreaSize = starSize * 3;
+  const clickAreaSize = starSize;
 
   return (
     <Billboard position={position}>
