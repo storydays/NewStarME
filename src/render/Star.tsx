@@ -232,7 +232,7 @@ function HighlightedStar({
       {/* Enhanced invisible clickable mesh - larger for highlighted stars */}
       <mesh onClick={handleClick} visible={false}>
         <planeGeometry args={[enhancedStarSize, enhancedStarSize]} />
-        <meshBasicMaterial transparent opacity={0} />
+        <meshBasicMaterial transparent opacity={0} visible={false} />
       </mesh>
 
       {/* Enhanced glow sprite with fixed opacity of 1.0 and pulsing color */}
