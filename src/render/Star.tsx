@@ -260,6 +260,7 @@ function HighlightedStar({
           opacity={colors.baseCoreOpacity}
           blending={THREE.AdditiveBlending}
           depthWrite={false}
+          alphaTest={0.01}
         />
       </mesh>
     </Billboard>
