@@ -260,31 +260,8 @@ function HighlightedStar({
           opacity={colors.baseCoreOpacity}
           blending={THREE.AdditiveBlending}
           depthWrite={false}
-          visible={false}
         />
       </mesh>
-
-      {/* Particle emission effect for highlighted stars */}
-      {[...Array(6)].map((_, i) => (
-        <sprite
-          key={i}
-          position={[
-            (Math.random() - 0.5) * enhancedStarSize * 0.5,
-            (Math.random() - 0.5) * enhancedStarSize * 0.5,
-            (Math.random() - 0.5) * enhancedStarSize * 0.1
-          ]}
-          scale={[enhancedStarSize * 0.1, enhancedStarSize * 0.1, enhancedStarSize * 0.1]}
-        >
-          <spriteMaterial
-            map={starTexture}
-            transparent
-            opacity={0.6}
-            color={colors.coreColor}
-            blending={THREE.AdditiveBlending}
-            depthWrite={false}
-          />
-        </sprite>
-      ))}
     </Billboard>
   );
 }
