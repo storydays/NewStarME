@@ -107,20 +107,6 @@ export function Star({
         <planeGeometry args={[clickAreaSize, clickAreaSize]} />
         <meshBasicMaterial transparent opacity={0} />
       </mesh>
-      
-      {/* Enhanced glow sprite with emotion-based coloring */}
-      <mesh onClick={handleClick}>
-        <planeGeometry args={[starSize * 2.5, starSize * 2.5]} />
-        <meshBasicMaterial
-          map={glowTexture}
-          color={colors.glowColor}
-          transparent
-          opacity={1.0}
-          blending={THREE.AdditiveBlending}
-          alphaTest={0.01}
-          depthWrite={false}
-        />
-      </mesh>
 
       {/* Glow sprite */}
       <sprite scale={[starSize * 2.5, starSize * 2.5, starSize * 2.5]}>
