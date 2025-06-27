@@ -103,10 +103,10 @@ export function Star({
   return (
     <Billboard position={position}>
       {/* Enhanced invisible clickable mesh - larger for highlighted stars */}
-      {/*<mesh onClick={handleClick} visible={false}>
+      <mesh onClick={handleClick} visible={false}>
         <planeGeometry args={[clickAreaSize, clickAreaSize]} />
-        <meshBasicMaterial transparent visible={false} />
-      </mesh>*/}
+        <meshBasicMaterial transparent opacity={0} />
+      </mesh>
       
       {/* Enhanced glow sprite with emotion-based coloring */}
       <mesh onClick={handleClick}>
@@ -118,9 +118,21 @@ export function Star({
           opacity={1.0}
           blending={THREE.AdditiveBlending}
           depthWrite={false}
-          visible={false}
         />
       </mesh>
+
+      {/* Glow sprite */}
+      <sprite scale={[starSize * 2.5, starSize * 2.5, starSize * 2.5]}>
+        <spriteMaterial
+          map={glowTexture}
+          transparent
+          depthWrite={false}
+          opacity={1.0}
+          color={new Color('#dbe6ff').multiplyScalar(glowMultiplier)}
+          alphaTest={0.01}
+          blending={AdditiveBlending}
+        />
+      </sprite>
       
       {/* Enhanced star sprite with emotion-based coloring */}
       <mesh onClick={handleClick}>
