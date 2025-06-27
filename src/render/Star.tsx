@@ -14,6 +14,8 @@ import * as THREE from 'three';
  * - Specialized components for different visual states
  * - Enhanced pulsing glow effect for highlighted stars
  * - Emotion-based color tinting
+ * - Fixed glow opacity at 1.0 for all stars
+ * - GlowMultiplier: 2x for normal stars, 4x for highlighted stars
  * 
  * Confidence Rating: High - Clean separation of concerns with enhanced visual effects
  */
@@ -42,7 +44,7 @@ interface HighlightedStarProps extends BaseStarProps {
  * RegularStar Component - Renders standard stars (non-highlighted)
  * 
  * Purpose: Handles rendering of regular stars with standard visual properties.
- * Provides basic glow effects and standard color schemes.
+ * Provides basic glow effects with 2x glowMultiplier and fixed opacity of 1.0.
  */
 function RegularStar({
   position,
@@ -70,26 +72,29 @@ function RegularStar({
     onClick(event);
   }, [onClick]);
 
+  // Apply 2x glowMultiplier for normal stars
+  const normalGlowMultiplier = glowMultiplier * 2.0;
+
   // Determine colors based on selection state
   const getStarColors = useCallback(() => {
     if (isSelected) {
       // Selected: Yellow core with enhanced yellow glow
       return {
         coreColor: new THREE.Color(1, 1, 0), // Yellow
-        glowColor: new THREE.Color('#dbe6ff').multiplyScalar(glowMultiplier),
-        glowOpacity: 0.8 * glowMultiplier,
+        glowColor: new THREE.Color('#dbe6ff').multiplyScalar(normalGlowMultiplier),
+        glowOpacity: 1.0, // Fixed at 1.0
         coreOpacity: opacity
       };
     } else {
       // Normal: White core with light blue glow
       return {
         coreColor: new THREE.Color(1, 1, 1), // White
-        glowColor: new THREE.Color('#dbe6ff').multiplyScalar(glowMultiplier),
-        glowOpacity: 0.4 * glowMultiplier,
+        glowColor: new THREE.Color('#dbe6ff').multiplyScalar(normalGlowMultiplier),
+        glowOpacity: 1.0, // Fixed at 1.0
         coreOpacity: opacity
       };
     }
-  }, [isSelected, opacity, glowMultiplier]);
+  }, [isSelected, opacity, normalGlowMultiplier]);
 
   const colors = getStarColors();
 
@@ -101,13 +106,13 @@ function RegularStar({
         <meshBasicMaterial transparent opacity={0} />
       </mesh>
 
-      {/* Glow sprite */}
+      {/* Glow sprite with fixed opacity of 1.0 */}
       <sprite scale={[starSize * 2.5, starSize * 2.5, starSize * 2.5]}>
         <spriteMaterial
           map={glowTexture}
           transparent
           depthWrite={false}
-          opacity={colors.glowOpacity}
+          opacity={1.0}
           color={colors.glowColor}
           alphaTest={0.01}
           blending={THREE.AdditiveBlending}
@@ -134,11 +139,12 @@ function RegularStar({
  * HighlightedStar Component - Renders enhanced highlighted stars with pulsing glow
  * 
  * Purpose: Specialized component for highlighted stars with enhanced visual effects.
- * Features emotion-based coloring, increased size, and animated pulsing glow.
+ * Features emotion-based coloring, increased size, 4x glowMultiplier, and animated pulsing glow.
  * 
  * Features:
  * - 400% size increase for enhanced visibility
- * - 2x glow intensity with pulsing animation
+ * - 4x glow intensity with pulsing animation
+ * - Fixed glow opacity at 1.0 with pulsing color intensity
  * - Emotion-based color tinting
  * - Particle emission effects
  * - Smooth pulsing glow using useFrame animation
@@ -176,7 +182,7 @@ function HighlightedStar({
 
   // Enhanced size and glow for highlighted stars
   const enhancedStarSize = starSize * 4.0; // 400% size increase
-  const enhancedGlowMultiplier = glowMultiplier * 2.0; // 2x glow intensity
+  const enhancedGlowMultiplier = glowMultiplier * 4.0; // 4x glow intensity for highlighted stars
 
   // Determine colors with emotion-based tinting
   const getStarColors = useCallback(() => {
@@ -185,7 +191,6 @@ function HighlightedStar({
       return {
         coreColor: new THREE.Color(1, 1, 0), // Yellow
         glowColor: new THREE.Color('#dbe6ff').multiplyScalar(enhancedGlowMultiplier),
-        baseGlowOpacity: 0.8 * enhancedGlowMultiplier,
         baseCoreOpacity: opacity
       };
     } else {
@@ -195,7 +200,6 @@ function HighlightedStar({
       return {
         coreColor: emotionColorObj, // Emotion-based color
         glowColor: emotionColorObj.clone().multiplyScalar(enhancedGlowMultiplier),
-        baseGlowOpacity: 0.9 * enhancedGlowMultiplier,
         baseCoreOpacity: Math.max(opacity, 0.9) // Ensure highlighted stars are very visible
       };
     }
@@ -204,25 +208,22 @@ function HighlightedStar({
   const colors = getStarColors();
 
   // Pulsing glow animation using useFrame
+  // Note: Glow opacity stays at 1.0, but we pulse the color intensity instead
   useFrame((state) => {
     if (glowMaterialRef.current && coreMaterialRef.current) {
       // Create smooth pulsing effect using sine wave
       const time = state.clock.elapsedTime;
       const pulseSpeed = 2.0; // Pulse frequency
-      const pulseIntensity = 0.3; // How much the opacity varies (0.3 = 30% variation)
+      const pulseIntensity = 0.3; // How much the color intensity varies
       
-      // Calculate pulsing multiplier (oscillates between 0.7 and 1.3)
+      // Calculate pulsing multiplier for color intensity (oscillates between 0.7 and 1.3)
       const pulseMultiplier = 1.0 + Math.sin(time * pulseSpeed) * pulseIntensity;
       
-      // Apply pulsing to glow opacity
-      glowMaterialRef.current.opacity = colors.baseGlowOpacity * pulseMultiplier;
+      // Apply pulsing to glow color intensity (opacity stays at 1.0)
+      glowMaterialRef.current.color = colors.glowColor.clone().multiplyScalar(pulseMultiplier);
       
       // Subtle pulsing on core as well (less intense)
       coreMaterialRef.current.opacity = colors.baseCoreOpacity * (1.0 + Math.sin(time * pulseSpeed) * 0.1);
-      
-      // Optional: Pulse the glow color intensity as well
-      const colorIntensity = 1.0 + Math.sin(time * pulseSpeed * 0.5) * 0.2;
-      glowMaterialRef.current.color = colors.glowColor.clone().multiplyScalar(colorIntensity);
     }
   });
 
@@ -234,14 +235,14 @@ function HighlightedStar({
         <meshBasicMaterial transparent opacity={0} />
       </mesh>
 
-      {/* Enhanced glow sprite with pulsing animation */}
+      {/* Enhanced glow sprite with fixed opacity of 1.0 and pulsing color */}
       <sprite scale={[enhancedStarSize * 2.5, enhancedStarSize * 2.5, enhancedStarSize * 2.5]}>
         <spriteMaterial
           ref={glowMaterialRef}
           map={glowTexture}
           transparent
           depthWrite={false}
-          opacity={colors.baseGlowOpacity}
+          opacity={1.0}
           color={colors.glowColor}
           alphaTest={0.01}
           blending={THREE.AdditiveBlending}
