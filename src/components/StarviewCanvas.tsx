@@ -1,11 +1,10 @@
-import React, { useRef, useMemo, useEffect, useState } from 'react';
+import React, { useMemo, useEffect, useState } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { Mesh } from 'three';
 import { HygStarsCatalog } from '../data/StarsCatalog';
 import { HygRecord } from '../types';
 
 /**
- * StarViewCanvas Component with HYG Catalog Integration
+ * StarviewCanvas Component with HYG Catalog Integration
  * 
  * Enhanced 3D background canvas that can utilize real star data from the HYG catalog
  * to create accurate stellar visualizations and positions.
@@ -19,52 +18,16 @@ import { HygRecord } from '../types';
  * Confidence Rating: High - Robust implementation with comprehensive error handling
  */
 
-interface StarViewCanvasProps {
+interface StarviewCanvasProps {
   hygCatalog: HygStarsCatalog | null;
   catalogLoading: boolean;
 }
 
 /**
- * Rotating Cube Component
- * Renders a slowly rotating cube with cosmic-themed materials
- */
-function RotatingCube() {
-  const meshRef = useRef<Mesh>(null);
-
-  // Use useFrame hook for continuous rotation animation
-  useFrame((state, delta) => {
-    if (meshRef.current) {
-      // Slow rotation on both X and Y axes for visual interest
-      meshRef.current.rotation.x += delta * 0.2;
-      meshRef.current.rotation.y += delta * 0.3;
-    }
-  });
-
-  // Memoize geometry and material for performance
-  const geometry = useMemo(() => {
-    return [2, 2, 2]; // Box geometry dimensions
-  }, []);
-
-  return (
-    <mesh ref={meshRef}>
-      <boxGeometry args={geometry} />
-      <meshStandardMaterial 
-        color="#2563EB" 
-        transparent 
-        opacity={0.6}
-        wireframe={false}
-        roughness={0.3}
-        metalness={0.7}
-      />
-    </mesh>
-  );
-}
-
-/**
- * Real Stars Component
+ * Starfield Component
  * Renders actual stars from the HYG catalog as 3D points
  */
-function RealStars({ hygCatalog }: { hygCatalog: HygStarsCatalog }) {
+function Starfield({ hygCatalog }: { hygCatalog: HygStarsCatalog }) {
   const [starData, setStarData] = useState<HygRecord[]>([]);
   
   useEffect(() => {
@@ -232,7 +195,7 @@ function SceneSetup() {
 }
 
 /**
- * StarViewCanvas Component
+ * StarviewCanvas Component
  * Main R3F canvas component that renders the 3D background scene
  * 
  * Features:
@@ -243,7 +206,7 @@ function SceneSetup() {
  * - Cosmic-themed dark background
  * - Real star data integration when available
  */
-export function StarViewCanvas({ hygCatalog, catalogLoading }: StarViewCanvasProps) {
+export function StarviewCanvas({ hygCatalog, catalogLoading }: StarviewCanvasProps) {
   return (
     <div 
       className="fixed inset-0 w-full h-full"
@@ -280,12 +243,7 @@ export function StarViewCanvas({ hygCatalog, catalogLoading }: StarViewCanvasPro
         
         {/* Render real stars if catalog is available and loaded */}
         {hygCatalog && !catalogLoading && (
-          <RealStars hygCatalog={hygCatalog} />
-        )}
-        
-        {/* Fallback rotating cube when catalog is not available */}
-        {(!hygCatalog || catalogLoading) && (
-          <RotatingCube />
+          <Starfield hygCatalog={hygCatalog} />
         )}
         
         {/* Optional: Add fog for depth perception */}
@@ -302,4 +260,4 @@ export function StarViewCanvas({ hygCatalog, catalogLoading }: StarViewCanvasPro
   );
 }
 
-export default StarViewCanvas;
+export default StarviewCanvas;
