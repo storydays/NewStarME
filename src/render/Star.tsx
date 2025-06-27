@@ -244,25 +244,23 @@ function HighlightedStar({
           depthWrite={false}
           opacity={1.0}
           color={colors.glowColor}
-          alphaTest={0.05}
+          alphaTest={0.1}
           blending={THREE.AdditiveBlending}
         />
       </sprite>
-      
-      {/* Enhanced star sprite with emotion-based coloring */}
-      <mesh onClick={handleClick}>
-        <planeGeometry args={[enhancedStarSize, enhancedStarSize]} />
-        <meshBasicMaterial
-          ref={coreMaterialRef}
+
+      {/* Star sprite */}
+      <sprite scale={[starSize, starSize, starSize]}>
+        <spriteMaterial
           map={starTexture}
-          color={colors.coreColor}
           transparent
-          opacity={colors.baseCoreOpacity}
-          blending={THREE.AdditiveBlending}
           depthWrite={false}
-          alphaTest={0.05}
+          opacity={getStarOpacity(mag)}
+          color={ 'white'}
+          alphaTest={0.1}
+          blending={THREE.AdditiveBlending}
         />
-      </mesh>
+      </sprite>
     </Billboard>
   );
 }
