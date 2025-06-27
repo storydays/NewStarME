@@ -1,10 +1,11 @@
 import React, { useMemo, useEffect, useState, useCallback } from 'react';
 import { Canvas, useFrame, useThree, useLoader } from '@react-three/fiber';
-import { Billboard, Html } from '@react-three/drei';
+import { Html } from '@react-three/drei';
 import { TextureLoader } from 'three';
 import * as THREE from 'three';
 import { HygStarsCatalog } from '../data/StarsCatalog';
 import { HygRecord } from '../types';
+import { Star } from '../render/Star';
 
 /**
  * StarviewCanvas Component with HYG Catalog Integration
@@ -17,6 +18,7 @@ import { HygRecord } from '../types';
  * - Graceful fallback when catalog is not available
  * - Performance optimized with proper star filtering
  * - Cosmic-themed dark background
+ * - Uses dedicated Star component for rendering
  * 
  * Confidence Rating: High - Robust implementation with comprehensive error handling
  */
@@ -99,80 +101,8 @@ function StarLabels({
 }
 
 /**
- * Individual Star Component
- * Renders a single star as a 3D billboard with glow and core sprite using textures
- */
-function Star({ 
-  star, 
-  index, 
-  position, 
-  starSize, 
-  glowMultiplier, 
-  isSelected, 
-  onSelect,
-  starParticleTexture,
-  starGlowTexture
-}: {
-  star: HygRecord;
-  index: number;
-  position: [number, number, number];
-  starSize: number;
-  glowMultiplier: number;
-  isSelected: boolean;
-  onSelect: (star: HygRecord, index: number) => void;
-  starParticleTexture: THREE.Texture;
-  starGlowTexture: THREE.Texture;
-}) {
-  // Calculate star properties based on magnitude
-  const opacity = Math.max(0.3, Math.min(1.0, (6.5 - star.mag) / 6.5));
-  const actualStarSize = Math.max(0.5, Math.min(2.0, starSize * (6.0 - star.mag) * 0.2));
-
-  const handleClick = useCallback((event: any) => {
-    event.stopPropagation();
-    console.log('Star clicked:', star.proper || star.id, 'at index:', index);
-    onSelect(star, index);
-  }, [star, index, onSelect]);
-
-  return (
-    <Billboard position={position}>
-      {/* 1. Transparent mesh for click detection (larger than star) */}
-      <mesh onClick={handleClick} visible={false}>
-        <planeGeometry args={[actualStarSize * 3, actualStarSize * 3]} />
-        <meshBasicMaterial transparent opacity={0} />
-      </mesh>
-      
-      {/* 2. Glow sprite using starGlow texture */}
-      <mesh onClick={handleClick}>
-        <planeGeometry args={[actualStarSize * 2.5, actualStarSize * 2.5]} />
-        <meshBasicMaterial
-          map={starGlowTexture}
-          color={new THREE.Color(0.7, 0.8, 1.0)} // Light blue
-          transparent
-          opacity={0.4 * glowMultiplier}
-          blending={THREE.AdditiveBlending}
-          depthWrite={false}
-        />
-      </mesh>
-      
-      {/* 3. Star sprite using starParticle texture */}
-      <mesh onClick={handleClick}>
-        <planeGeometry args={[actualStarSize, actualStarSize]} />
-        <meshBasicMaterial
-          map={starParticleTexture}
-          color={isSelected ? new THREE.Color(1, 1, 0) : new THREE.Color(1, 1, 1)} // Yellow if selected, white otherwise
-          transparent
-          opacity={isSelected ? 1.0 : opacity}
-          blending={THREE.AdditiveBlending}
-          depthWrite={false}
-        />
-      </mesh>
-    </Billboard>
-  );
-}
-
-/**
  * Starfield Component
- * Renders actual stars from the HYG catalog using textured billboards
+ * Renders actual stars from the HYG catalog using the dedicated Star component
  */
 function Starfield({ 
   hygCatalog, 
@@ -191,7 +121,7 @@ function Starfield({
 }) {
   const { camera } = useThree();
   
-  // 1. Initialize textures using useLoader
+  // Initialize textures using useLoader
   const [starParticleTexture, starGlowTexture] = useLoader(TextureLoader, [
     '/src/assets/star_particle.png',
     '/src/assets/star_glow.png'
@@ -245,7 +175,7 @@ function Starfield({
     }
   }, [onStarSelect]);
 
-  // 4. Memoize starSprites list for performance optimization
+  // Memoize starSprites list for performance optimization
   const starSprites = useMemo(() => {
     if (!starParticleTexture || !starGlowTexture || starData.length === 0) {
       return null;
@@ -256,18 +186,23 @@ function Starfield({
         ((selectedStar as any).id === star.id || 
          (selectedStar as any).hip === star.hip);
 
+      // Calculate actual star size based on magnitude
+      const actualStarSize = Math.max(0.5, Math.min(2.0, starSize * (6.0 - star.mag) * 0.2));
+
       return (
         <Star
           key={`star-${star.id}`}
-          star={star}
-          index={index}
           position={position}
-          starSize={starSize}
+          mag={star.mag}
+          starTexture={starParticleTexture}
+          glowTexture={starGlowTexture}
+          starSize={actualStarSize}
           glowMultiplier={glowMultiplier}
           isSelected={!!isSelected}
-          onSelect={handleStarSelect}
-          starParticleTexture={starParticleTexture}
-          starGlowTexture={starGlowTexture}
+          onClick={(event) => {
+            console.log('Star clicked:', star.proper || star.id, 'at index:', index);
+            handleStarSelect(star, index);
+          }}
         />
       );
     });
@@ -280,10 +215,10 @@ function Starfield({
 
   return (
     <group>
-      {/* Render star sprites */}
+      {/* Render star sprites using dedicated Star component */}
       {starSprites}
 
-      {/* 5. Conditional label rendering */}
+      {/* Conditional label rendering */}
       {showLabels && (
         <StarLabels
           starData={starData}
@@ -333,7 +268,7 @@ function SceneSetup() {
  * - Optimized performance with proper camera settings
  * - Cosmic-themed dark background
  * - Real star data integration when available
- * - Texture-based star rendering with click handling
+ * - Uses dedicated Star component for rendering
  */
 export function StarviewCanvas({ 
   hygCatalog, 
@@ -425,7 +360,7 @@ export function StarviewCanvas({
         <div className="absolute bottom-4 left-4 text-cosmic-stellar-wind text-xs font-light opacity-30 pointer-events-none">
           <div>{hygCatalog.getTotalStars().toLocaleString()} stars loaded</div>
           <div>Labels: {showLabels ? 'ON' : 'OFF'}</div>
-          <div>Textured star rendering active</div>
+          <div>Dedicated Star component active</div>
         </div>
       )}
     </div>
