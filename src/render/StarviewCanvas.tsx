@@ -473,9 +473,7 @@ export function StarviewCanvas({
   }, []);
 
   return (
-    <div 
-      className="fixed inset-0 w-full h-full"
-    >
+    <div className="fixed inset-0 w-full h-full">
       <Canvas
         camera={{
           position: [0, 0, 8], // Initial position
