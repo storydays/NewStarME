@@ -475,11 +475,11 @@ export function StarviewCanvas({
   return (
     <div 
       className="fixed inset-0 w-full h-full"
+      onClick={() => console.log('Click event received on App div!')}
       style={{ 
         zIndex: -1,
         pointerEvents: 'auto' // Enable pointer events for enhanced interaction
       }}
-      
     >
       <Canvas
         camera={{
