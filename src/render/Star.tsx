@@ -134,7 +134,7 @@ export function Star({
       </mesh>
 
       {/* Enhanced particle emission for highlighted stars */}
-      {isHighlighted && <mesh key={i} onClick={handleClick}>
+      {isHighlighted && <mesh onClick={handleClick}>
           <planeGeometry args={[starSize * 0.3, starSize * 0.3]} />
           <meshBasicMaterial
             color={colors.coreColor}
