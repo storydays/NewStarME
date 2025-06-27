@@ -47,6 +47,7 @@ export function Star({
   emotionColor,
   onClick
 }: StarProps) {
+  const finalStarSize = isHighlighted?4*starSize:starSize
   
   // Opacity calculation based on magnitude
   const calculateOpacity = useCallback((magnitude: number): number => {
@@ -132,19 +133,7 @@ export function Star({
           depthWrite={false}
         />
       </mesh>
-
-      {/* Enhanced particle emission for highlighted stars */}
-      {isHighlighted && <mesh onClick={handleClick}>
-          <planeGeometry args={[starSize * 0.3, starSize * 0.3]} />
-          <meshBasicMaterial
-            map={starTexture}
-            color={colors.coreColor}
-            transparent
-            opacity={0.6}
-            blending={THREE.AdditiveBlending}
-            depthWrite={false}
-          />
-        </mesh>}
+      
     </Billboard>
   );
 }
