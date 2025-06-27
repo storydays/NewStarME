@@ -87,7 +87,7 @@ export function Star({
       // Normal: White core with light blue glow
       return {
         coreColor: new THREE.Color(1, 1, 1), // White
-        glowColor: new THREE.Color(0.7, 0.8, 1.0).multiplyScalar(glowMultiplier), // Light blue glow
+        glowColor: new THREE.Color('#dbe6ff').multiplyScalar(glowMultiplier), // Light blue glow
         glowOpacity: 0.4 * glowMultiplier,
         coreOpacity: opacity
       };
