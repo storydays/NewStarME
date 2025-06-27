@@ -47,7 +47,6 @@ export function Star({
   emotionColor,
   onClick
 }: StarProps) {
-  const finalStarSize = isHighlighted?4*starSize:starSize
   
   // Opacity calculation based on magnitude
   const calculateOpacity = useCallback((magnitude: number): number => {
