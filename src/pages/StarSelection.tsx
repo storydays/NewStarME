@@ -143,7 +143,7 @@ export function StarSelection() {
           </motion.p>
         </div>
 
-        {/* Empty State - No cards, just guidance */}
+        {/* 
         {stars.length === 0 && (
           <motion.div
             className="text-center py-20"
@@ -160,9 +160,9 @@ export function StarSelection() {
               </p>
             </div>
           </motion.div>
-        )}
+        )} */}
 
-        {/* MOVED TO BOTTOM: Selected emotion display */}
+        {/* 
         <div className="text-center mt-auto mb-8">
           <motion.div
             className="inline-flex items-center gap-3 px-6 py-3 rounded-full frosted-glass-strong border"
@@ -177,25 +177,8 @@ export function StarSelection() {
             <span className="text-cosmic-observation font-light text-lg">{emotion.name}</span>
           </motion.div>
         </div>
-      </div>
+      </div>*/}
 
-      {/* Enhanced instructions for 3D interaction */}
-      <motion.div
-        className="fixed bottom-6 left-6 z-20 pointer-events-none"
-        initial={{ opacity: 0, x: -50 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ delay: 1.5 }}
-      >
-        <div className="frosted-glass-lighter rounded-lg p-3 max-w-xs">
-          <p className="text-cosmic-stellar-wind text-xs font-light leading-relaxed">
-            <strong className="text-cosmic-observation">Enhanced 3D View:</strong><br/>
-            • Highlighted stars are 400% larger<br/>
-            • Click any highlighted star to dedicate<br/>
-            • Zoom, pan, and rotate to explore<br/>
-            • Star names always visible
-          </p>
-        </div>
-      </motion.div>
     </div>
   );
 }
