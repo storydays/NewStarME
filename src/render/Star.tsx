@@ -4,13 +4,19 @@ import * as THREE from 'three';
 import { HygRecord } from '../types';
 
 /**
- * Star Component Specifications
+ * Star Component Specifications - Enhanced with highlighting support
  * 
  * Purpose: Reusable React component that renders a single star in a 3D scene 
  * using react-three-fiber and three.js. Visually represents a star with a glow 
  * and core, supports click interaction, and always faces the camera (billboard effect).
+ * Now supports highlighting with distinct visual treatment.
  * 
- * Confidence Rating: High - Complete implementation following exact specifications
+ * Visual States:
+ * - Normal: White core with light blue glow
+ * - Highlighted: Cyan/light blue core with enhanced cyan glow
+ * - Selected: Yellow core with enhanced glow
+ * 
+ * Confidence Rating: High - Adding highlighting to existing star rendering
  */
 
 interface StarProps {
@@ -21,6 +27,7 @@ interface StarProps {
   starSize: number;
   glowMultiplier: number;
   isSelected: boolean;
+  isHighlighted?: boolean; // NEW: Highlighting flag
   onClick: (event: any) => void;
 }
 
@@ -30,13 +37,14 @@ interface StarProps {
  * Visual Structure:
  * - Billboard: Ensures the star always faces the camera
  * - Invisible Clickable Mesh: A transparent plane, larger than the star, to improve click detection
- * - Glow Sprite: A sprite with the glow texture, scaled up, colored light blue, and using additive blending
- * - Star Sprite: A sprite with the star texture, scaled to starSize, colored white or yellow (if selected)
+ * - Glow Sprite: A sprite with the glow texture, scaled up, colored based on state, and using additive blending
+ * - Star Sprite: A sprite with the star texture, scaled to starSize, colored based on state
  * 
  * Behavior:
  * - Opacity calculated based on magnitude using specified formula
- * - Selection renders star core in yellow, otherwise white
+ * - Selection renders star core in yellow, highlighting in cyan, otherwise white
  * - Click handling triggers onClick callback with event
+ * - Enhanced glow for highlighted and selected states
  */
 export function Star({
   position,
@@ -46,6 +54,7 @@ export function Star({
   starSize,
   glowMultiplier,
   isSelected,
+  isHighlighted = false, // NEW: Default to false
   onClick
 }: StarProps) {
   
@@ -63,6 +72,37 @@ export function Star({
     onClick(event);
   }, [onClick]);
 
+  // Determine colors and glow based on state
+  const getStarColors = useCallback(() => {
+    if (isSelected) {
+      // Selected: Yellow core with enhanced yellow glow
+      return {
+        coreColor: new THREE.Color(1, 1, 0), // Yellow
+        glowColor: new THREE.Color(1, 1, 0.3), // Yellow-ish glow
+        glowOpacity: 0.8 * glowMultiplier,
+        coreOpacity: opacity
+      };
+    } else if (isHighlighted) {
+      // Highlighted: Cyan core with enhanced cyan glow
+      return {
+        coreColor: new THREE.Color(0, 1, 1), // Cyan
+        glowColor: new THREE.Color(0.3, 0.8, 1.0), // Light blue glow
+        glowOpacity: 0.7 * glowMultiplier,
+        coreOpacity: Math.max(opacity, 0.8) // Ensure highlighted stars are visible
+      };
+    } else {
+      // Normal: White core with light blue glow
+      return {
+        coreColor: new THREE.Color(1, 1, 1), // White
+        glowColor: new THREE.Color(0.7, 0.8, 1.0), // Light blue glow
+        glowOpacity: 0.4 * glowMultiplier,
+        coreOpacity: opacity
+      };
+    }
+  }, [isSelected, isHighlighted, opacity, glowMultiplier]);
+
+  const colors = getStarColors();
+
   return (
     <Billboard position={position}>
       {/* Invisible Clickable Mesh - larger than the star for improved click detection */}
@@ -71,27 +111,27 @@ export function Star({
         <meshBasicMaterial transparent opacity={0} />
       </mesh>
       
-      {/* Glow Sprite - scaled up, light blue, additive blending */}
+      {/* Glow Sprite - scaled up, colored based on state, additive blending */}
       <mesh onClick={handleClick}>
         <planeGeometry args={[starSize * 2.5, starSize * 2.5]} />
         <meshBasicMaterial
           map={glowTexture}
-          color={new THREE.Color(0.7, 0.8, 1.0)} // Light blue color
+          color={colors.glowColor}
           transparent
-          opacity={0.4 * glowMultiplier}
+          opacity={colors.glowOpacity}
           blending={THREE.AdditiveBlending}
           depthWrite={false}
         />
       </mesh>
       
-      {/* Star Sprite - core star with texture, white or yellow based on selection */}
+      {/* Star Sprite - core star with texture, colored based on state */}
       <mesh onClick={handleClick}>
         <planeGeometry args={[starSize, starSize]} />
         <meshBasicMaterial
           map={starTexture}
-          color={isSelected ? new THREE.Color(1, 1, 0) : new THREE.Color(1, 1, 1)} // Yellow if selected, white otherwise
+          color={colors.coreColor}
           transparent
-          opacity={opacity}
+          opacity={colors.coreOpacity}
           blending={THREE.AdditiveBlending}
           depthWrite={false}
         />

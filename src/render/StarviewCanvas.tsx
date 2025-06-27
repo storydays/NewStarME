@@ -2,15 +2,16 @@ import React, { useMemo, useCallback, useRef, useState, useEffect } from 'react'
 import { Canvas } from '@react-three/fiber';
 import { CameraControls } from '@react-three/drei';
 import { HygStarsCatalog } from '../data/StarsCatalog';
-import { HygRecord } from '../types';
+import { HygRecord, Star } from '../types';
 import { Starfield } from './Starfield';
 import { AnimationController } from './AnimationController';
 
 /**
- * StarviewCanvas Component with Continuous Orbiting Animation
+ * StarviewCanvas Component with Highlighted Stars Support
  * 
  * Enhanced 3D background canvas that utilizes real star data from the HYG catalog
  * and provides smooth camera animations including continuous orbiting.
+ * Now supports highlighting specific stars for emotion-based selection.
  * 
  * Features:
  * - Accepts HYG catalog as prop for real star data
@@ -22,8 +23,9 @@ import { AnimationController } from './AnimationController';
  * - Graceful fallback when catalog is not available
  * - Performance optimized with proper star filtering
  * - Cosmic-themed dark background
+ * - NEW: Highlighted stars support for emotion-based selection
  * 
- * Confidence Rating: High - Complete integration with continuous orbiting system
+ * Confidence Rating: High - Adding highlighted stars to existing system
  */
 
 interface StarviewCanvasProps {
@@ -34,6 +36,7 @@ interface StarviewCanvasProps {
   starSize?: number;
   glowMultiplier?: number;
   showLabels?: boolean;
+  highlightedStars?: Star[]; // NEW: Stars to highlight in 3D view
 }
 
 interface AnimationCommand {
@@ -50,7 +53,7 @@ interface AnimationCommand {
 }
 
 /**
- * StarfieldWrapper Component
+ * StarfieldWrapper Component - Enhanced with highlighting support
  * Converts HYG catalog data to Starfield component format and handles star selection
  */
 function StarfieldWrapper({ 
@@ -60,7 +63,8 @@ function StarfieldWrapper({
   onStarFocus,
   starSize = 0.1, 
   glowMultiplier = 1.0, 
-  showLabels = false 
+  showLabels = false,
+  highlightedStars = [] // NEW: Highlighted stars prop
 }: { 
   hygCatalog: HygStarsCatalog;
   selectedStar?: HygRecord | null;
@@ -69,17 +73,24 @@ function StarfieldWrapper({
   starSize?: number;
   glowMultiplier?: number;
   showLabels?: boolean;
+  highlightedStars?: Star[];
 }) {
   
-  // Convert HYG catalog data to Starfield format
+  // Convert HYG catalog data to Starfield format with highlighting info
   const catalogData = useMemo(() => {
     if (!hygCatalog) {
       console.log('StarfieldWrapper: No catalog available');
       return [];
     }
 
-    console.log('StarfieldWrapper: Processing star catalog...');
+    console.log('StarfieldWrapper: Processing star catalog with highlighting...');
+    console.log(`StarfieldWrapper: ${highlightedStars.length} stars to highlight`);
     
+    // Create a set of highlighted star names for fast lookup
+    const highlightedStarNames = new Set(
+      highlightedStars.map(star => star.scientific_name.toLowerCase())
+    );
+
     // Filter stars by magnitude and limit count for performance
     const filteredStars = hygCatalog
       .filterByMagnitude(-2, 6.5)
@@ -97,14 +108,23 @@ function StarfieldWrapper({
       const y = distance * Math.cos(decRad) * Math.sin(raRad);
       const z = distance * Math.sin(decRad);
 
+      // Check if this star should be highlighted
+      const starName = (star.proper || `HYG ${star.id}`).toLowerCase();
+      const isHighlighted = highlightedStarNames.has(starName);
+
+      if (isHighlighted) {
+        console.log(`StarfieldWrapper: Highlighting star: ${star.proper || star.id}`);
+      }
+
       return {
         id: star.id.toString(),
         position: [x, y, z] as [number, number, number],
         magnitude: star.mag,
-        name: star.proper || undefined
+        name: star.proper || undefined,
+        isHighlighted // NEW: Flag for highlighting
       };
     });
-  }, [hygCatalog]);
+  }, [hygCatalog, highlightedStars]);
 
   // Handle star selection from Starfield
   const handleStarSelect = useCallback((starId: string) => {
@@ -156,7 +176,8 @@ function SceneContent({
   starSize, 
   glowMultiplier, 
   showLabels,
-  onPointerMissed 
+  onPointerMissed,
+  highlightedStars = [] // NEW: Highlighted stars prop
 }: {
   hygCatalog: HygStarsCatalog | null;
   catalogLoading: boolean;
@@ -166,6 +187,7 @@ function SceneContent({
   glowMultiplier?: number;
   showLabels?: boolean;
   onPointerMissed: () => void;
+  highlightedStars?: Star[];
 }) {
   // Camera controls ref for AnimationController
   const cameraControlsRef = useRef<CameraControls>(null);
@@ -280,6 +302,7 @@ function SceneContent({
           starSize={starSize}
           glowMultiplier={glowMultiplier}
           showLabels={showLabels}
+          highlightedStars={highlightedStars}
         />
       )}
       
@@ -314,6 +337,7 @@ function SceneContent({
  * - Smooth camera animations for star selection
  * - Interactive camera controls with mouse/touch support
  * - Resume orbiting when star is deselected
+ * - NEW: Support for highlighting specific stars
  */
 export function StarviewCanvas({ 
   hygCatalog, 
@@ -322,7 +346,8 @@ export function StarviewCanvas({
   onStarSelect, 
   starSize = 0.1, 
   glowMultiplier = 1.0, 
-  showLabels = false 
+  showLabels = false,
+  highlightedStars = [] // NEW: Highlighted stars prop
 }: StarviewCanvasProps) {
   
   // Handle pointer miss (clicking on empty space)
@@ -372,6 +397,7 @@ export function StarviewCanvas({
           glowMultiplier={glowMultiplier}
           showLabels={showLabels}
           onPointerMissed={handlePointerMissed}
+          highlightedStars={highlightedStars}
         />
       </Canvas>
       
@@ -391,6 +417,11 @@ export function StarviewCanvas({
           <div className="text-green-400">
             {selectedStar ? `📍 Focused on: ${selectedStar.proper || selectedStar.id}` : '🔄 Orbiting scene center'}
           </div>
+          {highlightedStars.length > 0 && (
+            <div className="text-cyan-400">
+              ✨ {highlightedStars.length} stars highlighted
+            </div>
+          )}
           <div>Click stars for focus • Click empty space to resume orbit</div>
         </div>
       )}

@@ -8,11 +8,18 @@ import { Dedication } from './pages/Dedication';
 import { SharedStar } from './pages/SharedStar';
 import { HygStarsCatalog } from './data/StarsCatalog';
 import { HygRecord } from './types';
+import { SuggestedStarsProvider, useSuggestedStars } from './context/SuggestedStarsContext';
 
-function App() {
+/**
+ * AppContent Component - Contains the main app logic with context access
+ * 
+ * Separated from App to allow access to SuggestedStarsContext
+ */
+function AppContent() {
   const [hygCatalog, setHygCatalog] = useState<HygStarsCatalog | null>(null);
   const [catalogLoading, setCatalogLoading] = useState(true);
   const [selectedStar, setSelectedStar] = useState<HygRecord | null>(null);
+  const { suggestedStars } = useSuggestedStars();
 
   // Control settings for the star visualization - LABELS DISABLED BY DEFAULT
   const [controlSettings] = useState({
@@ -61,6 +68,7 @@ function App() {
           starSize={controlSettings.starSize}
           glowMultiplier={controlSettings.glowMultiplier}
           showLabels={controlSettings.showLabels}
+          highlightedStars={suggestedStars}
         />
         
         <motion.div
@@ -77,6 +85,17 @@ function App() {
         </motion.div>
       </div>
     </Router>
+  );
+}
+
+/**
+ * Main App Component - Provides context wrapper
+ */
+function App() {
+  return (
+    <SuggestedStarsProvider>
+      <AppContent />
+    </SuggestedStarsProvider>
   );
 }
 

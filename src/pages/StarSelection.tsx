@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Heart } from 'lucide-react';
-import { StarCard } from '../components/StarCard';
+import { ArrowLeft, Heart, Eye, MousePointer } from 'lucide-react';
 import { useStars } from '../hooks/useStars';
+import { useSuggestedStars } from '../context/SuggestedStarsContext';
 import { emotions } from '../data/emotions';
 import { Star } from '../types';
 
@@ -11,8 +11,23 @@ export function StarSelection() {
   const { emotionId } = useParams<{ emotionId: string }>();
   const navigate = useNavigate();
   const { stars, loading, error } = useStars(emotionId);
+  const { setSuggestedStars, clearSuggestedStars } = useSuggestedStars();
   
   const emotion = emotions.find(e => e.id === emotionId);
+
+  // Update suggested stars when stars are loaded
+  useEffect(() => {
+    if (stars && stars.length > 0) {
+      console.log(`StarSelection: Setting ${stars.length} suggested stars for 3D highlighting`);
+      setSuggestedStars(stars);
+    }
+    
+    // Clear suggested stars when leaving this page
+    return () => {
+      console.log('StarSelection: Clearing suggested stars on unmount');
+      clearSuggestedStars();
+    };
+  }, [stars, setSuggestedStars, clearSuggestedStars]);
 
   if (!emotion) {
     return (
@@ -21,10 +36,6 @@ export function StarSelection() {
       </div>
     );
   }
-
-  const handleStarSelect = (star: Star) => {
-    navigate(`/dedicate/${star.id}?emotion=${emotionId}`);
-  };
 
   const handleBack = () => {
     navigate('/');
@@ -100,38 +111,55 @@ export function StarSelection() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5 }}
             >
-              Choose Your Celestial Beacon
+              Celestial Beacons Await
             </motion.h1>
             
             <motion.p 
-              className="text-xl text-cosmic-light-echo font-light leading-relaxed particle-drift"
+              className="text-xl text-cosmic-light-echo font-light leading-relaxed particle-drift mb-8"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.7 }}
             >
-              Each star has been carefully selected to resonate with the cosmic frequency of {emotion.name.toLowerCase()}
+              {stars.length} stars have been carefully selected to resonate with the cosmic frequency of {emotion.name.toLowerCase()}
             </motion.p>
+
+            {/* 3D Interaction Guide */}
+            <motion.div
+              className="frosted-glass-strong rounded-2xl p-8 border border-cosmic-particle-trace max-w-lg mx-auto"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.9 }}
+            >
+              <div className="flex items-center justify-center gap-3 mb-6">
+                <Eye className="w-6 h-6 text-cosmic-cherenkov-blue" />
+                <h3 className="text-lg font-light text-cosmic-observation">3D Star Selection</h3>
+              </div>
+              
+              <div className="space-y-4 text-sm text-cosmic-light-echo font-light">
+                <div className="flex items-center gap-3">
+                  <div className="w-3 h-3 rounded-full bg-cosmic-cherenkov-blue animate-pulse"></div>
+                  <span>Highlighted stars are glowing in cyan blue</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <MousePointer className="w-4 h-4 text-cosmic-stellar-wind" />
+                  <span>Click any highlighted star to select it</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-3 h-3 rounded-full bg-yellow-400"></div>
+                  <span>Selected stars will glow in golden yellow</span>
+                </div>
+              </div>
+
+              <div className="mt-6 pt-4 border-t border-cosmic-particle-trace">
+                <p className="text-xs text-cosmic-stellar-wind">
+                  Use mouse to orbit • Scroll to zoom • Click stars to proceed to dedication
+                </p>
+              </div>
+            </motion.div>
           </div>
         </motion.div>
 
-        {/* Enhanced Stars Grid */}
-        <motion.div
-          className="cosmic-grid max-w-6xl mx-auto"
-          initial={{ opacity: 0, y: 40 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-        >
-          {stars.map((star, index) => (
-            <StarCard
-              key={star.id}
-              star={star}
-              onSelect={handleStarSelect}
-              index={index}
-            />
-          ))}
-        </motion.div>
-
-        {/* Enhanced Empty State */}
+        {/* Empty State - No cards, just guidance */}
         {stars.length === 0 && (
           <motion.div
             className="text-center py-20"
