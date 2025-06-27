@@ -1,11 +1,9 @@
-import React, { useMemo, useEffect, useState, useCallback } from 'react';
-import { Canvas, useFrame, useThree, useLoader } from '@react-three/fiber';
-import { Html } from '@react-three/drei';
-import { TextureLoader } from 'three';
+import React, { useMemo, useCallback } from 'react';
+import { Canvas, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { HygStarsCatalog } from '../data/StarsCatalog';
 import { HygRecord } from '../types';
-import { Star } from './Star';
+import { Starfield } from './Starfield';
 
 /**
  * StarviewCanvas Component with HYG Catalog Integration
@@ -18,7 +16,7 @@ import { Star } from './Star';
  * - Graceful fallback when catalog is not available
  * - Performance optimized with proper star filtering
  * - Cosmic-themed dark background
- * - Uses dedicated Star component for rendering
+ * - Uses dedicated Starfield component for rendering
  * 
  * Confidence Rating: High - Robust implementation with comprehensive error handling
  */
@@ -34,77 +32,10 @@ interface StarviewCanvasProps {
 }
 
 /**
- * StarLabels Component
- * Renders star name labels with opacity and size based on distance and magnitude
+ * StarfieldWrapper Component
+ * Converts HYG catalog data to Starfield component format
  */
-function StarLabels({ 
-  starData, 
-  cameraPosition,
-  showLabels 
-}: {
-  starData: Array<{
-    star: HygRecord;
-    position: [number, number, number];
-    distance: number;
-  }>;
-  cameraPosition: THREE.Vector3;
-  showLabels: boolean;
-}) {
-  if (!showLabels) return null;
-
-  // Filter stars that should have labels (only named stars)
-  const labeledStars = starData.filter(({ star, distance }) => 
-    star.proper && 
-    star.proper.trim() !== '' &&
-    distance < 50 && // Only show labels for nearby stars
-    star.mag < 4.0 // Only show labels for bright stars
-  ).slice(0, 30); // Limit number of labels for performance
-
-  return (
-    <>
-      {labeledStars.map(({ star, position, distance }) => {
-        // Calculate label opacity based on distance and magnitude
-        const distanceFromCamera = cameraPosition.distanceTo(new THREE.Vector3(...position));
-        const opacity = Math.max(0.3, Math.min(1.0, (30 / distanceFromCamera) * (4.0 - star.mag) / 4.0));
-        
-        // Calculate label size based on distance
-        const fontSize = Math.max(8, Math.min(16, 200 / distanceFromCamera));
-
-        if (opacity < 0.3) return null;
-
-        return (
-          <Html
-            key={`label-${star.id}`}
-            position={[position[0], position[1] + 0.5, position[2]]}
-            center
-            distanceFactor={10}
-            occlude
-          >
-            <div 
-              style={{
-                color: '#F8FAFC',
-                fontSize: `${fontSize}px`,
-                fontWeight: 300,
-                opacity: opacity,
-                textShadow: '0 0 4px rgba(0,0,0,0.8)',
-                pointerEvents: 'none',
-                whiteSpace: 'nowrap'
-              }}
-            >
-              {star.proper}
-            </div>
-          </Html>
-        );
-      })}
-    </>
-  );
-}
-
-/**
- * Starfield Component
- * Renders actual stars from the HYG catalog using the dedicated Star component
- */
-function Starfield({ 
+function StarfieldWrapper({ 
   hygCatalog, 
   selectedStar, 
   onStarSelect, 
@@ -119,31 +50,24 @@ function Starfield({
   glowMultiplier?: number;
   showLabels?: boolean;
 }) {
-  const { camera } = useThree();
   
-  // Initialize textures using useLoader
-  const [starParticleTexture, starGlowTexture] = useLoader(TextureLoader, [
-    '/src/assets/star_particle.png',
-    '/src/assets/star_glow.png'
-  ]);
-
-  // Process star data for rendering with memoization for performance
-  const starData = useMemo(() => {
+  // Convert HYG catalog data to Starfield format
+  const catalogData = useMemo(() => {
     if (!hygCatalog) {
-      console.log('Starfield: No catalog available');
+      console.log('StarfieldWrapper: No catalog available');
       return [];
     }
 
-    console.log('Starfield: Processing star catalog...');
+    console.log('StarfieldWrapper: Processing star catalog...');
     
     // Filter stars by magnitude and limit count for performance
     const filteredStars = hygCatalog
       .filterByMagnitude(-2, 6.5)
-      .slice(0, 5000); // Increased limit for better star field
+      .slice(0, 5000); // Limit for performance
 
-    console.log(`Starfield: Rendering ${filteredStars.length} stars`);
+    console.log(`StarfieldWrapper: Processing ${filteredStars.length} stars`);
 
-    return filteredStars.map((star, index) => {
+    return filteredStars.map((star) => {
       // Convert spherical coordinates to Cartesian for 3D positioning
       const distance = Math.min(star.dist, 100) / 5; // Scale for visualization
       const raRad = star.rarad;
@@ -154,79 +78,41 @@ function Starfield({
       const z = distance * Math.sin(decRad);
 
       return {
-        star,
-        index,
+        id: star.id.toString(),
         position: [x, y, z] as [number, number, number],
-        distance
+        magnitude: star.mag,
+        name: star.proper || undefined
       };
     });
   }, [hygCatalog]);
 
-  // Track camera position for label calculations
-  const cameraPosition = useMemo(() => {
-    return camera.position.clone();
-  }, [camera.position]);
+  // Handle star selection from Starfield
+  const handleStarSelect = useCallback((starId: string) => {
+    if (!hygCatalog || !onStarSelect) return;
 
-  // Handle star selection with proper typing
-  const handleStarSelect = useCallback((star: HygRecord, index: number) => {
-    console.log('Starfield: Handling star selection:', star.proper || star.id);
-    if (onStarSelect) {
-      onStarSelect(star, index);
+    // Find the original HYG record
+    const starIdNum = parseInt(starId);
+    const allStars = hygCatalog.getStars();
+    const selectedHygStar = allStars.find(star => star.id === starIdNum);
+    
+    if (selectedHygStar) {
+      console.log('StarfieldWrapper: Star selected:', selectedHygStar.proper || selectedHygStar.id);
+      onStarSelect(selectedHygStar, starIdNum);
     }
-  }, [onStarSelect]);
+  }, [hygCatalog, onStarSelect]);
 
-  // Memoize starSprites list for performance optimization
-  const starSprites = useMemo(() => {
-    if (!starParticleTexture || !starGlowTexture || starData.length === 0) {
-      return null;
-    }
-
-    return starData.map(({ star, index, position, distance }) => {
-      const isSelected = selectedStar && 
-        ((selectedStar as any).id === star.id || 
-         (selectedStar as any).hip === star.hip);
-
-      // Calculate actual star size based on magnitude
-      const actualStarSize = Math.max(0.5, Math.min(2.0, starSize * (6.0 - star.mag) * 0.2));
-
-      return (
-        <Star
-          key={`star-${star.id}`}
-          position={position}
-          mag={star.mag}
-          starTexture={starParticleTexture}
-          glowTexture={starGlowTexture}
-          starSize={actualStarSize}
-          glowMultiplier={glowMultiplier}
-          isSelected={!!isSelected}
-          onClick={(event) => {
-            console.log('Star clicked:', star.proper || star.id, 'at index:', index);
-            handleStarSelect(star, index);
-          }}
-        />
-      );
-    });
-  }, [starData, starSize, glowMultiplier, selectedStar, handleStarSelect, starParticleTexture, starGlowTexture]);
-
-  if (!hygCatalog || starData.length === 0) {
-    console.log('Starfield: No stars to render');
-    return null;
-  }
+  // Get selected star ID for Starfield
+  const selectedStarId = selectedStar ? selectedStar.id.toString() : null;
 
   return (
-    <group>
-      {/* Render star sprites using dedicated Star component */}
-      {starSprites}
-
-      {/* Conditional label rendering */}
-      {showLabels && (
-        <StarLabels
-          starData={starData}
-          cameraPosition={cameraPosition}
-          showLabels={showLabels}
-        />
-      )}
-    </group>
+    <Starfield
+      catalog={catalogData}
+      selectedStar={selectedStarId}
+      onStarSelect={handleStarSelect}
+      starSize={starSize}
+      glowMultiplier={glowMultiplier}
+      showLabels={showLabels}
+    />
   );
 }
 
@@ -268,7 +154,7 @@ function SceneSetup() {
  * - Optimized performance with proper camera settings
  * - Cosmic-themed dark background
  * - Real star data integration when available
- * - Uses dedicated Star component for rendering
+ * - Uses dedicated Starfield component for rendering
  */
 export function StarviewCanvas({ 
   hygCatalog, 
@@ -279,6 +165,7 @@ export function StarviewCanvas({
   glowMultiplier = 1.0, 
   showLabels = false 
 }: StarviewCanvasProps) {
+  
   // Handle pointer miss (clicking on empty space)
   const handlePointerMissed = useCallback(() => {
     console.log('StarviewCanvas: Pointer missed - deselecting star');
@@ -324,7 +211,7 @@ export function StarviewCanvas({
         
         {/* Render real stars if catalog is available and loaded */}
         {hygCatalog && !catalogLoading && (
-          <Starfield 
+          <StarfieldWrapper 
             hygCatalog={hygCatalog}
             selectedStar={selectedStar}
             onStarSelect={onStarSelect}
@@ -360,7 +247,7 @@ export function StarviewCanvas({
         <div className="absolute bottom-4 left-4 text-cosmic-stellar-wind text-xs font-light opacity-30 pointer-events-none">
           <div>{hygCatalog.getTotalStars().toLocaleString()} stars loaded</div>
           <div>Labels: {showLabels ? 'ON' : 'OFF'}</div>
-          <div>Dedicated Star component active</div>
+          <div>Starfield component active</div>
         </div>
       )}
     </div>
