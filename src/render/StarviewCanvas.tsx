@@ -401,7 +401,7 @@ function SceneContent({
         ref={cameraControlsRef}
         makeDefault
         minDistance={1}
-        maxDistance={500}
+        maxDistance={5000}
         enablePan={true}
         enableZoom={true}
         enableRotate={true}
