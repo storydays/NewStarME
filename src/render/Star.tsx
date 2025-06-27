@@ -114,7 +114,7 @@ export function Star({
           transparent
           depthWrite={false}
           opacity={1.0}
-          color={new THREE.Color('#dbe6ff').multiplyScalar(glowMultiplier)}
+          color={colors.glowColor}
           alphaTest={0.01}
           blending={THREE.AdditiveBlending}
         />
