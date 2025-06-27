@@ -14,11 +14,11 @@ function App() {
   const [catalogLoading, setCatalogLoading] = useState(true);
   const [selectedStar, setSelectedStar] = useState<HygRecord | null>(null);
 
-  // Control settings for the star visualization
+  // Control settings for the star visualization - LABELS DISABLED BY DEFAULT
   const [controlSettings] = useState({
     starSize: 0.1,
     glowMultiplier: 1.2,
-    showLabels: true
+    showLabels: false // Changed from true to false
   });
 
   useEffect(() => {
