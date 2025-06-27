@@ -118,6 +118,7 @@ export function Star({
           opacity={1.0}
           blending={THREE.AdditiveBlending}
           depthWrite={false}
+          visible={false}
         />
       </mesh>
       
