@@ -121,7 +121,7 @@ export function StarSelection() {
           </button>
         </motion.div>
 
-        {/* MOVED TO TOP: Title and description text */}
+        {/* 
         <div className="text-center max-w-2xl mx-auto mb-12">
           <motion.h1 
             className="text-3xl md:text-4xl font-light text-cosmic-observation mb-4 cosmic-float"
@@ -141,7 +141,7 @@ export function StarSelection() {
             {stars.length} stars have been carefully selected to resonate with the cosmic frequency of {emotion.name.toLowerCase()}. 
             Click on any highlighted star in the 3D view to dedicate it with your personal message.
           </motion.p>
-        </div>
+        </div>*/}
 
         {/* 
         {stars.length === 0 && (
