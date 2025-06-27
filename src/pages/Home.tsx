@@ -15,7 +15,7 @@ export function Home() {
     <div className="min-h-screen relative overflow-hidden">
       {/* Removed gravitational lensing effect overlay */}
       
-      {/* Main content with physics-based layout - CHANGED: Using flex-col with space-between */}
+      {/* Main content with physics-based layout - CHANGED: Using flex-col with custom spacing */}
       <div className="relative z-10 flex flex-col min-h-screen px-6 py-8">
         
         {/* Header with cosmic typography - TOP SECTION */}
@@ -41,8 +41,8 @@ export function Home() {
           </motion.p>
         </motion.div>
 
-        {/* Enhanced Emotion Wheel - MIDDLE SECTION - Centered vertically */}
-        <div className="flex-1 flex items-center justify-center">
+        {/* Enhanced Emotion Wheel - MIDDLE SECTION - Lifted higher with more space above */}
+        <div className="flex-grow flex items-start justify-center pt-16">
           <motion.div
             className="relative flex-shrink-0"
             initial={{ opacity: 0, scale: 0.9 }}
@@ -58,9 +58,9 @@ export function Home() {
           </motion.div>
         </div>
 
-        {/* Enhanced explanation with frosted glass - BOTTOM SECTION - Pushed to bottom */}
+        {/* Enhanced explanation with frosted glass - BOTTOM SECTION - Fixed at bottom */}
         <motion.div
-          className="text-center max-w-lg mx-auto mb-8"
+          className="text-center max-w-lg mx-auto mb-8 mt-auto"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.8, duration: 0.8 }}
