@@ -1,4 +1,4 @@
-import React, { useMemo, useCallback, useRef, useState } from 'react';
+import React, { useMemo, useCallback, useRef, useState, useEffect } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { CameraControls } from '@react-three/drei';
 import { HygStarsCatalog } from '../data/StarsCatalog';
@@ -17,11 +17,12 @@ import { AnimationController } from './AnimationController';
  * - Integrated AnimationController for smooth camera transitions
  * - Camera controls with CameraControls from drei
  * - Star selection with automatic camera focus animations
+ * - Initial animation on page load for engaging user experience
  * - Graceful fallback when catalog is not available
  * - Performance optimized with proper star filtering
  * - Cosmic-themed dark background
  * 
- * Confidence Rating: High - Complete integration with AnimationController
+ * Confidence Rating: High - Complete integration with AnimationController and initial animation
  */
 
 interface StarviewCanvasProps {
@@ -139,6 +140,7 @@ function StarfieldWrapper({
 /**
  * Scene Content Component
  * Contains all 3D scene elements including camera controls, animation controller, and starfield
+ * Now includes initial animation trigger on component mount
  */
 function SceneContent({ 
   hygCatalog, 
@@ -164,6 +166,21 @@ function SceneContent({
   
   // Animation state management
   const [animationCommand, setAnimationCommand] = useState<AnimationCommand | null>(null);
+
+  // INITIAL ANIMATION: Trigger resetView animation when component mounts
+  useEffect(() => {
+    console.log('SceneContent: Component mounted, triggering initial animation');
+    
+    // Set a slight delay to ensure camera controls are ready
+    const timer = setTimeout(() => {
+      setAnimationCommand({
+        type: 'resetView',
+        duration: 2000 // 2 second smooth animation to default position
+      });
+    }, 500); // 500ms delay to ensure everything is initialized
+
+    return () => clearTimeout(timer);
+  }, []); // Empty dependency array ensures this runs only once on mount
 
   // Handle star focus animation
   const handleStarFocus = useCallback((star: HygRecord) => {
@@ -295,6 +312,7 @@ function SceneContent({
  * - Real star data integration when available
  * - Smooth camera animations for star selection
  * - Interactive camera controls with mouse/touch support
+ * - Initial animation on page load for engaging experience
  */
 export function StarviewCanvas({ 
   hygCatalog, 
@@ -343,7 +361,7 @@ export function StarviewCanvas({
         }}
         onPointerMissed={handlePointerMissed}
       >
-        {/* Scene content with integrated AnimationController */}
+        {/* Scene content with integrated AnimationController and initial animation */}
         <SceneContent
           hygCatalog={hygCatalog}
           catalogLoading={catalogLoading}
@@ -369,6 +387,7 @@ export function StarviewCanvas({
           <div>{hygCatalog.getTotalStars().toLocaleString()} stars loaded</div>
           <div>Labels: {showLabels ? 'ON' : 'OFF'}</div>
           <div className="text-cosmic-cherenkov-blue">✨ AnimationController active</div>
+          <div className="text-green-400">🎬 Initial animation enabled</div>
           <div>Click stars for smooth camera focus</div>
         </div>
       )}
