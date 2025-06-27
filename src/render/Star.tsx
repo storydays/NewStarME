@@ -79,7 +79,7 @@ export function Star({
       
       return {
         coreColor: emotionColorObj, // Emotion-based color
-        glowColor: emotionColorObj.clone().multiplyScalar(0.8), // Slightly dimmed glow
+        glowColor: emotionColorObj.clone().multiplyScalar(glowMultiplier*2), // Slightly dimmed glow
         glowOpacity: 0.9 * glowMultiplier, // Enhanced glow for highlighted stars
         coreOpacity: Math.max(opacity, 0.9) // Ensure highlighted stars are very visible
       };
