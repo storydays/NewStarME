@@ -4,10 +4,10 @@ import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
 /**
- * Star Component - Refactored with NormalStar and HighlightedStar sub-components
+ * Star Component - Refactored with RegularStar and HighlightedStar sub-components
  * 
  * Purpose: Main dispatcher component that renders appropriate star type based on highlighting state.
- * Contains NormalStar and HighlightedStar components for better organization and specialized rendering.
+ * Contains RegularStar and HighlightedStar components for better organization and specialized rendering.
  * 
  * Features:
  * - Conditional rendering based on isHighlighted prop
@@ -39,12 +39,12 @@ interface HighlightedStarProps extends BaseStarProps {
 }
 
 /**
- * NormalStar Component - Renders standard stars (non-highlighted)
+ * RegularStar Component - Renders standard stars (non-highlighted)
  * 
  * Purpose: Handles rendering of regular stars with standard visual properties.
  * Provides basic glow effects and standard color schemes.
  */
-function NormalStar({
+function RegularStar({
   position,
   mag,
   starTexture,
@@ -66,7 +66,7 @@ function NormalStar({
   // Handle click events
   const handleClick = useCallback((event: any) => {
     event.stopPropagation();
-    console.log('NormalStar: Click detected on normal star');
+    console.log('RegularStar: Click detected on normal star');
     onClick(event);
   }, [onClick]);
 
@@ -288,7 +288,7 @@ function HighlightedStar({
 }
 
 /**
- * Main Star Component - Dispatcher for NormalStar and HighlightedStar
+ * Main Star Component - Dispatcher for RegularStar and HighlightedStar
  * 
  * Purpose: Acts as a conditional renderer that selects the appropriate
  * star component based on the highlighting state.
@@ -325,7 +325,7 @@ export function Star({
     );
   } else {
     return (
-      <NormalStar
+      <RegularStar
         position={position}
         mag={mag}
         starTexture={starTexture}
