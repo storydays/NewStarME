@@ -121,6 +121,19 @@ export function Star({
           depthWrite={false}
         />
       </mesh>
+
+      {/* Glow sprite */}
+      <sprite scale={[starSize * 2.5, starSize * 2.5, starSize * 2.5]}>
+        <spriteMaterial
+          map={glowTexture}
+          transparent
+          depthWrite={false}
+          opacity={1.0}
+          color={new THREE.Color('#dbe6ff').multiplyScalar(glowMultiplier)}
+          alphaTest={0.01}
+          blending={THREE.AdditiveBlending}
+        />
+      </sprite>
       
       {/* Enhanced star sprite with emotion-based coloring */}
       <mesh onClick={handleClick}>
