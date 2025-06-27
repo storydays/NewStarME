@@ -44,10 +44,9 @@ export function SuggestedStarsProvider({ children }: SuggestedStarsProviderProps
   const handleSetSuggestedStars = (stars: Star[]) => {
     console.log(`SuggestedStarsContext: Setting ${stars.length} suggested stars`);
     setSuggestedStars(stars);
-    // Auto-focus first star when stars are set
-    if (stars.length > 0) {
-      setFocusedStarIndex(0);
-    }
+    // REMOVED: Auto-focus first star when stars are set
+    // This was causing the navigation to reset to index 0 on every update
+    // The initial focus is now managed by useStarNavigation hook
   };
 
   const triggerStarFocus = (star: Star, index: number) => {
