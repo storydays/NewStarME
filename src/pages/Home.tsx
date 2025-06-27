@@ -15,12 +15,12 @@ export function Home() {
     <div className="min-h-screen relative overflow-hidden">
       {/* Removed gravitational lensing effect overlay */}
       
-      {/* Main content with physics-based layout - FIXED: Changed to fit screen */}
-      <div className="relative z-10 flex flex-col items-center justify-between h-full px-6 py-8">
+      {/* Main content with physics-based layout - CHANGED: Using flex-col with space-between */}
+      <div className="relative z-10 flex flex-col min-h-screen px-6 py-8">
         
-        {/* Header with cosmic typography - REDUCED spacing and removed duplicate text */}
+        {/* Header with cosmic typography - TOP SECTION */}
         <motion.div 
-          className="text-center mb-6 max-w-2xl"
+          className="text-center mb-8 max-w-2xl mx-auto"
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: "easeOut" }}
@@ -41,24 +41,26 @@ export function Home() {
           </motion.p>
         </motion.div>
 
-        {/* Enhanced Emotion Wheel - Central Focus - OFFSET HIGHER with reduced margin */}
-        <motion.div
-          className="mb-4 relative flex-shrink-0"
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.4, duration: 0.8, ease: "backOut" }}
-        >
-          {/* Quantum field effect around wheel - REDUCED size */}
-          <div className="absolute inset-0 rounded-full bg-quantum-field opacity-30 blur-2xl scale-125 animate-pulse" />
-          
-          <div className="relative z-10">
-            <EmotionWheel onEmotionSelect={handleEmotionSelect} />
-          </div>
-        </motion.div>
+        {/* Enhanced Emotion Wheel - MIDDLE SECTION - Centered vertically */}
+        <div className="flex-1 flex items-center justify-center">
+          <motion.div
+            className="relative flex-shrink-0"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.4, duration: 0.8, ease: "backOut" }}
+          >
+            {/* Quantum field effect around wheel */}
+            <div className="absolute inset-0 rounded-full bg-quantum-field opacity-30 blur-2xl scale-125 animate-pulse" />
+            
+            <div className="relative z-10">
+              <EmotionWheel onEmotionSelect={handleEmotionSelect} />
+            </div>
+          </motion.div>
+        </div>
 
-        {/* Enhanced explanation with frosted glass - SMALLER text size */}
+        {/* Enhanced explanation with frosted glass - BOTTOM SECTION - Pushed to bottom */}
         <motion.div
-          className="text-center max-w-lg"
+          className="text-center max-w-lg mx-auto mb-8"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.8, duration: 0.8 }}
