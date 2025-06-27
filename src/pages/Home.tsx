@@ -15,24 +15,24 @@ export function Home() {
     <div className="min-h-screen relative overflow-hidden">
       {/* Removed gravitational lensing effect overlay */}
       
-      {/* Main content with physics-based layout */}
-      <div className="relative z-10 flex flex-col items-center justify-center min-h-screen px-6 py-12">
+      {/* Main content with physics-based layout - FIXED: Changed to fit screen */}
+      <div className="relative z-10 flex flex-col items-center justify-between h-full px-6 py-8">
         
-        {/* Header with cosmic typography */}
+        {/* Header with cosmic typography - REDUCED spacing */}
         <motion.div 
-          className="text-center mb-16 max-w-2xl"
+          className="text-center mb-8 max-w-2xl"
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: "easeOut" }}
         >
           <motion.h1 
-            className="text-5xl md:text-6xl font-light text-cosmic-observation mb-6 tracking-tight cosmic-float"
+            className="text-4xl md:text-5xl font-light text-cosmic-observation mb-4 tracking-tight cosmic-float"
             style={{ fontVariationSettings: "'wght' 300" }}
           >
             StarMe
           </motion.h1>
           <motion.p 
-            className="text-xl md:text-2xl text-cosmic-light-echo font-light leading-relaxed mb-4"
+            className="text-lg md:text-xl text-cosmic-light-echo font-light leading-relaxed mb-2"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.3, duration: 0.8 }}
@@ -40,7 +40,7 @@ export function Home() {
             Dedicate a star to someone special
           </motion.p>
           <motion.p 
-            className="text-lg text-cosmic-stellar-wind font-light particle-drift"
+            className="text-base text-cosmic-stellar-wind font-light particle-drift"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.5, duration: 0.8 }}
@@ -49,68 +49,43 @@ export function Home() {
           </motion.p>
         </motion.div>
 
-        {/* Enhanced Emotion Wheel - Central Focus */}
+        {/* Enhanced Emotion Wheel - Central Focus - REDUCED container size */}
         <motion.div
-          className="mb-16 relative"
+          className="mb-8 relative flex-shrink-0"
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.4, duration: 0.8, ease: "backOut" }}
         >
-          {/* Quantum field effect around wheel */}
-          <div className="absolute inset-0 rounded-full bg-quantum-field opacity-30 blur-3xl scale-150 animate-pulse" />
+          {/* Quantum field effect around wheel - REDUCED size */}
+          <div className="absolute inset-0 rounded-full bg-quantum-field opacity-30 blur-2xl scale-125 animate-pulse" />
           
           <div className="relative z-10">
             <EmotionWheel onEmotionSelect={handleEmotionSelect} />
           </div>
         </motion.div>
 
-        {/* Enhanced explanation with frosted glass */}
+        {/* Enhanced explanation with frosted glass - REDUCED padding */}
         <motion.div
           className="text-center max-w-lg"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.8, duration: 0.8 }}
         >
-          <div className="frosted-glass rounded-2xl p-8 cosmic-float-card">
+          <div className="frosted-glass rounded-2xl p-6 cosmic-float-card">
             <motion.p 
-              className="text-cosmic-light-echo text-lg font-light leading-relaxed mb-4"
+              className="text-cosmic-light-echo text-base font-light leading-relaxed mb-3"
               animate={{ opacity: [0.8, 1, 0.8] }}
               transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
             >
               Every star tells a story. Every dedication creates a lasting memory.
             </motion.p>
             <motion.p 
-              className="text-cosmic-stellar-wind text-base font-light quantum-fluctuation"
+              className="text-cosmic-stellar-wind text-sm font-light quantum-fluctuation"
             >
               Select an emotion above to begin your cosmic journey
             </motion.p>
           </div>
         </motion.div>
-
-        {/* Particle effects */}
-        {/*<div className="absolute inset-0 pointer-events-none">
-          {[...Array(8)].map((_, i) => (
-            <motion.div
-              key={i}
-              className="absolute w-1 h-1 bg-cosmic-cherenkov-blue rounded-full"
-              style={{
-                left: `${20 + i * 10}%`,
-                top: `${30 + (i % 3) * 20}%`,
-              }}
-              animate={{
-                opacity: [0, 1, 0],
-                scale: [0, 1.5, 0],
-                y: [0, -20, 0],
-              }}
-              transition={{
-                duration: 4,
-                delay: i * 0.5,
-                repeat: Infinity,
-                ease: "easeInOut"
-              }}
-            />
-          ))}
-        </div>*/}
 
       </div>
     </div>
