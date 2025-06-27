@@ -59,7 +59,7 @@ function AppContent() {
 
   return (
     <Router>
-      <div on className="App cosmic-viewport">
+      <div className="App cosmic-viewport" onClick={() => console.log('Click event received on App div!')}>
         {/* Global 3D background canvas with HYG catalog - positioned at top level */}
         <StarviewCanvas
           hygCatalog={hygCatalog}
