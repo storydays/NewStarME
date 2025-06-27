@@ -1,34 +1,68 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Star } from '../types';
 import { StarService } from '../services/starService';
+
+/**
+ * useStars Hook - Enhanced with array stability
+ * 
+ * Purpose: Provides stable star data for a given emotion to prevent
+ * unnecessary re-renders and navigation resets.
+ * 
+ * Key Enhancement: Uses a ref to track the emotionId for which stars
+ * were last fetched, preventing refetches for the same emotion and
+ * ensuring the stars array reference remains stable.
+ * 
+ * Confidence Rating: High - Targeted fix for navigation stability
+ */
 
 export function useStars(emotionId?: string) {
   const [stars, setStars] = useState<Star[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // Track the emotionId for which stars were last successfully fetched
+  const lastFetchedEmotionRef = useRef<string | null>(null);
 
   useEffect(() => {
     async function fetchStars() {
+      // Early return if no emotionId
+      if (!emotionId) {
+        setStars([]);
+        setLoading(false);
+        return;
+      }
+
+      // STABILITY FIX: Check if we already have stars for this emotion
+      if (lastFetchedEmotionRef.current === emotionId) {
+        console.log(`useStars: Stars already loaded for emotion ${emotionId}, skipping fetch`);
+        return;
+      }
+
       try {
         setLoading(true);
         setError(null);
 
-        if (emotionId) {
-          // Use the new dynamic star fetching logic
-          console.log(`Fetching stars for emotion: ${emotionId}`);
-          const fetchedStars = await StarService.fetchStarsForEmotion(emotionId);
+        console.log(`useStars: Fetching stars for emotion: ${emotionId}`);
+        const fetchedStars = await StarService.fetchStarsForEmotion(emotionId);
+        
+        // Only update state if we successfully fetched stars
+        if (fetchedStars && fetchedStars.length > 0) {
           setStars(fetchedStars);
-          console.log(`Successfully loaded ${fetchedStars.length} stars for ${emotionId}`);
+          // Update the ref to track this successful fetch
+          lastFetchedEmotionRef.current = emotionId;
+          console.log(`useStars: Successfully loaded ${fetchedStars.length} stars for ${emotionId}`);
         } else {
-          // If no emotion specified, return empty array
+          console.warn(`useStars: No stars returned for emotion ${emotionId}`);
           setStars([]);
+          setError('No stars found for this emotion');
         }
       } catch (err) {
         console.error('Error in useStars:', err);
         const errorMessage = err instanceof Error ? err.message : 'Failed to load stars';
         setError(errorMessage);
         
-        // Set empty array on error
+        // Set empty array on error but don't update the ref
+        // This allows retry on next emotionId change
         setStars([]);
       } finally {
         setLoading(false);
@@ -36,6 +70,16 @@ export function useStars(emotionId?: string) {
     }
 
     fetchStars();
+  }, [emotionId]); // Only depend on emotionId
+
+  // Reset state when emotionId changes to a different value
+  useEffect(() => {
+    if (emotionId && lastFetchedEmotionRef.current && lastFetchedEmotionRef.current !== emotionId) {
+      console.log(`useStars: Emotion changed from ${lastFetchedEmotionRef.current} to ${emotionId}, clearing previous data`);
+      setStars([]);
+      setError(null);
+      lastFetchedEmotionRef.current = null; // Reset ref to allow new fetch
+    }
   }, [emotionId]);
 
   return { stars, loading, error };
