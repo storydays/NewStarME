@@ -1,24 +1,27 @@
-import React, { useMemo, useCallback } from 'react';
-import { Canvas, useThree } from '@react-three/fiber';
-import * as THREE from 'three';
+import React, { useMemo, useCallback, useRef, useState } from 'react';
+import { Canvas } from '@react-three/fiber';
+import { CameraControls } from '@react-three/drei';
 import { HygStarsCatalog } from '../data/StarsCatalog';
 import { HygRecord } from '../types';
 import { Starfield } from './Starfield';
+import { AnimationController } from './AnimationController';
 
 /**
- * StarviewCanvas Component with HYG Catalog Integration
+ * StarviewCanvas Component with AnimationController Integration
  * 
- * Enhanced 3D background canvas that can utilize real star data from the HYG catalog
- * to create accurate stellar visualizations and positions.
+ * Enhanced 3D background canvas that utilizes real star data from the HYG catalog
+ * and provides smooth camera animations for star selection and navigation.
  * 
  * Features:
  * - Accepts HYG catalog as prop for real star data
+ * - Integrated AnimationController for smooth camera transitions
+ * - Camera controls with CameraControls from drei
+ * - Star selection with automatic camera focus animations
  * - Graceful fallback when catalog is not available
  * - Performance optimized with proper star filtering
  * - Cosmic-themed dark background
- * - Uses dedicated Starfield component for rendering
  * 
- * Confidence Rating: High - Robust implementation with comprehensive error handling
+ * Confidence Rating: High - Complete integration with AnimationController
  */
 
 interface StarviewCanvasProps {
@@ -31,14 +34,23 @@ interface StarviewCanvasProps {
   showLabels?: boolean;
 }
 
+interface AnimationCommand {
+  type: 'focusStar' | 'resetView' | 'moveTo';
+  target?: {
+    position: [number, number, number];
+  };
+  duration?: number;
+}
+
 /**
  * StarfieldWrapper Component
- * Converts HYG catalog data to Starfield component format
+ * Converts HYG catalog data to Starfield component format and handles star selection
  */
 function StarfieldWrapper({ 
   hygCatalog, 
   selectedStar, 
   onStarSelect, 
+  onStarFocus,
   starSize = 0.1, 
   glowMultiplier = 1.0, 
   showLabels = false 
@@ -46,6 +58,7 @@ function StarfieldWrapper({
   hygCatalog: HygStarsCatalog;
   selectedStar?: HygRecord | null;
   onStarSelect?: (star: HygRecord | null, index: number | null) => void;
+  onStarFocus?: (star: HygRecord) => void;
   starSize?: number;
   glowMultiplier?: number;
   showLabels?: boolean;
@@ -97,9 +110,16 @@ function StarfieldWrapper({
     
     if (selectedHygStar) {
       console.log('StarfieldWrapper: Star selected:', selectedHygStar.proper || selectedHygStar.id);
+      
+      // Update selection state
       onStarSelect(selectedHygStar, starIdNum);
+      
+      // Trigger camera animation to focus on the star
+      if (onStarFocus) {
+        onStarFocus(selectedHygStar);
+      }
     }
-  }, [hygCatalog, onStarSelect]);
+  }, [hygCatalog, onStarSelect, onStarFocus]);
 
   // Get selected star ID for Starfield
   const selectedStarId = selectedStar ? selectedStar.id.toString() : null;
@@ -117,10 +137,82 @@ function StarfieldWrapper({
 }
 
 /**
- * Scene Setup Component
- * Configures lighting and camera for the 3D scene
+ * Scene Content Component
+ * Contains all 3D scene elements including camera controls, animation controller, and starfield
  */
-function SceneSetup() {
+function SceneContent({ 
+  hygCatalog, 
+  catalogLoading, 
+  selectedStar, 
+  onStarSelect, 
+  starSize, 
+  glowMultiplier, 
+  showLabels,
+  onPointerMissed 
+}: {
+  hygCatalog: HygStarsCatalog | null;
+  catalogLoading: boolean;
+  selectedStar?: HygRecord | null;
+  onStarSelect?: (star: HygRecord | null, index: number | null) => void;
+  starSize?: number;
+  glowMultiplier?: number;
+  showLabels?: boolean;
+  onPointerMissed: () => void;
+}) {
+  // Camera controls ref for AnimationController
+  const cameraControlsRef = useRef<CameraControls>(null);
+  
+  // Animation state management
+  const [animationCommand, setAnimationCommand] = useState<AnimationCommand | null>(null);
+
+  // Handle star focus animation
+  const handleStarFocus = useCallback((star: HygRecord) => {
+    console.log('SceneContent: Focusing camera on star:', star.proper || star.id);
+    
+    // Convert star coordinates to 3D position for animation
+    const distance = Math.min(star.dist, 100) / 5;
+    const raRad = star.rarad;
+    const decRad = star.decrad;
+    
+    const x = distance * Math.cos(decRad) * Math.cos(raRad);
+    const y = distance * Math.cos(decRad) * Math.sin(raRad);
+    const z = distance * Math.sin(decRad);
+
+    // Set animation command to focus on the star
+    setAnimationCommand({
+      type: 'focusStar',
+      target: {
+        position: [x, y, z]
+      },
+      duration: 2000
+    });
+  }, []);
+
+  // Handle animation completion
+  const handleAnimationComplete = useCallback(() => {
+    console.log('SceneContent: Animation completed');
+    setAnimationCommand(null);
+  }, []);
+
+  // Handle pointer miss (clicking on empty space)
+  const handlePointerMissedInternal = useCallback(() => {
+    console.log('SceneContent: Pointer missed - resetting view');
+    
+    // Deselect star
+    if (onStarSelect) {
+      onStarSelect(null, null);
+    }
+    
+    // Reset camera view
+    setAnimationCommand({
+      type: 'resetView',
+      duration: 1500
+    });
+    
+    // Call parent handler
+    onPointerMissed();
+  }, [onStarSelect, onPointerMissed]);
+
   return (
     <>
       {/* Ambient light for overall illumination */}
@@ -139,13 +231,60 @@ function SceneSetup() {
         intensity={0.5} 
         color="#3B82F6"
       />
+
+      {/* Camera Controls - enables user interaction and provides ref for AnimationController */}
+      <CameraControls
+        ref={cameraControlsRef}
+        makeDefault
+        minDistance={1}
+        maxDistance={500}
+        enablePan={true}
+        enableZoom={true}
+        enableRotate={true}
+        dampingFactor={0.05}
+        draggingSmoothTime={0.25}
+        smoothTime={0.25}
+      />
+
+      {/* AnimationController - manages smooth camera transitions */}
+      <AnimationController
+        cameraControlsRef={cameraControlsRef}
+        animationCommand={animationCommand}
+        onAnimationComplete={handleAnimationComplete}
+      />
+      
+      {/* Render real stars if catalog is available and loaded */}
+      {hygCatalog && !catalogLoading && (
+        <StarfieldWrapper 
+          hygCatalog={hygCatalog}
+          selectedStar={selectedStar}
+          onStarSelect={onStarSelect}
+          onStarFocus={handleStarFocus}
+          starSize={starSize}
+          glowMultiplier={glowMultiplier}
+          showLabels={showLabels}
+        />
+      )}
+      
+      {/* Cosmic fog for depth perception */}
+      <fog attach="fog" args={['#0A0A0F', 5, 20]} />
+      
+      {/* Invisible plane for pointer miss detection */}
+      <mesh
+        position={[0, 0, -50]}
+        onPointerMissed={handlePointerMissedInternal}
+        visible={false}
+      >
+        <planeGeometry args={[1000, 1000]} />
+        <meshBasicMaterial transparent opacity={0} />
+      </mesh>
     </>
   );
 }
 
 /**
  * StarviewCanvas Component
- * Main R3F canvas component that renders the 3D background scene
+ * Main R3F canvas component that renders the 3D background scene with integrated AnimationController
  * 
  * Features:
  * - Full viewport coverage with fixed positioning
@@ -154,7 +293,8 @@ function SceneSetup() {
  * - Optimized performance with proper camera settings
  * - Cosmic-themed dark background
  * - Real star data integration when available
- * - Uses dedicated Starfield component for rendering
+ * - Smooth camera animations for star selection
+ * - Interactive camera controls with mouse/touch support
  */
 export function StarviewCanvas({ 
   hygCatalog, 
@@ -168,11 +308,8 @@ export function StarviewCanvas({
   
   // Handle pointer miss (clicking on empty space)
   const handlePointerMissed = useCallback(() => {
-    console.log('StarviewCanvas: Pointer missed - deselecting star');
-    if (onStarSelect) {
-      onStarSelect(null, null);
-    }
-  }, [onStarSelect]);
+    console.log('StarviewCanvas: Pointer missed event');
+  }, []);
 
   return (
     <div 
@@ -206,33 +343,17 @@ export function StarviewCanvas({
         }}
         onPointerMissed={handlePointerMissed}
       >
-        {/* Scene lighting setup */}
-        <SceneSetup />
-        
-        {/* Render real stars if catalog is available and loaded */}
-        {hygCatalog && !catalogLoading && (
-          <StarfieldWrapper 
-            hygCatalog={hygCatalog}
-            selectedStar={selectedStar}
-            onStarSelect={onStarSelect}
-            starSize={starSize}
-            glowMultiplier={glowMultiplier}
-            showLabels={showLabels}
-          />
-        )}
-        
-        {/* Optional: Add fog for depth perception */}
-        <fog attach="fog" args={['#0A0A0F', 5, 20]} />
-        
-        {/* Invisible plane for pointer miss detection */}
-        <mesh
-          position={[0, 0, -50]}
+        {/* Scene content with integrated AnimationController */}
+        <SceneContent
+          hygCatalog={hygCatalog}
+          catalogLoading={catalogLoading}
+          selectedStar={selectedStar}
+          onStarSelect={onStarSelect}
+          starSize={starSize}
+          glowMultiplier={glowMultiplier}
+          showLabels={showLabels}
           onPointerMissed={handlePointerMissed}
-          visible={false}
-        >
-          <planeGeometry args={[1000, 1000]} />
-          <meshBasicMaterial transparent opacity={0} />
-        </mesh>
+        />
       </Canvas>
       
       {/* Loading indicator for catalog */}
@@ -247,7 +368,8 @@ export function StarviewCanvas({
         <div className="absolute bottom-4 left-4 text-cosmic-stellar-wind text-xs font-light opacity-30 pointer-events-none">
           <div>{hygCatalog.getTotalStars().toLocaleString()} stars loaded</div>
           <div>Labels: {showLabels ? 'ON' : 'OFF'}</div>
-          <div>Starfield component active</div>
+          <div className="text-cosmic-cherenkov-blue">✨ AnimationController active</div>
+          <div>Click stars for smooth camera focus</div>
         </div>
       )}
     </div>
