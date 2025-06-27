@@ -59,7 +59,7 @@ function AppContent() {
 
   return (
     <Router>
-      <div className="App cosmic-viewport">
+      <div on className="App cosmic-viewport">
         {/* Global 3D background canvas with HYG catalog - positioned at top level */}
         <StarviewCanvas
           hygCatalog={hygCatalog}
