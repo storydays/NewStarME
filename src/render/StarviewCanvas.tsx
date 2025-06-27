@@ -17,12 +17,12 @@ import { AnimationController } from './AnimationController';
  * - Integrated AnimationController for smooth camera transitions
  * - Camera controls with CameraControls from drei
  * - Star selection with automatic camera focus animations
- * - Initial animation on page load for engaging user experience
+ * - Test animation on page load: 2s delay, 4s duration, goes to [10,10,10]
  * - Graceful fallback when catalog is not available
  * - Performance optimized with proper star filtering
  * - Cosmic-themed dark background
  * 
- * Confidence Rating: High - Complete integration with AnimationController and initial animation
+ * Confidence Rating: High - Complete integration with AnimationController and test animation
  */
 
 interface StarviewCanvasProps {
@@ -140,7 +140,7 @@ function StarfieldWrapper({
 /**
  * Scene Content Component
  * Contains all 3D scene elements including camera controls, animation controller, and starfield
- * Now includes initial animation trigger on component mount
+ * Now includes TEST ANIMATION: 2s delay, 4s duration, goes to far point [10,10,10]
  */
 function SceneContent({ 
   hygCatalog, 
@@ -167,17 +167,22 @@ function SceneContent({
   // Animation state management
   const [animationCommand, setAnimationCommand] = useState<AnimationCommand | null>(null);
 
-  // INITIAL ANIMATION: Trigger resetView animation when component mounts
+  // TEST ANIMATION: Trigger moveTo animation with specified parameters
   useEffect(() => {
-    console.log('SceneContent: Component mounted, triggering initial animation');
+    console.log('SceneContent: Component mounted, setting up test animation');
     
-    // Set a slight delay to ensure camera controls are ready
+    // Set 2 second delay as requested
     const timer = setTimeout(() => {
+      console.log('SceneContent: Triggering test animation - moving to [10,10,10] over 4 seconds');
+      
       setAnimationCommand({
-        type: 'resetView',
-        duration: 2000 // 2 second smooth animation to default position
+        type: 'moveTo',
+        target: {
+          position: [10, 10, 10] // Far point in scene as requested
+        },
+        duration: 4000 // 4 second duration as requested
       });
-    }, 500); // 500ms delay to ensure everything is initialized
+    }, 2000); // 2 second timeout as requested
 
     return () => clearTimeout(timer);
   }, []); // Empty dependency array ensures this runs only once on mount
@@ -312,7 +317,7 @@ function SceneContent({
  * - Real star data integration when available
  * - Smooth camera animations for star selection
  * - Interactive camera controls with mouse/touch support
- * - Initial animation on page load for engaging experience
+ * - Test animation: 2s delay, 4s duration, moves to [10,10,10]
  */
 export function StarviewCanvas({ 
   hygCatalog, 
@@ -361,7 +366,7 @@ export function StarviewCanvas({
         }}
         onPointerMissed={handlePointerMissed}
       >
-        {/* Scene content with integrated AnimationController and initial animation */}
+        {/* Scene content with integrated AnimationController and test animation */}
         <SceneContent
           hygCatalog={hygCatalog}
           catalogLoading={catalogLoading}
@@ -387,7 +392,7 @@ export function StarviewCanvas({
           <div>{hygCatalog.getTotalStars().toLocaleString()} stars loaded</div>
           <div>Labels: {showLabels ? 'ON' : 'OFF'}</div>
           <div className="text-cosmic-cherenkov-blue">✨ AnimationController active</div>
-          <div className="text-green-400">🎬 Initial animation enabled</div>
+          <div className="text-green-400">🎬 Test animation: 2s delay → [10,10,10] over 4s</div>
           <div>Click stars for smooth camera focus</div>
         </div>
       )}
