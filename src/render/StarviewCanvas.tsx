@@ -479,6 +479,7 @@ export function StarviewCanvas({
         zIndex: -1,
         pointerEvents: 'auto' // Enable pointer events for enhanced interaction
       }}
+      
     >
       <Canvas
         camera={{
