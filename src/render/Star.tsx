@@ -137,6 +137,7 @@ export function Star({
       {isHighlighted && <mesh onClick={handleClick}>
           <planeGeometry args={[starSize * 0.3, starSize * 0.3]} />
           <meshBasicMaterial
+            map={starTexture}
             color={colors.coreColor}
             transparent
             opacity={0.6}
