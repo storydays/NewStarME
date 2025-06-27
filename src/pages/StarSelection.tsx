@@ -5,7 +5,7 @@ import { ArrowLeft, Heart } from 'lucide-react';
 import { useStars } from '../hooks/useStars';
 import { useStarNavigation } from '../hooks/useStarNavigation';
 import { useSuggestedStars } from '../context/SuggestedStarsContext';
-import { StarNavigationPanel } from '../components/StarNavigationPanel';
+// import { StarNavigationPanel } from '../components/StarNavigationPanel';
 import { emotions } from '../data/emotions';
 import { Star } from '../types';
 
@@ -107,7 +107,7 @@ export function StarSelection() {
   return (
     <div className="min-h-screen relative">
       <div className="relative z-10 container mx-auto px-6 py-8">
-        {/* Enhanced Header - Reduced spacing */}
+        {/* Back button */}
         <motion.div
           className="mb-12"
           initial={{ opacity: 0, y: 30 }}
@@ -120,40 +120,28 @@ export function StarSelection() {
             <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
             Return to cosmic emotions
           </button>
-          
-          <div className="text-center max-w-2xl mx-auto">
-            <motion.div
-              className="inline-flex items-center gap-3 px-6 py-3 rounded-full mb-6 frosted-glass-strong border"
-              style={{ 
-                borderColor: `${emotion.color}40`
-              }}
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ delay: 0.3, type: "spring" }}
-            >
-              <Heart className="w-5 h-5 cherenkov-glow" style={{ color: emotion.color }} />
-              <span className="text-cosmic-observation font-light text-lg">{emotion.name}</span>
-            </motion.div>
-            
-            <motion.h1 
-              className="text-3xl md:text-4xl font-light text-cosmic-observation mb-4 cosmic-float"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5 }}
-            >
-              Celestial Beacons Await
-            </motion.h1>
-            
-            <motion.p 
-              className="text-lg text-cosmic-light-echo font-light leading-relaxed particle-drift"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.7 }}
-            >
-              {stars.length} stars have been carefully selected to resonate with the cosmic frequency of {emotion.name.toLowerCase()}
-            </motion.p>
-          </div>
         </motion.div>
+
+        {/* MOVED TO TOP: Title and description text */}
+        <div className="text-center max-w-2xl mx-auto mb-12">
+          <motion.h1 
+            className="text-3xl md:text-4xl font-light text-cosmic-observation mb-4 cosmic-float"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+          >
+            Celestial Beacons Await
+          </motion.h1>
+          
+          <motion.p 
+            className="text-lg text-cosmic-light-echo font-light leading-relaxed particle-drift"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5 }}
+          >
+            {stars.length} stars have been carefully selected to resonate with the cosmic frequency of {emotion.name.toLowerCase()}
+          </motion.p>
+        </div>
 
         {/* Empty State - No cards, just guidance */}
         {stars.length === 0 && (
@@ -173,9 +161,26 @@ export function StarSelection() {
             </div>
           </motion.div>
         )}
+
+        {/* MOVED TO BOTTOM: Selected emotion display */}
+        <div className="text-center mt-auto mb-8">
+          <motion.div
+            className="inline-flex items-center gap-3 px-6 py-3 rounded-full frosted-glass-strong border"
+            style={{ 
+              borderColor: `${emotion.color}40`
+            }}
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.7, type: "spring" }}
+          >
+            <Heart className="w-5 h-5 cherenkov-glow" style={{ color: emotion.color }} />
+            <span className="text-cosmic-observation font-light text-lg">{emotion.name}</span>
+          </motion.div>
+        </div>
       </div>
 
-      {/* Star Navigation Panel */}
+      {/* DISABLED: Star Navigation Panel */}
+      {/* 
       <StarNavigationPanel
         stars={stars}
         currentIndex={currentIndex}
@@ -184,6 +189,7 @@ export function StarSelection() {
         emotionColor={emotion.color}
         emotionName={emotion.name}
       />
+      */}
     </div>
   );
 }
