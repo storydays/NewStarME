@@ -1,12 +1,14 @@
-import React, { useMemo, useCallback } from 'react';
+import React, { useMemo, useCallback, useRef, useState, useEffect } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
+import { CameraControls } from '@react-three/drei';
 import * as THREE from 'three';
 import { HygStarsCatalog } from '../data/StarsCatalog';
 import { HygRecord } from '../types';
 import { Starfield } from './Starfield';
+import { AnimationController } from './AnimationController';
 
 /**
- * StarviewCanvas Component with HYG Catalog Integration
+ * StarviewCanvas Component with HYG Catalog Integration and Animation Demo
  * 
  * Enhanced 3D background canvas that can utilize real star data from the HYG catalog
  * to create accurate stellar visualizations and positions.
@@ -17,6 +19,7 @@ import { Starfield } from './Starfield';
  * - Performance optimized with proper star filtering
  * - Cosmic-themed dark background
  * - Uses dedicated Starfield component for rendering
+ * - Includes AnimationController demonstration with rotation
  * 
  * Confidence Rating: High - Robust implementation with comprehensive error handling
  */
@@ -117,28 +120,190 @@ function StarfieldWrapper({
 }
 
 /**
- * Scene Setup Component
- * Configures lighting and camera for the 3D scene
+ * Scene Content Component with Animation Demo
+ * Contains all 3D scene elements including Starfield and AnimationController
  */
-function SceneSetup() {
+function SceneContent({ 
+  hygCatalog, 
+  selectedStar, 
+  onStarSelect, 
+  starSize, 
+  glowMultiplier, 
+  showLabels,
+  catalogLoading 
+}: {
+  hygCatalog: HygStarsCatalog | null;
+  selectedStar?: HygRecord | null;
+  onStarSelect?: (star: HygRecord | null, index: number | null) => void;
+  starSize?: number;
+  glowMultiplier?: number;
+  showLabels?: boolean;
+  catalogLoading: boolean;
+}) {
+  const cameraControlsRef = useRef<CameraControls>(null);
+  const [animationCommand, setAnimationCommand] = useState<any>(null);
+  const [isRotating, setIsRotating] = useState(false);
+  const rotationIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Handle pointer miss (clicking on empty space)
+  const handlePointerMissed = useCallback(() => {
+    console.log('SceneContent: Pointer missed - deselecting star');
+    if (onStarSelect) {
+      onStarSelect(null, null);
+    }
+  }, [onStarSelect]);
+
+  // Handle animation completion
+  const handleAnimationComplete = useCallback(() => {
+    console.log('SceneContent: Animation completed');
+    setAnimationCommand(null);
+  }, []);
+
+  // Start rotation demo around center of scene
+  const startRotationDemo = useCallback(() => {
+    if (isRotating || !cameraControlsRef.current) return;
+    
+    console.log('SceneContent: Starting rotation demo around scene center');
+    setIsRotating(true);
+    
+    const radius = 15; // Distance from center
+    const centerY = 2;  // Slight elevation
+    let angle = 0;
+    const angleStep = Math.PI / 8; // 22.5 degrees per step
+    
+    const rotateStep = () => {
+      if (!isRotating) return;
+      
+      angle += angleStep;
+      const x = Math.cos(angle) * radius;
+      const z = Math.sin(angle) * radius;
+      
+      // Create animation command to move to next position
+      setAnimationCommand({
+        type: 'focusStar',
+        target: {
+          position: [0, 0, 0] // Look at center
+        },
+        duration: 1000
+      });
+      
+      // Manually set camera position for smooth rotation
+      if (cameraControlsRef.current) {
+        cameraControlsRef.current.setLookAt(x, centerY, z, 0, 0, 0, true);
+      }
+    };
+    
+    // Start rotation with interval
+    rotationIntervalRef.current = setInterval(rotateStep, 2000); // 2 seconds per step
+    
+    // Initial position
+    rotateStep();
+  }, [isRotating]);
+
+  // Stop rotation demo
+  const stopRotationDemo = useCallback(() => {
+    console.log('SceneContent: Stopping rotation demo');
+    setIsRotating(false);
+    
+    if (rotationIntervalRef.current) {
+      clearInterval(rotationIntervalRef.current);
+      rotationIntervalRef.current = null;
+    }
+    
+    // Reset to default view
+    setAnimationCommand({
+      type: 'resetView',
+      duration: 2000
+    });
+  }, []);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (rotationIntervalRef.current) {
+        clearInterval(rotationIntervalRef.current);
+      }
+    };
+  }, []);
+
+  // Auto-start rotation demo when catalog loads
+  useEffect(() => {
+    if (hygCatalog && !catalogLoading && !isRotating) {
+      // Start rotation demo after a short delay
+      const timer = setTimeout(() => {
+        startRotationDemo();
+      }, 3000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [hygCatalog, catalogLoading, isRotating, startRotationDemo]);
+
   return (
     <>
-      {/* Ambient light for overall illumination */}
-      <ambientLight intensity={0.4} color="#60A5FA" />
+      {/* Camera Controls */}
+      <CameraControls
+        ref={cameraControlsRef}
+        makeDefault
+        minDistance={1}
+        maxDistance={500}
+        enablePan={true}
+        enableZoom={true}
+        enableRotate={true}
+        dampingFactor={0.05}
+        draggingSmoothTime={0.25}
+        smoothTime={0.25}
+      />
       
-      {/* Directional light for depth and shadows */}
+      {/* Animation Controller for camera movements */}
+      <AnimationController
+        cameraControlsRef={cameraControlsRef}
+        animationCommand={animationCommand}
+        onAnimationComplete={handleAnimationComplete}
+      />
+      
+      {/* Scene lighting setup */}
+      <ambientLight intensity={0.4} color="#60A5FA" />
       <directionalLight 
         position={[10, 10, 5]} 
         intensity={0.8} 
         color="#93C5FD"
       />
-      
-      {/* Point light for additional cosmic glow */}
       <pointLight 
         position={[-10, -10, -5]} 
         intensity={0.5} 
         color="#3B82F6"
       />
+      
+      {/* Render real stars if catalog is available and loaded */}
+      {hygCatalog && !catalogLoading && (
+        <StarfieldWrapper 
+          hygCatalog={hygCatalog}
+          selectedStar={selectedStar}
+          onStarSelect={onStarSelect}
+          starSize={starSize}
+          glowMultiplier={glowMultiplier}
+          showLabels={showLabels}
+        />
+      )}
+      
+      {/* Optional: Add fog for depth perception */}
+      <fog attach="fog" args={['#0A0A0F', 5, 20]} />
+      
+      {/* Invisible plane for pointer miss detection */}
+      <mesh
+        position={[0, 0, -50]}
+        onPointerMissed={handlePointerMissed}
+        visible={false}
+      >
+        <planeGeometry args={[1000, 1000]} />
+        <meshBasicMaterial transparent opacity={0} />
+      </mesh>
+      
+      {/* Demo Controls UI */}
+      <mesh position={[0, 0, 0]} visible={false}>
+        <boxGeometry args={[0.1, 0.1, 0.1]} />
+        <meshBasicMaterial color="red" />
+      </mesh>
     </>
   );
 }
@@ -155,6 +320,7 @@ function SceneSetup() {
  * - Cosmic-themed dark background
  * - Real star data integration when available
  * - Uses dedicated Starfield component for rendering
+ * - Includes AnimationController demonstration
  */
 export function StarviewCanvas({ 
   hygCatalog, 
@@ -166,14 +332,6 @@ export function StarviewCanvas({
   showLabels = false 
 }: StarviewCanvasProps) {
   
-  // Handle pointer miss (clicking on empty space)
-  const handlePointerMissed = useCallback(() => {
-    console.log('StarviewCanvas: Pointer missed - deselecting star');
-    if (onStarSelect) {
-      onStarSelect(null, null);
-    }
-  }, [onStarSelect]);
-
   return (
     <div 
       className="fixed inset-0 w-full h-full"
@@ -204,35 +362,16 @@ export function StarviewCanvas({
           scroll: false, // Don't resize on scroll
           debounce: { scroll: 50, resize: 0 } // Debounce settings
         }}
-        onPointerMissed={handlePointerMissed}
       >
-        {/* Scene lighting setup */}
-        <SceneSetup />
-        
-        {/* Render real stars if catalog is available and loaded */}
-        {hygCatalog && !catalogLoading && (
-          <StarfieldWrapper 
-            hygCatalog={hygCatalog}
-            selectedStar={selectedStar}
-            onStarSelect={onStarSelect}
-            starSize={starSize}
-            glowMultiplier={glowMultiplier}
-            showLabels={showLabels}
-          />
-        )}
-        
-        {/* Optional: Add fog for depth perception */}
-        <fog attach="fog" args={['#0A0A0F', 5, 20]} />
-        
-        {/* Invisible plane for pointer miss detection */}
-        <mesh
-          position={[0, 0, -50]}
-          onPointerMissed={handlePointerMissed}
-          visible={false}
-        >
-          <planeGeometry args={[1000, 1000]} />
-          <meshBasicMaterial transparent opacity={0} />
-        </mesh>
+        <SceneContent
+          hygCatalog={hygCatalog}
+          selectedStar={selectedStar}
+          onStarSelect={onStarSelect}
+          starSize={starSize}
+          glowMultiplier={glowMultiplier}
+          showLabels={showLabels}
+          catalogLoading={catalogLoading}
+        />
       </Canvas>
       
       {/* Loading indicator for catalog */}
@@ -242,14 +381,33 @@ export function StarviewCanvas({
         </div>
       )}
       
-      {/* Status indicators */}
+      {/* Status indicators with animation demo info */}
       {hygCatalog && (
         <div className="absolute bottom-4 left-4 text-cosmic-stellar-wind text-xs font-light opacity-30 pointer-events-none">
           <div>{hygCatalog.getTotalStars().toLocaleString()} stars loaded</div>
           <div>Labels: {showLabels ? 'ON' : 'OFF'}</div>
           <div>Starfield component active</div>
+          <div className="text-cosmic-cherenkov-blue mt-2">
+            🎬 AnimationController Demo: Rotating around scene center
+          </div>
+          <div className="text-green-400">
+            ✨ Automatic rotation every 2 seconds
+          </div>
         </div>
       )}
+      
+      {/* Demo Instructions */}
+      <div className="absolute top-4 left-4 text-cosmic-stellar-wind text-xs font-light opacity-50 pointer-events-none">
+        <div className="frosted-glass rounded-lg p-3 max-w-xs">
+          <div className="text-cosmic-cherenkov-blue font-medium mb-2">AnimationController Demo</div>
+          <div className="space-y-1">
+            <div>• Camera rotates around scene center</div>
+            <div>• Demonstrates focusStar animation</div>
+            <div>• Auto-starts 3 seconds after load</div>
+            <div>• Uses 15-unit radius orbit</div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
