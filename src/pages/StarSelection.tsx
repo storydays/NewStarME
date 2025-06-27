@@ -3,7 +3,9 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Heart } from 'lucide-react';
 import { useStars } from '../hooks/useStars';
+import { useStarNavigation } from '../hooks/useStarNavigation';
 import { useSuggestedStars } from '../context/SuggestedStarsContext';
+import { StarNavigationPanel } from '../components/StarNavigationPanel';
 import { emotions } from '../data/emotions';
 import { Star } from '../types';
 
@@ -11,9 +13,27 @@ export function StarSelection() {
   const { emotionId } = useParams<{ emotionId: string }>();
   const navigate = useNavigate();
   const { stars, loading, error } = useStars(emotionId);
-  const { setSuggestedStars, clearSuggestedStars } = useSuggestedStars();
+  const { setSuggestedStars, clearSuggestedStars, triggerStarFocus } = useSuggestedStars();
   
   const emotion = emotions.find(e => e.id === emotionId);
+
+  // Star navigation hook with camera focus integration
+  const {
+    currentIndex,
+    currentStar,
+    canGoPrev,
+    canGoNext,
+    goToPrev,
+    goToNext,
+    goToIndex,
+    setCurrentIndex
+  } = useStarNavigation({
+    stars,
+    onStarFocus: (star, index) => {
+      console.log(`StarSelection: Focusing camera on star ${star.scientific_name} at index ${index}`);
+      triggerStarFocus(star, index);
+    }
+  });
 
   // Update suggested stars when stars are loaded
   useEffect(() => {
@@ -39,6 +59,16 @@ export function StarSelection() {
 
   const handleBack = () => {
     navigate('/');
+  };
+
+  const handleDedicate = (star: Star) => {
+    console.log(`StarSelection: Navigating to dedication for star: ${star.scientific_name}`);
+    navigate(`/dedicate/${star.id}?emotion=${emotionId}`);
+  };
+
+  const handleNavigate = (index: number) => {
+    console.log(`StarSelection: Navigating to star at index ${index}`);
+    goToIndex(index);
   };
 
   if (loading) {
@@ -144,6 +174,16 @@ export function StarSelection() {
           </motion.div>
         )}
       </div>
+
+      {/* Star Navigation Panel */}
+      <StarNavigationPanel
+        stars={stars}
+        currentIndex={currentIndex}
+        onNavigate={handleNavigate}
+        onDedicate={handleDedicate}
+        emotionColor={emotion.color}
+        emotionName={emotion.name}
+      />
     </div>
   );
 }

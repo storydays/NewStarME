@@ -14,12 +14,13 @@ import { SuggestedStarsProvider, useSuggestedStars } from './context/SuggestedSt
  * AppContent Component - Contains the main app logic with context access
  * 
  * Separated from App to allow access to SuggestedStarsContext
+ * Enhanced with camera focus integration for star navigation
  */
 function AppContent() {
   const [hygCatalog, setHygCatalog] = useState<HygStarsCatalog | null>(null);
   const [catalogLoading, setCatalogLoading] = useState(true);
   const [selectedStar, setSelectedStar] = useState<HygRecord | null>(null);
-  const { suggestedStars } = useSuggestedStars();
+  const { suggestedStars, focusedStarIndex } = useSuggestedStars();
 
   // Control settings for the star visualization - LABELS DISABLED BY DEFAULT
   const [controlSettings] = useState({
@@ -69,6 +70,7 @@ function AppContent() {
           glowMultiplier={controlSettings.glowMultiplier}
           showLabels={controlSettings.showLabels}
           highlightedStars={suggestedStars}
+          focusedStarIndex={focusedStarIndex}
         />
         
         <motion.div

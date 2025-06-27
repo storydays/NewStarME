@@ -7,25 +7,23 @@ import { Starfield } from './Starfield';
 import { AnimationController } from './AnimationController';
 
 /**
- * StarviewCanvas Component with Highlighted Stars Support
+ * StarviewCanvas Component with Camera Focus Integration
  * 
  * Enhanced 3D background canvas that utilizes real star data from the HYG catalog
- * and provides smooth camera animations including continuous orbiting.
- * Now supports highlighting specific stars for emotion-based selection.
+ * and provides smooth camera animations including continuous orbiting and star focusing.
  * 
  * Features:
  * - Accepts HYG catalog as prop for real star data
  * - Integrated AnimationController with continuous orbiting support
- * - Default orbiting animation when no star is selected
- * - Camera controls with CameraControls from drei
+ * - Camera focus animations for star navigation
  * - Star selection with automatic camera focus animations
  * - Resume orbiting when star is deselected
  * - Graceful fallback when catalog is not available
  * - Performance optimized with proper star filtering
  * - Cosmic-themed dark background
- * - NEW: Highlighted stars support for emotion-based selection
+ * - NEW: Camera focus integration for star navigation
  * 
- * Confidence Rating: High - Adding highlighted stars to existing system
+ * Confidence Rating: High - Adding camera focus to existing system
  */
 
 interface StarviewCanvasProps {
@@ -36,7 +34,8 @@ interface StarviewCanvasProps {
   starSize?: number;
   glowMultiplier?: number;
   showLabels?: boolean;
-  highlightedStars?: Star[]; // NEW: Stars to highlight in 3D view
+  highlightedStars?: Star[];
+  focusedStarIndex?: number | null; // NEW: Index of star to focus camera on
 }
 
 interface AnimationCommand {
@@ -53,7 +52,7 @@ interface AnimationCommand {
 }
 
 /**
- * StarfieldWrapper Component - Enhanced with highlighting support
+ * StarfieldWrapper Component - Enhanced with camera focus support
  * Converts HYG catalog data to Starfield component format and handles star selection
  */
 function StarfieldWrapper({ 
@@ -64,7 +63,8 @@ function StarfieldWrapper({
   starSize = 0.1, 
   glowMultiplier = 1.0, 
   showLabels = false,
-  highlightedStars = [] // NEW: Highlighted stars prop
+  highlightedStars = [],
+  focusedStarIndex = null
 }: { 
   hygCatalog: HygStarsCatalog;
   selectedStar?: HygRecord | null;
@@ -74,6 +74,7 @@ function StarfieldWrapper({
   glowMultiplier?: number;
   showLabels?: boolean;
   highlightedStars?: Star[];
+  focusedStarIndex?: number | null;
 }) {
   
   // Convert HYG catalog data to Starfield format with highlighting info
@@ -121,10 +122,29 @@ function StarfieldWrapper({
         position: [x, y, z] as [number, number, number],
         magnitude: star.mag,
         name: star.proper || undefined,
-        isHighlighted // NEW: Flag for highlighting
+        isHighlighted,
+        hygRecord: star // Store original record for camera focusing
       };
     });
   }, [hygCatalog, highlightedStars]);
+
+  // Handle camera focus when focusedStarIndex changes
+  useEffect(() => {
+    if (focusedStarIndex !== null && highlightedStars[focusedStarIndex] && onStarFocus) {
+      const targetStar = highlightedStars[focusedStarIndex];
+      console.log(`StarfieldWrapper: Focusing camera on star: ${targetStar.scientific_name}`);
+      
+      // Find the corresponding HYG record for camera positioning
+      const hygStar = catalogData.find(star => {
+        const starName = (star.hygRecord?.proper || `HYG ${star.hygRecord?.id}`).toLowerCase();
+        return starName === targetStar.scientific_name.toLowerCase();
+      });
+
+      if (hygStar && hygStar.hygRecord) {
+        onStarFocus(hygStar.hygRecord);
+      }
+    }
+  }, [focusedStarIndex, highlightedStars, catalogData, onStarFocus]);
 
   // Handle star selection from Starfield
   const handleStarSelect = useCallback((starId: string) => {
@@ -166,7 +186,7 @@ function StarfieldWrapper({
 /**
  * Scene Content Component
  * Contains all 3D scene elements including camera controls, animation controller, and starfield
- * Now includes CONTINUOUS ORBITING: Default orbit around scene center when no star selected
+ * Now includes CAMERA FOCUS: Smooth animations to focus on specific stars
  */
 function SceneContent({ 
   hygCatalog, 
@@ -177,7 +197,8 @@ function SceneContent({
   glowMultiplier, 
   showLabels,
   onPointerMissed,
-  highlightedStars = [] // NEW: Highlighted stars prop
+  highlightedStars = [],
+  focusedStarIndex = null
 }: {
   hygCatalog: HygStarsCatalog | null;
   catalogLoading: boolean;
@@ -188,6 +209,7 @@ function SceneContent({
   showLabels?: boolean;
   onPointerMissed: () => void;
   highlightedStars?: Star[];
+  focusedStarIndex?: number | null;
 }) {
   // Camera controls ref for AnimationController
   const cameraControlsRef = useRef<CameraControls>(null);
@@ -195,10 +217,10 @@ function SceneContent({
   // Animation state management
   const [animationCommand, setAnimationCommand] = useState<AnimationCommand | null>(null);
 
-  // DEFAULT ORBITING: Start orbiting when no star is selected
+  // DEFAULT ORBITING: Start orbiting when no star is selected and no focus
   useEffect(() => {
-    if (!selectedStar) {
-      console.log('SceneContent: No star selected - starting default orbit animation');
+    if (!selectedStar && focusedStarIndex === null) {
+      console.log('SceneContent: No star selected or focused - starting default orbit animation');
       
       setAnimationCommand({
         type: 'orbit',
@@ -208,7 +230,7 @@ function SceneContent({
         elevation: 0.2        // Vertical movement factor
       });
     }
-  }, [selectedStar]);
+  }, [selectedStar, focusedStarIndex]);
 
   // Handle star focus animation
   const handleStarFocus = useCallback((star: HygRecord) => {
@@ -303,6 +325,7 @@ function SceneContent({
           glowMultiplier={glowMultiplier}
           showLabels={showLabels}
           highlightedStars={highlightedStars}
+          focusedStarIndex={focusedStarIndex}
         />
       )}
       
@@ -324,7 +347,7 @@ function SceneContent({
 
 /**
  * StarviewCanvas Component
- * Main R3F canvas component that renders the 3D background scene with continuous orbiting
+ * Main R3F canvas component that renders the 3D background scene with camera focus support
  * 
  * Features:
  * - Full viewport coverage with fixed positioning
@@ -337,7 +360,7 @@ function SceneContent({
  * - Smooth camera animations for star selection
  * - Interactive camera controls with mouse/touch support
  * - Resume orbiting when star is deselected
- * - NEW: Support for highlighting specific stars
+ * - NEW: Camera focus integration for star navigation
  */
 export function StarviewCanvas({ 
   hygCatalog, 
@@ -347,7 +370,8 @@ export function StarviewCanvas({
   starSize = 0.1, 
   glowMultiplier = 1.0, 
   showLabels = false,
-  highlightedStars = [] // NEW: Highlighted stars prop
+  highlightedStars = [],
+  focusedStarIndex = null
 }: StarviewCanvasProps) {
   
   // Handle pointer miss (clicking on empty space)
@@ -387,7 +411,7 @@ export function StarviewCanvas({
         }}
         onPointerMissed={handlePointerMissed}
       >
-        {/* Scene content with integrated AnimationController and continuous orbiting */}
+        {/* Scene content with integrated AnimationController and camera focus support */}
         <SceneContent
           hygCatalog={hygCatalog}
           catalogLoading={catalogLoading}
@@ -398,6 +422,7 @@ export function StarviewCanvas({
           showLabels={showLabels}
           onPointerMissed={handlePointerMissed}
           highlightedStars={highlightedStars}
+          focusedStarIndex={focusedStarIndex}
         />
       </Canvas>
     </div>

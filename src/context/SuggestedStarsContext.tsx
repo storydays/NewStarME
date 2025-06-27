@@ -2,23 +2,27 @@ import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { Star } from '../types';
 
 /**
- * SuggestedStarsContext - Global state for highlighted stars in 3D view
+ * SuggestedStarsContext - Enhanced with camera focus support
  * 
  * Purpose: Provides a way for pages to communicate which stars should be
- * highlighted in the 3D visualization without prop drilling.
+ * highlighted in the 3D visualization and trigger camera focus animations.
  * 
  * Features:
  * - Global state management for suggested/highlighted stars
+ * - Camera focus trigger for smooth star-to-star navigation
  * - Context provider for easy consumption across components
  * - Type-safe interface with TypeScript
  * 
- * Confidence Rating: High - Standard React Context pattern
+ * Confidence Rating: High - Enhanced context with camera integration
  */
 
 interface SuggestedStarsContextType {
   suggestedStars: Star[];
   setSuggestedStars: (stars: Star[]) => void;
   clearSuggestedStars: () => void;
+  focusedStarIndex: number | null;
+  setFocusedStarIndex: (index: number | null) => void;
+  triggerStarFocus: (star: Star, index: number) => void;
 }
 
 const SuggestedStarsContext = createContext<SuggestedStarsContextType | undefined>(undefined);
@@ -29,15 +33,26 @@ interface SuggestedStarsProviderProps {
 
 export function SuggestedStarsProvider({ children }: SuggestedStarsProviderProps) {
   const [suggestedStars, setSuggestedStars] = useState<Star[]>([]);
+  const [focusedStarIndex, setFocusedStarIndex] = useState<number | null>(null);
 
   const clearSuggestedStars = () => {
     console.log('SuggestedStarsContext: Clearing suggested stars');
     setSuggestedStars([]);
+    setFocusedStarIndex(null);
   };
 
   const handleSetSuggestedStars = (stars: Star[]) => {
     console.log(`SuggestedStarsContext: Setting ${stars.length} suggested stars`);
     setSuggestedStars(stars);
+    // Auto-focus first star when stars are set
+    if (stars.length > 0) {
+      setFocusedStarIndex(0);
+    }
+  };
+
+  const triggerStarFocus = (star: Star, index: number) => {
+    console.log(`SuggestedStarsContext: Triggering focus on star ${star.scientific_name} at index ${index}`);
+    setFocusedStarIndex(index);
   };
 
   return (
@@ -45,7 +60,10 @@ export function SuggestedStarsProvider({ children }: SuggestedStarsProviderProps
       value={{ 
         suggestedStars, 
         setSuggestedStars: handleSetSuggestedStars, 
-        clearSuggestedStars 
+        clearSuggestedStars,
+        focusedStarIndex,
+        setFocusedStarIndex,
+        triggerStarFocus
       }}
     >
       {children}
