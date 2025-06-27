@@ -106,16 +106,16 @@ export function StarSelection() {
 
   return (
     <div className="min-h-screen relative">
-      <div className="relative z-10 container mx-auto px-6 py-12">
-        {/* Enhanced Header */}
+      <div className="relative z-10 container mx-auto px-6 py-8">
+        {/* Enhanced Header - Reduced spacing */}
         <motion.div
-          className="mb-16"
+          className="mb-12"
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
         >
           <button
             onClick={handleBack}
-            className="flex items-center gap-2 text-cosmic-stellar-wind hover:text-cosmic-observation transition-colors mb-12 group font-light frosted-glass px-4 py-2 rounded-lg"
+            className="flex items-center gap-2 text-cosmic-stellar-wind hover:text-cosmic-observation transition-colors mb-8 group font-light frosted-glass px-4 py-2 rounded-lg"
           >
             <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
             Return to cosmic emotions
@@ -123,7 +123,7 @@ export function StarSelection() {
           
           <div className="text-center max-w-2xl mx-auto">
             <motion.div
-              className="inline-flex items-center gap-3 px-6 py-3 rounded-full mb-8 frosted-glass-strong border"
+              className="inline-flex items-center gap-3 px-6 py-3 rounded-full mb-6 frosted-glass-strong border"
               style={{ 
                 borderColor: `${emotion.color}40`
               }}
@@ -136,7 +136,7 @@ export function StarSelection() {
             </motion.div>
             
             <motion.h1 
-              className="text-4xl md:text-5xl font-light text-cosmic-observation mb-6 cosmic-float"
+              className="text-3xl md:text-4xl font-light text-cosmic-observation mb-4 cosmic-float"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5 }}
@@ -145,7 +145,7 @@ export function StarSelection() {
             </motion.h1>
             
             <motion.p 
-              className="text-xl text-cosmic-light-echo font-light leading-relaxed particle-drift"
+              className="text-lg text-cosmic-light-echo font-light leading-relaxed particle-drift"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.7 }}
