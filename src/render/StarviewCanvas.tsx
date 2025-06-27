@@ -7,22 +7,23 @@ import { Starfield } from './Starfield';
 import { AnimationController } from './AnimationController';
 
 /**
- * StarviewCanvas Component with AnimationController Integration
+ * StarviewCanvas Component with Continuous Orbiting Animation
  * 
  * Enhanced 3D background canvas that utilizes real star data from the HYG catalog
- * and provides smooth camera animations for star selection and navigation.
+ * and provides smooth camera animations including continuous orbiting.
  * 
  * Features:
  * - Accepts HYG catalog as prop for real star data
- * - Integrated AnimationController for smooth camera transitions
+ * - Integrated AnimationController with continuous orbiting support
+ * - Default orbiting animation when no star is selected
  * - Camera controls with CameraControls from drei
  * - Star selection with automatic camera focus animations
- * - Test animation on page load: 2s delay, 4s duration, goes to [10,10,10]
+ * - Resume orbiting when star is deselected
  * - Graceful fallback when catalog is not available
  * - Performance optimized with proper star filtering
  * - Cosmic-themed dark background
  * 
- * Confidence Rating: High - Complete integration with AnimationController and test animation
+ * Confidence Rating: High - Complete integration with continuous orbiting system
  */
 
 interface StarviewCanvasProps {
@@ -36,11 +37,16 @@ interface StarviewCanvasProps {
 }
 
 interface AnimationCommand {
-  type: 'focusStar' | 'resetView' | 'moveTo';
+  type: 'focusStar' | 'resetView' | 'moveTo' | 'orbit';
   target?: {
     position: [number, number, number];
   };
   duration?: number;
+  // Orbit-specific parameters
+  center?: [number, number, number];
+  radius?: number;
+  speed?: number;
+  elevation?: number;
 }
 
 /**
@@ -140,7 +146,7 @@ function StarfieldWrapper({
 /**
  * Scene Content Component
  * Contains all 3D scene elements including camera controls, animation controller, and starfield
- * Now includes TEST ANIMATION: 2s delay, 4s duration, goes to far point [10,10,10]
+ * Now includes CONTINUOUS ORBITING: Default orbit around scene center when no star selected
  */
 function SceneContent({ 
   hygCatalog, 
@@ -167,25 +173,20 @@ function SceneContent({
   // Animation state management
   const [animationCommand, setAnimationCommand] = useState<AnimationCommand | null>(null);
 
-  // TEST ANIMATION: Trigger moveTo animation with specified parameters
+  // DEFAULT ORBITING: Start orbiting when no star is selected
   useEffect(() => {
-    console.log('SceneContent: Component mounted, setting up test animation');
-    
-    // Set 2 second delay as requested
-    const timer = setTimeout(() => {
-      console.log('SceneContent: Triggering test animation - moving to [10,10,10] over 4 seconds');
+    if (!selectedStar) {
+      console.log('SceneContent: No star selected - starting default orbit animation');
       
       setAnimationCommand({
-        type: 'moveTo',
-        target: {
-          position: [10, 10, 10] // Far point in scene as requested
-        },
-        duration: 4000 // 4 second duration as requested
+        type: 'orbit',
+        center: [0, 0, 0],    // Orbit around scene center
+        radius: 8,            // Orbit radius
+        speed: 0.3,           // Orbit speed (radians per second)
+        elevation: 0.2        // Vertical movement factor
       });
-    }, 2000); // 2 second timeout as requested
-
-    return () => clearTimeout(timer);
-  }, []); // Empty dependency array ensures this runs only once on mount
+    }
+  }, [selectedStar]);
 
   // Handle star focus animation
   const handleStarFocus = useCallback((star: HygRecord) => {
@@ -200,7 +201,7 @@ function SceneContent({
     const y = distance * Math.cos(decRad) * Math.sin(raRad);
     const z = distance * Math.sin(decRad);
 
-    // Set animation command to focus on the star
+    // Set animation command to focus on the star (stops orbiting)
     setAnimationCommand({
       type: 'focusStar',
       target: {
@@ -218,18 +219,12 @@ function SceneContent({
 
   // Handle pointer miss (clicking on empty space)
   const handlePointerMissedInternal = useCallback(() => {
-    console.log('SceneContent: Pointer missed - resetting view');
+    console.log('SceneContent: Pointer missed - deselecting star and resuming orbit');
     
-    // Deselect star
+    // Deselect star (this will trigger the useEffect to start orbiting again)
     if (onStarSelect) {
       onStarSelect(null, null);
     }
-    
-    // Reset camera view
-    setAnimationCommand({
-      type: 'resetView',
-      duration: 1500
-    });
     
     // Call parent handler
     onPointerMissed();
@@ -268,7 +263,7 @@ function SceneContent({
         smoothTime={0.25}
       />
 
-      {/* AnimationController - manages smooth camera transitions */}
+      {/* AnimationController - manages smooth camera transitions and continuous orbiting */}
       <AnimationController
         cameraControlsRef={cameraControlsRef}
         animationCommand={animationCommand}
@@ -306,7 +301,7 @@ function SceneContent({
 
 /**
  * StarviewCanvas Component
- * Main R3F canvas component that renders the 3D background scene with integrated AnimationController
+ * Main R3F canvas component that renders the 3D background scene with continuous orbiting
  * 
  * Features:
  * - Full viewport coverage with fixed positioning
@@ -315,9 +310,10 @@ function SceneContent({
  * - Optimized performance with proper camera settings
  * - Cosmic-themed dark background
  * - Real star data integration when available
+ * - Continuous orbiting animation when no star is selected
  * - Smooth camera animations for star selection
  * - Interactive camera controls with mouse/touch support
- * - Test animation: 2s delay, 4s duration, moves to [10,10,10]
+ * - Resume orbiting when star is deselected
  */
 export function StarviewCanvas({ 
   hygCatalog, 
@@ -366,7 +362,7 @@ export function StarviewCanvas({
         }}
         onPointerMissed={handlePointerMissed}
       >
-        {/* Scene content with integrated AnimationController and test animation */}
+        {/* Scene content with integrated AnimationController and continuous orbiting */}
         <SceneContent
           hygCatalog={hygCatalog}
           catalogLoading={catalogLoading}
@@ -391,9 +387,11 @@ export function StarviewCanvas({
         <div className="absolute bottom-4 left-4 text-cosmic-stellar-wind text-xs font-light opacity-30 pointer-events-none">
           <div>{hygCatalog.getTotalStars().toLocaleString()} stars loaded</div>
           <div>Labels: {showLabels ? 'ON' : 'OFF'}</div>
-          <div className="text-cosmic-cherenkov-blue">✨ AnimationController active</div>
-          <div className="text-green-400">🎬 Test animation: 2s delay → [10,10,10] over 4s</div>
-          <div>Click stars for smooth camera focus</div>
+          <div className="text-cosmic-cherenkov-blue">🌟 Continuous Orbiting Active</div>
+          <div className="text-green-400">
+            {selectedStar ? `📍 Focused on: ${selectedStar.proper || selectedStar.id}` : '🔄 Orbiting scene center'}
+          </div>
+          <div>Click stars for focus • Click empty space to resume orbit</div>
         </div>
       )}
     </div>
