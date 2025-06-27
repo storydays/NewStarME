@@ -16,8 +16,8 @@ function App() {
 
   // Control settings for the star visualization - LABELS DISABLED BY DEFAULT
   const [controlSettings] = useState({
-    starSize: 0.1,
-    glowMultiplier: 1.2,
+    starSize: 0.25,
+    glowMultiplier: 2,
     showLabels: false // Changed from true to false
   });
 
