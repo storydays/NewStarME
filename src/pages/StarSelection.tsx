@@ -7,7 +7,7 @@ import { useStarNavigation } from '../hooks/useStarNavigation';
 import { useSuggestedStars } from '../context/SuggestedStarsContext';
 import { StarNavigationPanel } from '../components/StarNavigationPanel';
 import { emotions } from '../data/emotions';
-import { Star } from '../types';
+import { HygRecord } from '../types';
 
 export function StarSelection() {
   const { emotionId } = useParams<{ emotionId: string }>();
@@ -30,7 +30,7 @@ export function StarSelection() {
   } = useStarNavigation({
     stars,
     onStarFocus: (star, index) => {
-      console.log(`StarSelection: Focusing camera on star ${star.scientific_name} at index ${index}`);
+      console.log(`StarSelection: Focusing camera on star ${star.proper || star.id} at index ${index}`);
       triggerStarFocus(star, index);
     }
   });
@@ -38,8 +38,22 @@ export function StarSelection() {
   // Update suggested stars when stars are loaded
   useEffect(() => {
     if (stars && stars.length > 0) {
-      console.log(`StarSelection: Setting ${stars.length} suggested stars for 3D highlighting`);
-      setSuggestedStars(stars);
+      console.log(`StarSelection: Setting ${stars.length} suggested HYG stars for 3D highlighting`);
+      // Convert HygRecord[] to Star[] format for context compatibility
+      const starObjects = stars.map(hygRecord => ({
+        id: hygRecord.id.toString(),
+        scientific_name: hygRecord.proper || `HYG ${hygRecord.id}`,
+        poetic_description: `A magnificent celestial beacon for ${emotionId}`,
+        coordinates: `${hygRecord.ra.toFixed(3)}° RA, ${hygRecord.dec.toFixed(3)}° Dec`,
+        visual_data: {
+          brightness: Math.max(0.3, Math.min(1.0, (6.5 - hygRecord.mag) / 6.5)),
+          color: '#F8F8FF',
+          size: 1.0
+        },
+        emotion_id: emotionId || 'love'
+      }));
+      
+      setSuggestedStars(starObjects);
     }
     
     // Clear suggested stars when leaving this page
@@ -47,7 +61,7 @@ export function StarSelection() {
       console.log('StarSelection: Clearing suggested stars on unmount');
       clearSuggestedStars();
     };
-  }, [stars, setSuggestedStars, clearSuggestedStars]);
+  }, [stars, setSuggestedStars, clearSuggestedStars, emotionId]);
 
   if (!emotion) {
     return (
@@ -61,8 +75,9 @@ export function StarSelection() {
     navigate('/');
   };
 
-  const handleDedicate = (star: Star) => {
-    console.log(`StarSelection: Navigating to dedication for star: ${star.scientific_name}`);
+  const handleDedicate = (star: HygRecord) => {
+    console.log(`StarSelection: Navigating to dedication for star: ${star.proper || star.id}`);
+    // Use HygRecord.id for the dedication URL
     navigate(`/dedicate/${star.id}?emotion=${emotionId}`);
   };
 
@@ -175,12 +190,29 @@ export function StarSelection() {
         )}
       </div>
 
-      {/* Star Navigation Panel */}
+      {/* Star Navigation Panel - Updated to work with HygRecord[] */}
       <StarNavigationPanel
-        stars={stars}
+        stars={stars.map(hygRecord => ({
+          id: hygRecord.id.toString(),
+          scientific_name: hygRecord.proper || `HYG ${hygRecord.id}`,
+          poetic_description: `A magnificent celestial beacon embodying ${emotion.name.toLowerCase()}`,
+          coordinates: `${hygRecord.ra.toFixed(3)}° RA, ${hygRecord.dec.toFixed(3)}° Dec`,
+          visual_data: {
+            brightness: Math.max(0.3, Math.min(1.0, (6.5 - hygRecord.mag) / 6.5)),
+            color: '#F8F8FF',
+            size: 1.0
+          },
+          emotion_id: emotionId || 'love'
+        }))}
         currentIndex={currentIndex}
         onNavigate={handleNavigate}
-        onDedicate={handleDedicate}
+        onDedicate={(star) => {
+          // Find the corresponding HygRecord
+          const hygRecord = stars.find(h => h.id.toString() === star.id);
+          if (hygRecord) {
+            handleDedicate(hygRecord);
+          }
+        }}
         emotionColor={emotion.color}
         emotionName={emotion.name}
       />

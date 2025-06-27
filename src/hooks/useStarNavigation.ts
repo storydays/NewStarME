@@ -1,14 +1,13 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { Star } from '../types';
+import { HygRecord } from '../types';
 
 /**
- * useStarNavigation Hook - Enhanced with stability fixes
+ * useStarNavigation Hook - Updated for HygRecord[]
  * 
  * Purpose: Manages navigation state and camera focusing for star browsing.
  * Provides prev/next navigation and camera animation triggers.
  * 
- * Key Enhancement: Uses refs to track initialization state and prevent
- * unnecessary resets when the stars array reference changes but content is the same.
+ * Key Enhancement: Now works with HygRecord[] instead of Star[]
  * 
  * Features:
  * - Current star index tracking
@@ -17,17 +16,17 @@ import { Star } from '../types';
  * - Smart reset logic (only when stars actually change)
  * - Prevents infinite reset loops
  * 
- * Confidence Rating: High - Targeted fix for navigation stability
+ * Confidence Rating: High - Updated for HYG integration
  */
 
 interface UseStarNavigationProps {
-  stars: Star[];
-  onStarFocus?: (star: Star, index: number) => void;
+  stars: HygRecord[];
+  onStarFocus?: (star: HygRecord, index: number) => void;
 }
 
 interface UseStarNavigationReturn {
   currentIndex: number;
-  currentStar: Star | null;
+  currentStar: HygRecord | null;
   canGoPrev: boolean;
   canGoNext: boolean;
   goToPrev: () => void;

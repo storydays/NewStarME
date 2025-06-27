@@ -21,9 +21,9 @@ import { AnimationController } from './AnimationController';
  * - Graceful fallback when catalog is not available
  * - Performance optimized with proper star filtering
  * - Cosmic-themed dark background
- * - NEW: Camera focus integration for star navigation
+ * - UPDATED: Now works with HygRecord[] for highlighted stars
  * 
- * Confidence Rating: High - Adding camera focus to existing system
+ * Confidence Rating: High - Updated for HYG integration
  */
 
 interface StarviewCanvasProps {
@@ -34,8 +34,8 @@ interface StarviewCanvasProps {
   starSize?: number;
   glowMultiplier?: number;
   showLabels?: boolean;
-  highlightedStars?: Star[];
-  focusedStarIndex?: number | null; // NEW: Index of star to focus camera on
+  highlightedStars?: Star[]; // Keep as Star[] for backward compatibility
+  focusedStarIndex?: number | null;
 }
 
 interface AnimationCommand {
@@ -52,7 +52,7 @@ interface AnimationCommand {
 }
 
 /**
- * StarfieldWrapper Component - Enhanced with camera focus support
+ * StarfieldWrapper Component - Updated for HYG integration
  * Converts HYG catalog data to Starfield component format and handles star selection
  */
 function StarfieldWrapper({ 
@@ -360,7 +360,7 @@ function SceneContent({
  * - Smooth camera animations for star selection
  * - Interactive camera controls with mouse/touch support
  * - Resume orbiting when star is deselected
- * - NEW: Camera focus integration for star navigation
+ * - UPDATED: Now works with HygRecord[] for highlighted stars
  */
 export function StarviewCanvas({ 
   hygCatalog, 

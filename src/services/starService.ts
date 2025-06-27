@@ -3,7 +3,7 @@ import { Star, HygRecord } from '../types';
 import { HygStarsCatalog } from '../data/StarsCatalog';
 
 /**
- * StarService - Enhanced with HYG Catalog Integration
+ * StarService - Enhanced with HYG Catalog Integration and Matching
  * 
  * This service now uses the HYG star catalog as the primary source for star data,
  * providing access to over 119,000 real stars with accurate astronomical data.
@@ -11,6 +11,7 @@ import { HygStarsCatalog } from '../data/StarsCatalog';
  * Key Features:
  * - Dynamic loading of HYG catalog from remote CSV
  * - Intelligent fallback system (AI -> HYG -> Local)
+ * - Smart matching between AI-generated stars and HYG catalog
  * - Caching for performance
  * - Emotion-based star selection using astronomical properties
  * 
@@ -25,6 +26,106 @@ export class StarService {
   private static hygCatalog: HygStarsCatalog | null = null;
   private static catalogLoadPromise: Promise<HygStarsCatalog> | null = null;
   private static catalogLoadFailed: boolean = false;
+
+  /**
+   * NEW: Find best matching HygRecord for a given Star
+   * 
+   * Priority matching:
+   * 1. Scientific name match (case-insensitive)
+   * 2. Approximate coordinates match (within tolerance)
+   * 
+   * @param star - Star object to find HYG match for
+   * @returns HygRecord if match found, null otherwise
+   */
+  static findBestHygMatch(star: Star): HygRecord | null {
+    if (!this.hygCatalog) {
+      console.warn('StarService.findBestHygMatch: HYG catalog not loaded');
+      return null;
+    }
+
+    const allStars = this.hygCatalog.getStars();
+    console.log(`StarService.findBestHygMatch: Searching for match for "${star.scientific_name}"`);
+
+    // Priority 1: Scientific name match (case-insensitive)
+    const nameMatch = allStars.find(hygStar => {
+      if (!hygStar.proper) return false;
+      
+      const hygName = hygStar.proper.toLowerCase().trim();
+      const starName = star.scientific_name.toLowerCase().trim();
+      
+      // Exact match
+      if (hygName === starName) return true;
+      
+      // Partial match (either direction)
+      if (hygName.includes(starName) || starName.includes(hygName)) return true;
+      
+      return false;
+    });
+
+    if (nameMatch) {
+      console.log(`StarService.findBestHygMatch: Found name match for "${star.scientific_name}" -> "${nameMatch.proper}"`);
+      return nameMatch;
+    }
+
+    // Priority 2: Approximate coordinates match
+    try {
+      const starCoords = this.parseCoordinates(star.coordinates);
+      if (starCoords) {
+        const tolerance = 0.5; // degrees tolerance
+        
+        const coordMatch = allStars.find(hygStar => {
+          const raDiff = Math.abs(hygStar.ra - starCoords.ra);
+          const decDiff = Math.abs(hygStar.dec - starCoords.dec);
+          
+          return raDiff <= tolerance && decDiff <= tolerance;
+        });
+
+        if (coordMatch) {
+          console.log(`StarService.findBestHygMatch: Found coordinate match for "${star.scientific_name}" -> "${coordMatch.proper || `HYG ${coordMatch.id}`}"`);
+          return coordMatch;
+        }
+      }
+    } catch (error) {
+      console.warn('StarService.findBestHygMatch: Error parsing coordinates:', error);
+    }
+
+    console.log(`StarService.findBestHygMatch: No match found for "${star.scientific_name}"`);
+    return null;
+  }
+
+  /**
+   * Parse coordinate string to RA/Dec degrees
+   * 
+   * @param coordinates - Coordinate string in format "XXh XXm XXs ±XX° XX′ XX″"
+   * @returns Object with ra and dec in degrees, or null if parsing fails
+   */
+  private static parseCoordinates(coordinates: string): { ra: number; dec: number } | null {
+    try {
+      // Parse RA: "XXh XXm XXs"
+      const raMatch = coordinates.match(/(\d+)h\s*(\d+)m\s*([\d.]+)s/);
+      if (!raMatch) return null;
+      
+      const raHours = parseInt(raMatch[1]);
+      const raMinutes = parseInt(raMatch[2]);
+      const raSeconds = parseFloat(raMatch[3]);
+      const ra = (raHours + raMinutes / 60 + raSeconds / 3600) * 15; // Convert to degrees
+      
+      // Parse Dec: "±XX° XX′ XX″"
+      const decMatch = coordinates.match(/([+−-])(\d+)°\s*(\d+)′\s*([\d.]+)″/);
+      if (!decMatch) return null;
+      
+      const decSign = decMatch[1] === '−' || decMatch[1] === '-' ? -1 : 1;
+      const decDegrees = parseInt(decMatch[2]);
+      const decMinutes = parseInt(decMatch[3]);
+      const decSeconds = parseFloat(decMatch[4]);
+      const dec = decSign * (decDegrees + decMinutes / 60 + decSeconds / 3600);
+      
+      return { ra, dec };
+    } catch (error) {
+      console.warn('StarService.parseCoordinates: Failed to parse coordinates:', coordinates, error);
+      return null;
+    }
+  }
 
   /**
    * Initialize the StarService with fallback static stars
@@ -305,7 +406,8 @@ export class StarService {
       coordinates,
       visual_data: { brightness, color, size },
       emotion_id: emotionId,
-      source: 'static'
+      source: 'static',
+      hyg_proper_name: starData.name // Store for matching
     };
   }
 
@@ -476,7 +578,8 @@ export class StarService {
       coordinates,
       visual_data: { brightness, color, size },
       emotion_id: emotionId,
-      source: 'static'
+      source: 'static',
+      hyg_proper_name: hygRecord.proper // Store HYG proper name
     };
   }
 
@@ -561,12 +664,22 @@ export class StarService {
   }
 
   /**
-   * Main method to fetch stars for a given emotion
-   * Uses AI generation, HYG catalog fallback, and database caching
+   * UPDATED: Main method to fetch stars for a given emotion
+   * Now returns HygRecord[] instead of Star[]
+   * Uses AI generation with HYG matching, HYG catalog fallback, and database caching
    */
-  static async fetchStarsForEmotion(emotionId: string): Promise<Star[]> {
+  static async fetchStarsForEmotion(emotionId: string): Promise<HygRecord[]> {
     try {
       console.log(`Fetching stars for emotion: ${emotionId}`);
+
+      // Ensure HYG catalog is loaded first
+      if (!this.hygCatalog && !this.catalogLoadFailed) {
+        try {
+          await this.loadHygCatalog();
+        } catch (error) {
+          console.warn('Failed to load HYG catalog for fetchStarsForEmotion:', error);
+        }
+      }
 
       // Step 1: Check for cached AI-generated stars
       const { data: cachedStars, error: cacheError } = await supabase
@@ -585,7 +698,12 @@ export class StarService {
         
         if (now - generatedAt < this.CACHE_DURATION) {
           console.log(`Using cached AI stars (${cachedStars.length} found)`);
-          return cachedStars.slice(0, 5);
+          // Convert cached stars to HygRecords
+          const hygRecords = cachedStars.slice(0, 5).map(star => this.findBestHygMatch(star)).filter(Boolean) as HygRecord[];
+          if (hygRecords.length > 0) {
+            console.log(`Successfully matched ${hygRecords.length} cached stars to HYG records`);
+            return hygRecords;
+          }
         } else {
           console.log('Cached stars are stale, generating new ones');
         }
@@ -610,7 +728,22 @@ export class StarService {
           
           if (result.success && result.stars && result.stars.length > 0) {
             console.log(`AI generation successful: ${result.stars.length} stars generated`);
-            return result.stars;
+            
+            // Convert AI-generated stars to HygRecords using matching
+            const hygRecords: HygRecord[] = [];
+            for (const aiStar of result.stars) {
+              const hygMatch = this.findBestHygMatch(aiStar);
+              if (hygMatch) {
+                hygRecords.push(hygMatch);
+              }
+            }
+            
+            if (hygRecords.length > 0) {
+              console.log(`Successfully matched ${hygRecords.length} AI stars to HYG records`);
+              return hygRecords;
+            } else {
+              console.warn('No AI stars could be matched to HYG records, falling back');
+            }
           } else {
             console.warn('AI generation returned no stars, falling back to HYG catalog');
           }
@@ -646,10 +779,10 @@ export class StarService {
   }
 
   /**
-   * Get stars from HYG catalog for an emotion
-   * Uses astronomical properties to select appropriate stars
+   * UPDATED: Get stars from HYG catalog for an emotion
+   * Now returns HygRecord[] directly
    */
-  private static async getHygStarsForEmotion(emotionId: string): Promise<Star[]> {
+  private static async getHygStarsForEmotion(emotionId: string): Promise<HygRecord[]> {
     try {
       // Ensure HYG catalog is loaded
       if (!this.hygCatalog) {
@@ -747,8 +880,8 @@ export class StarService {
 
       console.log(`Selected ${selectedStars.length} stars from HYG catalog for ${emotionId}`);
 
-      // Convert to Star format
-      return selectedStars.map(hygStar => this.mapHygRecordToStar(hygStar, emotionId));
+      // Return HygRecords directly
+      return selectedStars;
 
     } catch (error) {
       console.error('Error getting HYG stars for emotion:', error);
@@ -757,9 +890,10 @@ export class StarService {
   }
 
   /**
-   * Get static stars from database for an emotion
+   * UPDATED: Get static stars from database for an emotion
+   * Now returns HygRecord[] by matching database stars to HYG catalog
    */
-  private static async getStaticStarsForEmotion(emotionId: string): Promise<Star[]> {
+  private static async getStaticStarsForEmotion(emotionId: string): Promise<HygRecord[]> {
     try {
       const { data: staticStars, error } = await supabase
         .from('stars')
@@ -775,7 +909,18 @@ export class StarService {
 
       if (staticStars && staticStars.length > 0) {
         console.log(`Found ${staticStars.length} static stars in database`);
-        return staticStars;
+        
+        // Convert static stars to HygRecords using matching
+        const hygRecords: HygRecord[] = [];
+        for (const star of staticStars) {
+          const hygMatch = this.findBestHygMatch(star);
+          if (hygMatch) {
+            hygRecords.push(hygMatch);
+          }
+        }
+        
+        console.log(`Successfully matched ${hygRecords.length} static stars to HYG records`);
+        return hygRecords;
       }
 
       return [];
@@ -786,10 +931,26 @@ export class StarService {
   }
 
   /**
-   * Get star by ID - supports both database and HYG catalog lookups
+   * UPDATED: Get star by ID - supports both database and HYG catalog lookups
+   * Now handles numeric HygRecord IDs for the Dedication page
    */
   static async getStarById(starId: string): Promise<Star | null> {
     try {
+      // Check if it's a numeric HYG ID
+      const numericId = parseInt(starId);
+      if (!isNaN(numericId) && this.hygCatalog) {
+        console.log(`StarService.getStarById: Looking up HYG star with ID ${numericId}`);
+        
+        const hygStar = this.hygCatalog.getStar(numericId);
+        if (hygStar) {
+          // Convert HygRecord to Star for the Dedication form
+          // We need to determine the emotion - use a default for now
+          const star = this.mapHygRecordToStar(hygStar, 'love');
+          console.log(`StarService.getStarById: Found HYG star: ${star.scientific_name}`);
+          return star;
+        }
+      }
+
       // First try database
       const { data, error } = await supabase
         .from('stars')
@@ -836,8 +997,13 @@ export class StarService {
    */
   static async getStarsByEmotion(emotionId: string): Promise<Star[] | null> {
     try {
-      const stars = await this.fetchStarsForEmotion(emotionId);
-      return stars.length > 0 ? stars : null;
+      const hygRecords = await this.fetchStarsForEmotion(emotionId);
+      if (hygRecords.length > 0) {
+        // Convert HygRecords back to Stars for legacy compatibility
+        const stars = hygRecords.map(hygRecord => this.mapHygRecordToStar(hygRecord, emotionId));
+        return stars;
+      }
+      return null;
     } catch (error) {
       console.error('Error in getStarsByEmotion:', error);
       return null;

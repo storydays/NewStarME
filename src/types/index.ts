@@ -19,6 +19,7 @@ export interface Star {
   emotion_id: string;
   source?: 'static' | 'ai' | 'fallback'; // Added source tracking
   generated_at?: string; // Added generation timestamp
+  hyg_proper_name?: string; // NEW: Store HYG proper name for matching
 }
 
 export interface Dedication {
