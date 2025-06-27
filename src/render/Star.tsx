@@ -244,7 +244,7 @@ function HighlightedStar({
           depthWrite={false}
           opacity={1.0}
           color={colors.glowColor}
-          alphaTest={0.01}
+          alphaTest={0.05}
           blending={THREE.AdditiveBlending}
         />
       </sprite>
@@ -260,7 +260,7 @@ function HighlightedStar({
           opacity={colors.baseCoreOpacity}
           blending={THREE.AdditiveBlending}
           depthWrite={false}
-          alphaTest={0.01}
+          alphaTest={0.05}
         />
       </mesh>
     </Billboard>
