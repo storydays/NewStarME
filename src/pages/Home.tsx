@@ -13,8 +13,7 @@ export function Home() {
 
   return (
     <div className="min-h-screen relative overflow-hidden">
-      {/* Gravitational lensing effect overlay */}
-      <div className="absolute inset-0 bg-gravitational-lensing opacity-20 pointer-events-none" />
+      {/* Removed gravitational lensing effect overlay */}
       
       {/* Main content with physics-based layout */}
       <div className="relative z-10 flex flex-col items-center justify-center min-h-screen px-6 py-12">

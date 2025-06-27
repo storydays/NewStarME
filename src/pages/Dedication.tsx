@@ -70,8 +70,7 @@ export function Dedication() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-cosmic-dark-matter via-cosmic-deep-space to-cosmic-quantum-field relative">
-      {/* Gravitational lensing effect */}
-      <div className="absolute inset-0 bg-gravitational-lensing opacity-15 pointer-events-none" />
+      {/* Removed gravitational lensing effect */}
       
       <div className="relative z-10 container mx-auto px-6 py-12">
         {/* Enhanced Header */}
