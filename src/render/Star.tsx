@@ -103,10 +103,10 @@ export function Star({
   return (
     <Billboard position={position}>
       {/* Enhanced invisible clickable mesh - larger for highlighted stars */}
-      <mesh onClick={handleClick} visible={false}>
+      {/*<mesh onClick={handleClick} visible={false}>
         <planeGeometry args={[clickAreaSize, clickAreaSize]} />
         <meshBasicMaterial transparent visible={false} />
-      </mesh>
+      </mesh>*/}
       
       {/* Enhanced glow sprite with emotion-based coloring */}
       <mesh onClick={handleClick}>
