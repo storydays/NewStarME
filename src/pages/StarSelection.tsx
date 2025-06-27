@@ -5,7 +5,6 @@ import { ArrowLeft, Heart } from 'lucide-react';
 import { useStars } from '../hooks/useStars';
 import { useStarNavigation } from '../hooks/useStarNavigation';
 import { useSuggestedStars } from '../context/SuggestedStarsContext';
-// import { StarNavigationPanel } from '../components/StarNavigationPanel';
 import { emotions } from '../data/emotions';
 import { Star } from '../types';
 
@@ -35,10 +34,10 @@ export function StarSelection() {
     }
   });
 
-  // Update suggested stars when stars are loaded
+  // Update suggested stars when stars are loaded with enhanced highlighting
   useEffect(() => {
     if (stars && stars.length > 0) {
-      console.log(`StarSelection: Setting ${stars.length} suggested stars for 3D highlighting`);
+      console.log(`StarSelection: Setting ${stars.length} suggested stars for enhanced 3D highlighting`);
       setSuggestedStars(stars);
     }
     
@@ -139,7 +138,8 @@ export function StarSelection() {
             animate={{ opacity: 1 }}
             transition={{ delay: 0.5 }}
           >
-            {stars.length} stars have been carefully selected to resonate with the cosmic frequency of {emotion.name.toLowerCase()}
+            {stars.length} stars have been carefully selected to resonate with the cosmic frequency of {emotion.name.toLowerCase()}. 
+            Click on any highlighted star in the 3D view to dedicate it with your personal message.
           </motion.p>
         </div>
 
@@ -179,17 +179,23 @@ export function StarSelection() {
         </div>
       </div>
 
-      {/* DISABLED: Star Navigation Panel */}
-      {/* 
-      <StarNavigationPanel
-        stars={stars}
-        currentIndex={currentIndex}
-        onNavigate={handleNavigate}
-        onDedicate={handleDedicate}
-        emotionColor={emotion.color}
-        emotionName={emotion.name}
-      />
-      */}
+      {/* Enhanced instructions for 3D interaction */}
+      <motion.div
+        className="fixed bottom-6 left-6 z-20 pointer-events-none"
+        initial={{ opacity: 0, x: -50 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ delay: 1.5 }}
+      >
+        <div className="frosted-glass-lighter rounded-lg p-3 max-w-xs">
+          <p className="text-cosmic-stellar-wind text-xs font-light leading-relaxed">
+            <strong className="text-cosmic-observation">Enhanced 3D View:</strong><br/>
+            • Highlighted stars are 400% larger<br/>
+            • Click any highlighted star to dedicate<br/>
+            • Zoom, pan, and rotate to explore<br/>
+            • Star names always visible
+          </p>
+        </div>
+      </motion.div>
     </div>
   );
 }

@@ -3,24 +3,23 @@ import { useFrame } from '@react-three/fiber';
 import { CameraControls } from '@react-three/drei';
 
 /**
- * AnimationController Component - Enhanced with Continuous Orbiting
+ * AnimationController Component - Enhanced with Center View Support
  * 
- * Purpose: Manages both discrete and continuous camera animations in a 3D scene.
- * Supports one-shot animations (focusStar, resetView, moveTo) and continuous orbiting.
+ * Purpose: Manages camera animations including discrete movements and continuous orbiting.
+ * Now supports automatic centering for optimal viewing of highlighted stars.
  * 
  * Features:
- * - Discrete animations: focusStar, resetView, moveTo (triggered by useEffect)
- * - Continuous animations: orbit (handled by useFrame)
- * - Prevents overlapping animations with ref-based state management
+ * - Discrete animations: focusStar, resetView, moveTo, centerView
+ * - Continuous animations: orbit
+ * - Optimal camera positioning for star groups
  * - Smooth transitions between animation modes
- * - Graceful error handling with completion callbacks
- * - No visual output (returns null)
+ * - Enhanced error handling and completion callbacks
  * 
- * Confidence Rating: High - Complete refactoring with continuous orbit support
+ * Confidence Rating: High - Enhanced existing system with center view capability
  */
 
 interface AnimationCommand {
-  type: 'focusStar' | 'resetView' | 'moveTo' | 'orbit';
+  type: 'focusStar' | 'resetView' | 'moveTo' | 'orbit' | 'centerView';
   target?: {
     position: [number, number, number];
   };
@@ -30,6 +29,11 @@ interface AnimationCommand {
   radius?: number;
   speed?: number;
   elevation?: number;
+  // Center view parameters
+  boundingBox?: {
+    min: [number, number, number];
+    max: [number, number, number];
+  };
 }
 
 interface AnimationControllerProps {
@@ -51,13 +55,13 @@ export const AnimationController: React.FC<AnimationControllerProps> = ({
     isOrbiting: false,
     center: [0, 0, 0] as [number, number, number],
     radius: 8,
-    speed: 0.3, // radians per second
+    speed: 0.3,
     elevation: 0.2,
     currentAngle: 0,
     lastTime: 0
   });
 
-  // Handle discrete animations (focusStar, resetView, moveTo)
+  // Handle discrete animations (focusStar, resetView, moveTo, centerView)
   useEffect(() => {
     // Skip if no command or if it's an orbit command (handled by useFrame)
     if (!animationCommand || animationCommand.type === 'orbit') {
@@ -84,41 +88,79 @@ export const AnimationController: React.FC<AnimationControllerProps> = ({
       try {
         switch (animationCommand.type) {
           case 'focusStar': {
-            // Move camera to position offset from target star and look at star's position
+            // Enhanced star focusing with optimal viewing distance
             if (!animationCommand.target?.position) {
               console.warn('AnimationController: focusStar command missing target position');
               break;
             }
             
             const [x, y, z] = animationCommand.target.position;
-            const distance = 5; // Fixed offset distance as specified
+            const optimalDistance = 3; // Closer for detailed star viewing
             
-            // Calculate camera position with offset
+            // Calculate camera position with optimal offset
             const cameraPos: [number, number, number] = [
-              x + distance, 
-              y + distance, 
-              z + distance
+              x + optimalDistance, 
+              y + optimalDistance * 0.5, 
+              z + optimalDistance
             ];
             
             console.log(`AnimationController: Focusing on star at [${x}, ${y}, ${z}], camera at [${cameraPos.join(', ')}]`);
             
-            // Execute smooth camera movement and look-at simultaneously
+            // Execute smooth camera movement with optimal positioning
             await controls.setLookAt(
-              ...cameraPos,     // Camera position
-              ...animationCommand.target.position, // Look-at target
-              true              // Animate smoothly
+              ...cameraPos,
+              ...animationCommand.target.position,
+              true
+            );
+            break;
+          }
+
+          case 'centerView': {
+            // NEW: Center camera to view all highlighted stars optimally
+            if (!animationCommand.target?.position) {
+              console.warn('AnimationController: centerView command missing target position');
+              break;
+            }
+            
+            const [centerX, centerY, centerZ] = animationCommand.target.position;
+            
+            // Calculate optimal viewing distance based on bounding box
+            let viewDistance = 12; // Default distance
+            if (animationCommand.boundingBox) {
+              const { min, max } = animationCommand.boundingBox;
+              const maxDimension = Math.max(
+                max[0] - min[0],
+                max[1] - min[1],
+                max[2] - min[2]
+              );
+              viewDistance = Math.max(8, maxDimension * 1.2);
+            }
+            
+            // Position camera for optimal group viewing
+            const cameraPos: [number, number, number] = [
+              centerX,
+              centerY + viewDistance * 0.3,
+              centerZ + viewDistance
+            ];
+            
+            console.log(`AnimationController: Centering view at [${centerX}, ${centerY}, ${centerZ}], camera at [${cameraPos.join(', ')}]`);
+            
+            await controls.setLookAt(
+              ...cameraPos,
+              centerX, centerY, centerZ,
+              true
             );
             break;
           }
 
           case 'resetView': {
-            // Return camera to default position (2,2,2) looking at origin (0,0,0)
+            // Return camera to default position
             console.log('AnimationController: Resetting camera to default view');
             
             await controls.setLookAt(
-              2, 2, 2,    // Camera position
-              0, 0, 0,    // Look-at target (origin)
-              true        // Animate smoothly
+              2, 2, 2,
+              0, 0, 0,
+              true
             );
             break;
           }
@@ -185,8 +227,8 @@ export const AnimationController: React.FC<AnimationControllerProps> = ({
     orbit.radius = animationCommand.radius || 8;
     orbit.speed = animationCommand.speed || 0.3;
     orbit.elevation = animationCommand.elevation || 0.2;
-    orbit.currentAngle = 0; // Reset angle
-    orbit.lastTime = 0; // Reset timing
+    orbit.currentAngle = 0;
+    orbit.lastTime = 0;
     orbit.isOrbiting = true;
 
     console.log('AnimationController: Orbit parameters set:', {
@@ -230,15 +272,14 @@ export const AnimationController: React.FC<AnimationControllerProps> = ({
     // Calculate camera position in orbit
     const [centerX, centerY, centerZ] = orbit.center;
     const x = centerX + Math.cos(orbit.currentAngle) * orbit.radius;
-    const y = centerY + Math.sin(orbit.currentAngle * orbit.elevation) * 2; // Gentle vertical movement
+    const y = centerY + Math.sin(orbit.currentAngle * orbit.elevation) * 2;
     const z = centerZ + Math.sin(orbit.currentAngle) * orbit.radius;
 
     // Update camera position and look-at target
-    // Use setLookAt without animation (false) for smooth continuous movement
     controls.setLookAt(
-      x, y, z,                    // Camera position
-      centerX, centerY, centerZ,  // Look-at target (orbit center)
-      false                       // No animation - direct update for smooth orbit
+      x, y, z,
+      centerX, centerY, centerZ,
+      false
     );
   });
 

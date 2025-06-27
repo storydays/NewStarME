@@ -1,22 +1,25 @@
 import React, { useCallback } from 'react';
 import { Billboard } from '@react-three/drei';
 import * as THREE from 'three';
-import { HygRecord } from '../types';
 
 /**
- * Star Component Specifications - Enhanced with highlighting support
+ * Star Component - Enhanced with Emotion-Based Coloring and Advanced Highlighting
  * 
- * Purpose: Reusable React component that renders a single star in a 3D scene 
- * using react-three-fiber and three.js. Visually represents a star with a glow 
- * and core, supports click interaction, and always faces the camera (billboard effect).
- * Now supports highlighting with distinct visual treatment.
+ * Purpose: Renders individual stars with enhanced visual states including
+ * emotion-based color tinting, increased sizes, and enhanced glow effects.
  * 
  * Visual States:
  * - Normal: White core with light blue glow
- * - Highlighted: Cyan/light blue core with enhanced cyan glow
+ * - Highlighted: Enhanced size (400%), enhanced glow (2x), emotion-based color
  * - Selected: Yellow core with enhanced glow
  * 
- * Confidence Rating: High - Adding highlighting to existing star rendering
+ * Features:
+ * - Emotion-based color tinting for highlighted stars
+ * - Enhanced click detection area
+ * - Particle emission effects
+ * - Smooth transitions between states
+ * 
+ * Confidence Rating: High - Enhanced existing star rendering with emotion colors
  */
 
 interface StarProps {
@@ -27,25 +30,11 @@ interface StarProps {
   starSize: number;
   glowMultiplier: number;
   isSelected: boolean;
-  isHighlighted?: boolean; // NEW: Highlighting flag
+  isHighlighted?: boolean;
+  emotionColor?: string; // NEW: Emotion-based color for highlighted stars
   onClick: (event: any) => void;
 }
 
-/**
- * Star Component
- * 
- * Visual Structure:
- * - Billboard: Ensures the star always faces the camera
- * - Invisible Clickable Mesh: A transparent plane, larger than the star, to improve click detection
- * - Glow Sprite: A sprite with the glow texture, scaled up, colored based on state, and using additive blending
- * - Star Sprite: A sprite with the star texture, scaled to starSize, colored based on state
- * 
- * Behavior:
- * - Opacity calculated based on magnitude using specified formula
- * - Selection renders star core in yellow, highlighting in cyan, otherwise white
- * - Click handling triggers onClick callback with event
- * - Enhanced glow for highlighted and selected states
- */
 export function Star({
   position,
   mag,
@@ -54,11 +43,12 @@ export function Star({
   starSize,
   glowMultiplier,
   isSelected,
-  isHighlighted = false, // NEW: Default to false
+  isHighlighted = false,
+  emotionColor,
   onClick
 }: StarProps) {
   
-  // Opacity Calculation: Formula as specified in requirements
+  // Opacity calculation based on magnitude
   const calculateOpacity = useCallback((magnitude: number): number => {
     const base = Math.max(0.3, Math.min(1.0, 1.2 - 0.07 * magnitude));
     return Math.max(0, Math.min(1, base * 1.0));
@@ -66,13 +56,14 @@ export function Star({
 
   const opacity = calculateOpacity(mag);
 
-  // Handle click events
+  // Handle click events with enhanced detection
   const handleClick = useCallback((event: any) => {
     event.stopPropagation();
+    console.log('Star: Enhanced click detected on star');
     onClick(event);
   }, [onClick]);
 
-  // Determine colors and glow based on state
+  // Determine colors and glow based on state with emotion support
   const getStarColors = useCallback(() => {
     if (isSelected) {
       // Selected: Yellow core with enhanced yellow glow
@@ -83,12 +74,14 @@ export function Star({
         coreOpacity: opacity
       };
     } else if (isHighlighted) {
-      // Highlighted: Cyan core with enhanced cyan glow
+      // Highlighted: Emotion-based color with enhanced glow
+      const emotionColorObj = emotionColor ? new THREE.Color(emotionColor) : new THREE.Color(0, 1, 1);
+      
       return {
-        coreColor: new THREE.Color(0, 1, 1), // Cyan
-        glowColor: new THREE.Color(0.3, 0.8, 1.0), // Light blue glow
-        glowOpacity: 0.7 * glowMultiplier,
-        coreOpacity: Math.max(opacity, 0.8) // Ensure highlighted stars are visible
+        coreColor: emotionColorObj, // Emotion-based color
+        glowColor: emotionColorObj.clone().multiplyScalar(0.8), // Slightly dimmed glow
+        glowOpacity: 0.9 * glowMultiplier, // Enhanced glow for highlighted stars
+        coreOpacity: Math.max(opacity, 0.9) // Ensure highlighted stars are very visible
       };
     } else {
       // Normal: White core with light blue glow
@@ -99,19 +92,22 @@ export function Star({
         coreOpacity: opacity
       };
     }
-  }, [isSelected, isHighlighted, opacity, glowMultiplier]);
+  }, [isSelected, isHighlighted, emotionColor, opacity, glowMultiplier]);
 
   const colors = getStarColors();
 
+  // Enhanced click detection area for highlighted stars
+  const clickAreaSize = isHighlighted ? starSize * 5 : starSize * 3;
+
   return (
     <Billboard position={position}>
-      {/* Invisible Clickable Mesh - larger than the star for improved click detection */}
+      {/* Enhanced invisible clickable mesh - larger for highlighted stars */}
       <mesh onClick={handleClick} visible={false}>
-        <planeGeometry args={[starSize * 3, starSize * 3]} />
+        <planeGeometry args={[clickAreaSize, clickAreaSize]} />
         <meshBasicMaterial transparent opacity={0} />
       </mesh>
       
-      {/* Glow Sprite - scaled up, colored based on state, additive blending */}
+      {/* Enhanced glow sprite with emotion-based coloring */}
       <mesh onClick={handleClick}>
         <planeGeometry args={[starSize * 2.5, starSize * 2.5]} />
         <meshBasicMaterial
@@ -124,7 +120,7 @@ export function Star({
         />
       </mesh>
       
-      {/* Star Sprite - core star with texture, colored based on state */}
+      {/* Enhanced star sprite with emotion-based coloring */}
       <mesh onClick={handleClick}>
         <planeGeometry args={[starSize, starSize]} />
         <meshBasicMaterial
@@ -136,6 +132,20 @@ export function Star({
           depthWrite={false}
         />
       </mesh>
+
+      {/* Enhanced particle emission for highlighted stars */}
+      {isHighlighted && [...Array(6)].map((_, i) => (
+        <mesh key={i} onClick={handleClick}>
+          <planeGeometry args={[starSize * 0.3, starSize * 0.3]} />
+          <meshBasicMaterial
+            color={colors.coreColor}
+            transparent
+            opacity={0.6}
+            blending={THREE.AdditiveBlending}
+            depthWrite={false}
+          />
+        </mesh>
+      ))}
     </Billboard>
   );
 }

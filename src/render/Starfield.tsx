@@ -5,20 +5,20 @@ import { Star } from './Star';
 import { StarLabels } from './StarLabels';
 
 /**
- * Starfield Component - Enhanced with highlighting support
+ * Starfield Component - Enhanced with Advanced Star Selection Interface
  * 
- * Purpose: Renders a collection of stars in 3D space using the HYG catalog data.
- * Implements star rendering with textures, click handling, optional labels, and highlighting.
+ * Purpose: Renders stars with enhanced highlighting, emotion-based coloring,
+ * increased sizes for highlighted stars, and always-visible labels.
  * 
  * Features:
- * - Texture loading for star particle and glow effects
- * - Performance optimized with memoization
- * - Click handling for star selection
- * - Optional label rendering
- * - Magnitude-based opacity calculation
- * - NEW: Support for highlighting specific stars
+ * - 400% size increase for highlighted stars
+ * - 2x glow intensity for highlighted stars
+ * - Emotion-based color tinting
+ * - Enhanced click detection
+ * - Always-visible star name labels
+ * - Performance optimized rendering
  * 
- * Confidence Rating: High - Adding highlighting to existing system
+ * Confidence Rating: High - Enhanced existing system with advanced highlighting
  */
 
 interface StarfieldProps {
@@ -27,7 +27,11 @@ interface StarfieldProps {
     position: [number, number, number];
     magnitude: number;
     name?: string;
-    isHighlighted?: boolean; // NEW: Highlighting flag
+    isHighlighted?: boolean;
+    enhancedSize?: number; // NEW: Size multiplier for highlighted stars
+    enhancedGlow?: number; // NEW: Glow multiplier for highlighted stars
+    emotionColor?: string; // NEW: Emotion-based color tinting
+    showLabel?: boolean | string; // NEW: Force show label with optional custom text
   }>;
   selectedStar?: string | null;
   onStarSelect?: (starId: string) => void;
@@ -45,7 +49,7 @@ export function Starfield({
   showLabels = true
 }: StarfieldProps) {
   
-  // 1. Initialize textures: Load star_particle and star_glow textures from assets dir
+  // Initialize textures
   const [starTexture, glowTexture] = useMemo(() => {
     const loader = new TextureLoader();
     return [
@@ -54,33 +58,42 @@ export function Starfield({
     ];
   }, []);
 
-  // Handle star click events
+  // Handle star click events with enhanced detection
   const handleStarClick = useCallback((starId: string) => {
-    console.log('Starfield: Star clicked:', starId);
+    console.log('Starfield: Enhanced star clicked:', starId);
     if (onStarSelect) {
       onStarSelect(starId);
     }
   }, [onStarSelect]);
 
-  // 4. Optimize performance: Memoize starSprites list with useMemo
-  // Only update when star list, size or textures change
+  // Optimize performance: Memoize starSprites list with enhanced highlighting
   const starSprites = useMemo(() => {
     if (!starTexture || !glowTexture) {
       console.log('Starfield: Textures not loaded yet');
       return null;
     }
 
-    console.log(`Starfield: Rendering ${catalog.length} stars`);
+    console.log(`Starfield: Rendering ${catalog.length} stars with enhanced highlighting`);
     
     // Count highlighted stars for logging
     const highlightedCount = catalog.filter(star => star.isHighlighted).length;
     if (highlightedCount > 0) {
-      console.log(`Starfield: ${highlightedCount} stars are highlighted`);
+      console.log(`Starfield: ${highlightedCount} stars are highlighted with enhanced visualization`);
     }
 
     return catalog.map((star, index) => {
-      // Calculate actual star size based on magnitude (brighter stars = larger)
-      const actualStarSize = Math.max(0.02, Math.min(0.3, starSize * (6.0 - star.magnitude) * 0.2));
+      // Calculate base star size based on magnitude
+      const baseMagnitudeSize = Math.max(0.02, Math.min(0.3, starSize * (6.0 - star.magnitude) * 0.2));
+      
+      // Apply enhanced size for highlighted stars (400% increase)
+      const enhancedSize = star.enhancedSize || 1.0;
+      const actualStarSize = baseMagnitudeSize * enhancedSize;
+      
+      // Apply enhanced glow for highlighted stars (2x intensity)
+      const enhancedGlow = star.enhancedGlow || 1.0;
+      const actualGlowMultiplier = glowMultiplier * enhancedGlow;
+
+      console.log(`Starfield: Star ${star.id} - highlighted: ${star.isHighlighted}, size: ${actualStarSize.toFixed(3)}, glow: ${actualGlowMultiplier.toFixed(1)}`);
 
       return (
         <Star
@@ -90,24 +103,38 @@ export function Starfield({
           starTexture={starTexture}
           glowTexture={glowTexture}
           starSize={actualStarSize}
-          glowMultiplier={glowMultiplier}
+          glowMultiplier={actualGlowMultiplier}
           isSelected={star.id === selectedStar}
-          isHighlighted={star.isHighlighted || false} // NEW: Pass highlighting flag
+          isHighlighted={star.isHighlighted || false}
+          emotionColor={star.emotionColor} // NEW: Pass emotion color for tinting
           onClick={() => handleStarClick(star.id)}
         />
       );
     });
   }, [catalog, selectedStar, starTexture, glowTexture, starSize, glowMultiplier, handleStarClick]);
 
+  // Prepare enhanced labels data
+  const enhancedLabelsData = useMemo(() => {
+    return catalog.map(star => ({
+      id: star.id,
+      position: star.position,
+      magnitude: star.magnitude,
+      name: star.name,
+      isHighlighted: star.isHighlighted,
+      showLabel: star.showLabel,
+      emotionColor: star.emotionColor
+    }));
+  }, [catalog]);
+
   return (
     <>
-      {/* Render star sprites using dedicated Star component */}
+      {/* Render enhanced star sprites */}
       {starSprites}
       
-      {/* 5. Add conditional label rendering: If showLabels is true, render StarLabels component */}
+      {/* Render enhanced labels with always-visible highlighted star names */}
       {showLabels && (
         <StarLabels
-          stars={catalog}
+          stars={enhancedLabelsData}
           selectedStar={selectedStar}
         />
       )}

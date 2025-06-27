@@ -4,17 +4,20 @@ import { useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 
 /**
- * StarLabels Component
+ * StarLabels Component - Enhanced with Always-Visible Highlighted Star Names
  * 
- * Purpose: Renders star name labels in 3D space with distance and magnitude-based styling.
+ * Purpose: Renders star name labels with enhanced visibility for highlighted stars
+ * and emotion-based styling. Always shows labels for highlighted stars regardless
+ * of distance or magnitude.
  * 
  * Features:
- * - Distance-based opacity calculation
- * - Magnitude-based filtering (only bright stars get labels)
- * - Performance optimized with limited label count
- * - Responsive font sizing based on camera distance
+ * - Always-visible labels for highlighted stars
+ * - Emotion-based color styling
+ * - Enhanced font sizing and visibility
+ * - Camera-facing orientation
+ * - Distance-based opacity for non-highlighted stars
  * 
- * Confidence Rating: High - Complete implementation with performance considerations
+ * Confidence Rating: High - Enhanced existing label system with highlighting support
  */
 
 interface StarLabelsProps {
@@ -23,6 +26,9 @@ interface StarLabelsProps {
     position: [number, number, number];
     magnitude: number;
     name?: string;
+    isHighlighted?: boolean;
+    showLabel?: boolean | string;
+    emotionColor?: string;
   }>;
   selectedStar?: string | null;
 }
@@ -30,12 +36,25 @@ interface StarLabelsProps {
 export function StarLabels({ stars, selectedStar }: StarLabelsProps) {
   const { camera } = useThree();
 
-  // Filter stars that should have labels (only named stars with good visibility)
-  const labeledStars = stars.filter(star => 
-    star.name && 
-    star.name.trim() !== '' &&
-    star.magnitude < 4.0 // Only show labels for bright stars
-  ).slice(0, 30); // Limit number of labels for performance
+  // Filter and prepare stars for labeling with enhanced highlighting
+  const labeledStars = stars.filter(star => {
+    // Always show labels for highlighted stars
+    if (star.isHighlighted && star.name) {
+      return true;
+    }
+    
+    // Show labels for selected stars
+    if (star.id === selectedStar && star.name) {
+      return true;
+    }
+    
+    // For non-highlighted stars, use original filtering logic
+    return star.name && 
+           star.name.trim() !== '' &&
+           star.magnitude < 4.0; // Only bright stars get labels normally
+  }).slice(0, 50); // Increased limit to accommodate highlighted stars
+
+  console.log(`StarLabels: Rendering ${labeledStars.length} labels (${labeledStars.filter(s => s.isHighlighted).length} highlighted)`);
 
   return (
     <>
@@ -44,36 +63,68 @@ export function StarLabels({ stars, selectedStar }: StarLabelsProps) {
         const starPosition = new THREE.Vector3(...star.position);
         const distanceFromCamera = camera.position.distanceTo(starPosition);
         
-        // Calculate label opacity based on distance and magnitude
-        const opacity = Math.max(0.3, Math.min(1.0, (30 / distanceFromCamera) * (4.0 - star.magnitude) / 4.0));
+        // Enhanced visibility for highlighted stars
+        let opacity: number;
+        let fontSize: number;
+        let fontWeight: number;
+        let color: string;
         
-        // Calculate label size based on distance
-        const fontSize = Math.max(8, Math.min(16, 200 / distanceFromCamera));
+        if (star.isHighlighted) {
+          // Highlighted stars: Always visible with enhanced styling
+          opacity = 1.0; // Always fully visible
+          fontSize = Math.max(14, Math.min(20, 300 / distanceFromCamera)); // Larger font
+          fontWeight = 600; // Bold font
+          color = star.emotionColor || '#00FFFF'; // Emotion color or cyan
+          
+          console.log(`StarLabels: Enhanced label for highlighted star: ${star.name}`);
+        } else if (star.id === selectedStar) {
+          // Selected stars: Enhanced visibility
+          opacity = 1.0;
+          fontSize = Math.max(12, Math.min(18, 250 / distanceFromCamera));
+          fontWeight = 500;
+          color = '#FFD700'; // Gold for selected
+        } else {
+          // Normal stars: Distance-based visibility
+          opacity = Math.max(0.3, Math.min(1.0, (30 / distanceFromCamera) * (4.0 - star.magnitude) / 4.0));
+          fontSize = Math.max(8, Math.min(16, 200 / distanceFromCamera));
+          fontWeight = 300;
+          color = '#F8FAFC'; // White for normal
+        }
 
-        // Skip labels that would be too faint
-        if (opacity < 0.3) return null;
-
-        // Highlight selected star label
-        const isSelected = star.id === selectedStar;
+        // Skip labels that would be too faint (except highlighted ones)
+        if (!star.isHighlighted && opacity < 0.3) return null;
 
         return (
           <Html
             key={`label-${star.id}`}
-            position={[star.position[0], star.position[1] + 0.5, star.position[2]]}
+            position={[star.position[0], star.position[1] + 0.8, star.position[2]]} // Slightly higher position
             center
-            distanceFactor={10}
-            occlude
+            distanceFactor={8} // Reduced for better visibility
+            occlude={false} // Don't hide labels behind objects for highlighted stars
           >
             <div 
               style={{
-                color: isSelected ? '#FFD700' : '#F8FAFC', // Gold for selected, white for others
+                color: color,
                 fontSize: `${fontSize}px`,
-                fontWeight: isSelected ? 500 : 300,
+                fontWeight: fontWeight,
                 opacity: opacity,
-                textShadow: '0 0 4px rgba(0,0,0,0.8)',
+                textShadow: star.isHighlighted 
+                  ? `0 0 8px ${color}, 0 0 16px ${color}40` // Enhanced glow for highlighted
+                  : '0 0 4px rgba(0,0,0,0.8)', // Standard shadow
                 pointerEvents: 'none',
                 whiteSpace: 'nowrap',
-                transition: 'all 0.3s ease'
+                transition: 'all 0.3s ease',
+                fontFamily: 'Inter, system-ui, sans-serif',
+                letterSpacing: star.isHighlighted ? '0.5px' : '0px', // Enhanced spacing for highlighted
+                textAlign: 'center',
+                padding: star.isHighlighted ? '2px 6px' : '0px', // Padding for highlighted
+                borderRadius: star.isHighlighted ? '4px' : '0px',
+                backgroundColor: star.isHighlighted 
+                  ? `${color}20` // Semi-transparent background for highlighted
+                  : 'transparent',
+                border: star.isHighlighted 
+                  ? `1px solid ${color}40` // Subtle border for highlighted
+                  : 'none'
               }}
             >
               {star.name}
