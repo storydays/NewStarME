@@ -400,31 +400,6 @@ export function StarviewCanvas({
           highlightedStars={highlightedStars}
         />
       </Canvas>
-      
-      {/* Loading indicator for catalog */}
-      {catalogLoading && (
-        <div className="absolute bottom-4 right-4 text-cosmic-stellar-wind text-xs font-light opacity-50">
-          Loading star catalog...
-        </div>
-      )}
-      
-      {/* Status indicators */}
-      {hygCatalog && (
-        <div className="absolute bottom-4 left-4 text-cosmic-stellar-wind text-xs font-light opacity-30 pointer-events-none">
-          <div>{hygCatalog.getTotalStars().toLocaleString()} stars loaded</div>
-          <div>Labels: {showLabels ? 'ON' : 'OFF'}</div>
-          <div className="text-cosmic-cherenkov-blue">🌟 Continuous Orbiting Active</div>
-          <div className="text-green-400">
-            {selectedStar ? `📍 Focused on: ${selectedStar.proper || selectedStar.id}` : '🔄 Orbiting scene center'}
-          </div>
-          {highlightedStars.length > 0 && (
-            <div className="text-cyan-400">
-              ✨ {highlightedStars.length} stars highlighted
-            </div>
-          )}
-          <div>Click stars for focus • Click empty space to resume orbit</div>
-        </div>
-      )}
     </div>
   );
 }
