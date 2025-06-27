@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { StarsViewCanvas, StarsViewCanvasRef } from './render/StarsViewCanvas';
+import { StarviewCanvas } from './render/StarviewCanvas';
 import { Home } from './pages/Home';
 import { StarSelection } from './pages/StarSelection';
 import { Dedication } from './pages/Dedication';
@@ -13,7 +13,6 @@ function App() {
   const [hygCatalog, setHygCatalog] = useState<HygStarsCatalog | null>(null);
   const [catalogLoading, setCatalogLoading] = useState(true);
   const [selectedStar, setSelectedStar] = useState<HygRecord | null>(null);
-  const canvasRef = useRef<StarsViewCanvasRef>(null);
 
   // Control settings for the star visualization
   const [controlSettings] = useState({
@@ -35,7 +34,7 @@ function App() {
         setHygCatalog(catalog);
       } catch (error) {
         console.warn('Failed to load HYG catalog in App.tsx:', error);
-        // Continue without catalog - StarsViewCanvas will handle gracefully
+        // Continue without catalog - StarviewCanvas will handle gracefully
         setHygCatalog(null);
       } finally {
         setCatalogLoading(false);
@@ -54,12 +53,14 @@ function App() {
     <Router>
       <div className="App cosmic-viewport">
         {/* Global 3D background canvas with HYG catalog - positioned at top level */}
-        <StarsViewCanvas
-          ref={canvasRef}
-          starsCatalog={hygCatalog}
-          controlSettings={controlSettings}
+        <StarviewCanvas
+          hygCatalog={hygCatalog}
+          catalogLoading={catalogLoading}
           selectedStar={selectedStar}
           onStarSelect={handleStarSelect}
+          starSize={controlSettings.starSize}
+          glowMultiplier={controlSettings.glowMultiplier}
+          showLabels={controlSettings.showLabels}
         />
         
         <motion.div

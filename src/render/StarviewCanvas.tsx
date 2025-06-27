@@ -5,7 +5,7 @@ import { TextureLoader } from 'three';
 import * as THREE from 'three';
 import { HygStarsCatalog } from '../data/StarsCatalog';
 import { HygRecord } from '../types';
-import { Star } from '../render/Star';
+import { Star } from './Star';
 
 /**
  * StarviewCanvas Component with HYG Catalog Integration
