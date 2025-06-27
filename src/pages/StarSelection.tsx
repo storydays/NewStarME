@@ -176,8 +176,8 @@ export function StarSelection() {
             <Heart className="w-5 h-5 cherenkov-glow" style={{ color: emotion.color }} />
             <span className="text-cosmic-observation font-light text-lg">{emotion.name}</span>
           </motion.div>
-        </div>
-      </div>*/}
+        </div>*/}
+      </div>
 
     </div>
   );
