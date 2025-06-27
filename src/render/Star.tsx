@@ -134,8 +134,7 @@ export function Star({
       </mesh>
 
       {/* Enhanced particle emission for highlighted stars */}
-      {isHighlighted && [...Array(6)].map((_, i) => (
-        <mesh key={i} onClick={handleClick}>
+      {isHighlighted && <mesh key={i} onClick={handleClick}>
           <planeGeometry args={[starSize * 0.3, starSize * 0.3]} />
           <meshBasicMaterial
             color={colors.coreColor}
@@ -144,8 +143,7 @@ export function Star({
             blending={THREE.AdditiveBlending}
             depthWrite={false}
           />
-        </mesh>
-      ))}
+        </mesh>}
     </Billboard>
   );
 }
