@@ -28,9 +28,7 @@ export function Dedication() {
 
   const handleDedicationSubmit = async (dedicationData: any) => {
     try {
-      console.log('Dedication.tsx: Creating dedication with data:', dedicationData);
       const dedication = await createDedication(dedicationData);
-      console.log('Dedication.tsx: Dedication created successfully:', dedication);
       navigate(`/star/${dedication.id}`);
     } catch (error) {
       console.error('Failed to create dedication:', error);
@@ -59,9 +57,6 @@ export function Dedication() {
       <div className="min-h-screen bg-gradient-to-br from-cosmic-dark-matter to-cosmic-quantum-field flex items-center justify-center">
         <div className="text-center frosted-glass rounded-2xl p-8">
           <p className="text-red-400 text-xl mb-4 font-light">Celestial body not found</p>
-          <p className="text-cosmic-stellar-wind text-sm mb-4 font-light">
-            Star ID: {starId} | Emotion: {emotionId}
-          </p>
           <button 
             onClick={() => navigate('/')}
             className="text-cosmic-cherenkov-blue hover:text-cosmic-plasma-glow transition-colors font-light"
@@ -72,8 +67,6 @@ export function Dedication() {
       </div>
     );
   }
-
-  console.log('Dedication.tsx: Rendering with star:', star.scientific_name, 'and emotion:', emotion.name);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-cosmic-dark-matter via-cosmic-deep-space to-cosmic-quantum-field relative">

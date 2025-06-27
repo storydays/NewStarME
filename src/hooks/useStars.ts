@@ -1,21 +1,22 @@
 import { useState, useEffect, useRef } from 'react';
-import { HygRecord } from '../types';
+import { Star } from '../types';
 import { StarService } from '../services/starService';
 
 /**
- * useStars Hook - Updated to work with HygRecord[]
+ * useStars Hook - Enhanced with array stability
  * 
  * Purpose: Provides stable star data for a given emotion to prevent
  * unnecessary re-renders and navigation resets.
  * 
- * Key Enhancement: Now returns HygRecord[] instead of Star[] to ensure
- * all stars can be properly focused in the 3D visualization.
+ * Key Enhancement: Uses a ref to track the emotionId for which stars
+ * were last fetched, preventing refetches for the same emotion and
+ * ensuring the stars array reference remains stable.
  * 
- * Confidence Rating: High - Targeted update for HYG integration
+ * Confidence Rating: High - Targeted fix for navigation stability
  */
 
 export function useStars(emotionId?: string) {
-  const [stars, setStars] = useState<HygRecord[]>([]);
+  const [stars, setStars] = useState<Star[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
@@ -49,7 +50,7 @@ export function useStars(emotionId?: string) {
           setStars(fetchedStars);
           // Update the ref to track this successful fetch
           lastFetchedEmotionRef.current = emotionId;
-          console.log(`useStars: Successfully loaded ${fetchedStars.length} HYG stars for ${emotionId}`);
+          console.log(`useStars: Successfully loaded ${fetchedStars.length} stars for ${emotionId}`);
         } else {
           console.warn(`useStars: No stars returned for emotion ${emotionId}`);
           setStars([]);
@@ -84,9 +85,9 @@ export function useStars(emotionId?: string) {
   return { stars, loading, error };
 }
 
-// Hook for getting a single star by ID - Updated to handle HYG IDs
+// Hook for getting a single star by ID
 export function useStar(starId?: string) {
-  const [star, setStar] = useState<any | null>(null); // Keep as Star for Dedication form compatibility
+  const [star, setStar] = useState<Star | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -102,15 +103,8 @@ export function useStar(starId?: string) {
         setLoading(true);
         setError(null);
 
-        console.log(`useStar: Fetching star with ID: ${starId}`);
         const fetchedStar = await StarService.getStarById(starId);
         setStar(fetchedStar);
-        
-        if (fetchedStar) {
-          console.log(`useStar: Successfully loaded star: ${fetchedStar.scientific_name}`);
-        } else {
-          console.warn(`useStar: No star found with ID: ${starId}`);
-        }
       } catch (err) {
         console.error('Error fetching star:', err);
         const errorMessage = err instanceof Error ? err.message : 'Failed to load star';

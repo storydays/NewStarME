@@ -5,7 +5,7 @@ import { Star } from './Star';
 import { StarLabels } from './StarLabels';
 
 /**
- * Starfield Component - Updated for HYG integration
+ * Starfield Component - Enhanced with highlighting support
  * 
  * Purpose: Renders a collection of stars in 3D space using the HYG catalog data.
  * Implements star rendering with textures, click handling, optional labels, and highlighting.
@@ -16,10 +16,9 @@ import { StarLabels } from './StarLabels';
  * - Click handling for star selection
  * - Optional label rendering
  * - Magnitude-based opacity calculation
- * - Support for highlighting specific stars
- * - UPDATED: Now works with HYG catalog data format
+ * - NEW: Support for highlighting specific stars
  * 
- * Confidence Rating: High - Updated for HYG integration
+ * Confidence Rating: High - Adding highlighting to existing system
  */
 
 interface StarfieldProps {
@@ -28,8 +27,7 @@ interface StarfieldProps {
     position: [number, number, number];
     magnitude: number;
     name?: string;
-    isHighlighted?: boolean;
-    hygRecord?: any; // Store original HYG record
+    isHighlighted?: boolean; // NEW: Highlighting flag
   }>;
   selectedStar?: string | null;
   onStarSelect?: (starId: string) => void;
@@ -94,7 +92,7 @@ export function Starfield({
           starSize={actualStarSize}
           glowMultiplier={glowMultiplier}
           isSelected={star.id === selectedStar}
-          isHighlighted={star.isHighlighted || false}
+          isHighlighted={star.isHighlighted || false} // NEW: Pass highlighting flag
           onClick={() => handleStarClick(star.id)}
         />
       );
