@@ -16,8 +16,9 @@ import { AnimationController } from './AnimationController';
  * - Configurable rendering mode: 'classic' or 'instanced'
  * - Classic mode: Individual Star.tsx components with full effects
  * - Instanced mode: GPU-accelerated shader-based rendering
- * - Automatic lighting and fog adjustments per mode
+ * - Automatic lighting adjustments per mode
  * - Maintains compatibility with existing star selection system
+ * - UPDATED: Fog effect removed for clearer star visibility
  * 
  * Confidence Rating: High - Clean separation of rendering modes
  */
@@ -453,10 +454,7 @@ function SceneContent({
         />
       )}
       
-      {/* Mode-aware fog configuration */}
-      {renderingMode === 'classic' && (
-        <fog attach="fog" args={['#0A0A0F', 5, 25]} />
-      )}
+      {/* REMOVED: Fog effect for clearer star visibility */}
       
       {/* Invisible plane for pointer miss detection */}
       <mesh
