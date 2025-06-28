@@ -249,6 +249,14 @@ function HighlightedStar({
         />
       </sprite>
 
+      map={glowTexture}
+          transparent
+          depthWrite={false}
+          opacity={1.0}
+          color={new Color('#dbe6ff').multiplyScalar(glowMultiplier)}
+          alphaTest={0.01}
+          blending={AdditiveBlending}
+
       {/* Star sprite - REVERTED: Fixed opacity and alphaTest */}
       <sprite scale={[starSize*2, starSize*2, starSize*2]}>
         <spriteMaterial
