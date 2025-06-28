@@ -250,12 +250,12 @@ function HighlightedStar({
       </sprite>
 
       {/* Star sprite */}
-      <sprite scale={[starSize*2, starSize*2, starSize*2]}>
+      <sprite scale={[starSize*4, starSize*2, starSize*2]}>
         <spriteMaterial
           map={starTexture}
           transparent
           depthWrite={false}
-          opacity={1.0}
+          opacity={0.0}
           color={ 'white'}
           alphaTest={0.1}
           blending={THREE.AdditiveBlending}
