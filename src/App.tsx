@@ -15,6 +15,7 @@ import { SuggestedStarsProvider, useSuggestedStars } from './context/SuggestedSt
  * 
  * Separated from App to allow access to SuggestedStarsContext
  * Enhanced with camera focus integration for star navigation
+ * Added rendering mode configuration
  */
 function AppContent() {
   const [hygCatalog, setHygCatalog] = useState<HygStarsCatalog | null>(null);
@@ -26,7 +27,8 @@ function AppContent() {
   const [controlSettings] = useState({
     starSize: 0.25,
     glowMultiplier: 2,
-    showLabels: false // Changed from true to false
+    showLabels: false, // Changed from true to false
+    renderingMode: 'classic' as 'classic' | 'instanced' // NEW: Default to classic rendering
   });
 
   useEffect(() => {
@@ -36,7 +38,7 @@ function AppContent() {
         setCatalogLoading(true);
         
         // Load the HYG catalog from the public directory
-        const catalog = await HygStarsCatalog.fromUrl('/hygdata_v41.csv.gz', false);
+        const catalog = await HygStarsCatalog.fromUrl('/hygdata_v41.csv.gz', true); // Use compressed format
         
         console.log(`HYG catalog loaded successfully: ${catalog.getTotalStars()} stars`);
         setHygCatalog(catalog);
@@ -71,6 +73,7 @@ function AppContent() {
           showLabels={controlSettings.showLabels}
           highlightedStars={suggestedStars}
           focusedStarIndex={focusedStarIndex}
+          renderingMode={controlSettings.renderingMode} // NEW: Pass rendering mode
         />
         
         <motion.div

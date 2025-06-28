@@ -249,15 +249,16 @@ function HighlightedStar({
         />
       </sprite>
 
-      {/* Star sprite */}
+      {/* Star sprite - REVERTED: Fixed opacity and alphaTest */}
       <sprite scale={[starSize*2, starSize*2, starSize*2]}>
         <spriteMaterial
+          ref={coreMaterialRef}
           map={starTexture}
           transparent
           depthWrite={false}
-          opacity={1.0}
-          color={ 'white'}
-          alphaTest={0.2}
+          opacity={colors.baseCoreOpacity * (1.0 + Math.sin(0) * 0.1)} // Will be animated by useFrame
+          color={'white'}
+          alphaTest={0.1} // REVERTED: Back to 0.1
           blending={THREE.AdditiveBlending}
         />
       </sprite>

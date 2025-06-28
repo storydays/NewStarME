@@ -7,19 +7,19 @@ import { Starfield } from './Starfield';
 import { AnimationController } from './AnimationController';
 
 /**
- * StarviewCanvas Component - Optimized for Large Star Catalogs
+ * StarviewCanvas Component with Configurable Rendering Modes
  * 
- * Enhanced 3D background canvas optimized for rendering 100K+ stars efficiently.
- * Uses instanced rendering for performance while maintaining visual quality for important stars.
+ * Enhanced 3D background canvas that supports both classic individual rendering
+ * and optimized instanced rendering for large star catalogs.
  * 
  * Features:
- * - Efficient rendering of complete HYG catalog (119K+ stars)
- * - GPU-accelerated instanced rendering for regular stars
- * - Individual rendering for highlighted/selected stars
- * - Performance-optimized camera controls and interactions
- * - Intelligent label management for usability
+ * - Configurable rendering mode: 'classic' or 'instanced'
+ * - Classic mode: Individual Star.tsx components with full effects
+ * - Instanced mode: GPU-accelerated shader-based rendering
+ * - Automatic lighting and fog adjustments per mode
+ * - Maintains compatibility with existing star selection system
  * 
- * Confidence Rating: High - Production-ready optimization for large datasets
+ * Confidence Rating: High - Clean separation of rendering modes
  */
 
 interface StarviewCanvasProps {
@@ -32,6 +32,7 @@ interface StarviewCanvasProps {
   showLabels?: boolean;
   highlightedStars?: Star[];
   focusedStarIndex?: number | null;
+  renderingMode?: 'classic' | 'instanced'; // NEW: Rendering mode configuration
 }
 
 interface AnimationCommand {
@@ -129,7 +130,7 @@ function calculateOptimalCameraPosition(highlightedStars: Star[]): {
 }
 
 /**
- * StarfieldWrapper Component - Optimized for Complete Catalog
+ * StarfieldWrapper Component - Mode-aware star processing
  */
 function StarfieldWrapper({ 
   hygCatalog, 
@@ -141,7 +142,8 @@ function StarfieldWrapper({
   showLabels = false,
   highlightedStars = [],
   focusedStarIndex = null,
-  emotionColor = '#2563EB'
+  emotionColor = '#2563EB',
+  renderingMode = 'classic'
 }: { 
   hygCatalog: HygStarsCatalog;
   selectedStar?: HygRecord | null;
@@ -153,16 +155,17 @@ function StarfieldWrapper({
   highlightedStars?: Star[];
   focusedStarIndex?: number | null;
   emotionColor?: string;
+  renderingMode?: 'classic' | 'instanced';
 }) {
   
-  // Convert HYG catalog data to Starfield format - OPTIMIZED
+  // Convert HYG catalog data to Starfield format - mode-aware processing
   const catalogData = useMemo(() => {
     if (!hygCatalog) {
       console.log('StarfieldWrapper: No catalog available');
       return [];
     }
 
-    console.log('StarfieldWrapper: Processing complete HYG catalog for optimized rendering...');
+    console.log(`StarfieldWrapper: Processing HYG catalog for ${renderingMode} rendering mode...`);
     console.log(`StarfieldWrapper: ${highlightedStars.length} stars to highlight`);
     
     // Create a set of highlighted star names for fast lookup
@@ -170,12 +173,21 @@ function StarfieldWrapper({
       highlightedStars.map(star => star.scientific_name.toLowerCase())
     );
 
-    // Get ALL stars from catalog - no filtering for complete view
-    const allStars = hygCatalog.getStars();
+    // Filter stars based on rendering mode
+    let filteredStars;
+    if (renderingMode === 'classic') {
+      // Classic mode: Filter by magnitude and limit count for performance
+      filteredStars = hygCatalog
+        .filterByMagnitude(-2, 6.5)
+        .slice(0, 5000);
+      console.log(`StarfieldWrapper: Classic mode - processing ${filteredStars.length} filtered stars`);
+    } else {
+      // Instanced mode: Use all stars for complete view
+      filteredStars = hygCatalog.getStars();
+      console.log(`StarfieldWrapper: Instanced mode - processing ALL ${filteredStars.length} stars`);
+    }
 
-    console.log(`StarfieldWrapper: Processing ALL ${allStars.length} stars from HYG catalog`);
-
-    return allStars.map((star) => {
+    return filteredStars.map((star) => {
       // Convert spherical coordinates to Cartesian for 3D positioning
       const distance = Math.min(star.dist, 100) / 5;
       const raRad = star.rarad;
@@ -203,7 +215,7 @@ function StarfieldWrapper({
         showLabel: isHighlighted && (star.proper || `HYG ${star.id}`)
       };
     });
-  }, [hygCatalog, highlightedStars, emotionColor]);
+  }, [hygCatalog, highlightedStars, emotionColor, renderingMode]);
 
   // Handle camera focus when focusedStarIndex changes
   useEffect(() => {
@@ -223,13 +235,33 @@ function StarfieldWrapper({
     }
   }, [focusedStarIndex, highlightedStars, catalogData, onStarFocus]);
 
-  // Handle star selection from Starfield - DISABLED for performance
-  // With 119K stars, click detection on individual stars is not practical
+  // Handle star selection from Starfield - mode-aware
   const handleStarSelect = useCallback((starId: string) => {
-    console.log('StarfieldWrapper: Star selection disabled for performance with large catalog');
-    // Individual star selection disabled for performance with 119K stars
-    // Only highlighted stars maintain click functionality
-  }, []);
+    if (!hygCatalog || !onStarSelect) return;
+
+    if (renderingMode === 'instanced') {
+      console.log('StarfieldWrapper: Star selection disabled for performance in instanced mode');
+      // Individual star selection disabled for performance with instanced rendering
+      return;
+    }
+
+    // Classic mode: Full star selection functionality
+    const starIdNum = parseInt(starId);
+    const allStars = hygCatalog.getStars();
+    const selectedHygStar = allStars.find(star => star.id === starIdNum);
+    
+    if (selectedHygStar) {
+      console.log('StarfieldWrapper: Star selected:', selectedHygStar.proper || selectedHygStar.id);
+      
+      // Update selection state
+      onStarSelect(selectedHygStar, starIdNum);
+      
+      // Trigger camera animation to focus on the star
+      if (onStarFocus) {
+        onStarFocus(selectedHygStar);
+      }
+    }
+  }, [hygCatalog, onStarSelect, onStarFocus, renderingMode]);
 
   // Get selected star ID for Starfield
   const selectedStarId = selectedStar ? selectedStar.id.toString() : null;
@@ -242,12 +274,13 @@ function StarfieldWrapper({
       starSize={starSize}
       glowMultiplier={glowMultiplier}
       showLabels={showLabels}
+      renderingMode={renderingMode} // NEW: Pass rendering mode to Starfield
     />
   );
 }
 
 /**
- * Scene Content Component - Optimized for Large Catalogs
+ * Scene Content Component - Mode-aware lighting and effects
  */
 function SceneContent({ 
   hygCatalog, 
@@ -260,7 +293,8 @@ function SceneContent({
   onPointerMissed,
   highlightedStars = [],
   focusedStarIndex = null,
-  emotionColor = '#2563EB'
+  emotionColor = '#2563EB',
+  renderingMode = 'classic'
 }: {
   hygCatalog: HygStarsCatalog | null;
   catalogLoading: boolean;
@@ -273,6 +307,7 @@ function SceneContent({
   highlightedStars?: Star[];
   focusedStarIndex?: number | null;
   emotionColor?: string;
+  renderingMode?: 'classic' | 'instanced';
 }) {
   // Camera controls ref for AnimationController
   const cameraControlsRef = useRef<CameraControls>(null);
@@ -352,15 +387,35 @@ function SceneContent({
 
   return (
     <>
-      {/* Optimized lighting for large star fields */}
-      <ambientLight intensity={0.4} color="#60A5FA" />
-      <directionalLight 
-        position={[10, 10, 5]} 
-        intensity={0.3} 
-        color="#93C5FD"
-      />
+      {/* Mode-aware lighting configuration */}
+      {renderingMode === 'classic' ? (
+        // Classic mode: Enhanced lighting for individual stars
+        <>
+          <ambientLight intensity={0.3} color="#60A5FA" />
+          <directionalLight 
+            position={[10, 10, 5]} 
+            intensity={0.6} 
+            color="#93C5FD"
+          />
+          <pointLight 
+            position={[-10, -10, -5]} 
+            intensity={0.4} 
+            color="#3B82F6"
+          />
+        </>
+      ) : (
+        // Instanced mode: Optimized lighting for large datasets
+        <>
+          <ambientLight intensity={0.4} color="#60A5FA" />
+          <directionalLight 
+            position={[10, 10, 5]} 
+            intensity={0.3} 
+            color="#93C5FD"
+          />
+        </>
+      )}
 
-      {/* Camera Controls - optimized for large datasets */}
+      {/* Camera Controls */}
       <CameraControls
         ref={cameraControlsRef}
         makeDefault
@@ -381,7 +436,7 @@ function SceneContent({
         onAnimationComplete={handleAnimationComplete}
       />
       
-      {/* Render optimized star field */}
+      {/* Render star field with mode configuration */}
       {hygCatalog && !catalogLoading && (
         <StarfieldWrapper 
           hygCatalog={hygCatalog}
@@ -394,10 +449,14 @@ function SceneContent({
           highlightedStars={highlightedStars}
           focusedStarIndex={focusedStarIndex}
           emotionColor={emotionColor}
+          renderingMode={renderingMode} // NEW: Pass rendering mode
         />
       )}
       
-      {/* No fog for better visibility of distant stars */}
+      {/* Mode-aware fog configuration */}
+      {renderingMode === 'classic' && (
+        <fog attach="fog" args={['#0A0A0F', 5, 25]} />
+      )}
       
       {/* Invisible plane for pointer miss detection */}
       <mesh
@@ -413,7 +472,7 @@ function SceneContent({
 }
 
 /**
- * Main StarviewCanvas Component - Production Optimized
+ * Main StarviewCanvas Component - Mode-configurable rendering
  */
 export function StarviewCanvas({ 
   hygCatalog, 
@@ -424,7 +483,8 @@ export function StarviewCanvas({
   glowMultiplier = 1.0, 
   showLabels = false,
   highlightedStars = [],
-  focusedStarIndex = null
+  focusedStarIndex = null,
+  renderingMode = 'classic' // NEW: Default to classic mode
 }: StarviewCanvasProps) {
   
   const emotionColor = highlightedStars.length > 0 ? '#2563EB' : '#2563EB';
@@ -432,6 +492,8 @@ export function StarviewCanvas({
   const handlePointerMissed = useCallback(() => {
     console.log('StarviewCanvas: Pointer missed event');
   }, []);
+
+  console.log(`StarviewCanvas: Initializing with ${renderingMode} rendering mode`);
 
   return (
     <div className="fixed inset-0 w-full h-full">
@@ -459,7 +521,7 @@ export function StarviewCanvas({
         }}
         onPointerMissed={handlePointerMissed}
       >
-        {/* Optimized scene content for large star catalogs */}
+        {/* Mode-configurable scene content */}
         <SceneContent
           hygCatalog={hygCatalog}
           catalogLoading={catalogLoading}
@@ -472,6 +534,7 @@ export function StarviewCanvas({
           highlightedStars={highlightedStars}
           focusedStarIndex={focusedStarIndex}
           emotionColor={emotionColor}
+          renderingMode={renderingMode} // NEW: Pass rendering mode
         />
       </Canvas>
     </div>

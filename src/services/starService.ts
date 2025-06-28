@@ -105,6 +105,7 @@ export class StarService {
   /**
    * Load the HYG catalog from remote CSV with improved error handling
    * Uses caching to avoid repeated downloads
+   * FIXED: Use compressed format (true) for .gz files
    */
   private static async loadHygCatalog(): Promise<HygStarsCatalog> {
     if (this.hygCatalog) {
@@ -128,7 +129,8 @@ export class StarService {
         const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
         
         try {
-          const catalog = await HygStarsCatalog.fromUrl('/hygdata_v41.csv.gz', false);
+          // FIXED: Use compressed format (true) for .gz files
+          const catalog = await HygStarsCatalog.fromUrl('/hygdata_v41.csv.gz', true);
           clearTimeout(timeoutId);
           
           this.hygCatalog = catalog;
