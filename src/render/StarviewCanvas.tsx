@@ -513,7 +513,7 @@ export function StarviewCanvas({
   console.log(`StarviewCanvas: Initializing with ${renderingMode} rendering mode and star selection modal support`);
 
   return (
-    <div className="fixed inset-0 w-full h-full">
+    <div className="fixed inset-0 w-full h-full" onClick={()=>console.log("canvas click !!!")}>
       <Canvas
         camera={{
           position: [0, 0, 8],
