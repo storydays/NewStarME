@@ -1,19 +1,21 @@
+import Papa from 'papaparse';
 import { HygRecord } from '../types';
 
 /**
- * HygStarsCatalog Class - Raw HYG Data Management
+ * HygStarsCatalog Class - Raw HYG Data Management with Papa Parse
  * 
  * Purpose: Handles loading and parsing of the HYG (HipparcoS, Yale, Gliese) star catalog.
  * This class is responsible for the raw astronomical data before any application-specific processing.
  * 
  * Features:
  * - Loads HYG catalog from CSV files (compressed or uncompressed)
+ * - Uses Papa Parse for robust CSV parsing
  * - Parses CSV data into HygRecord objects
  * - Provides basic filtering and access methods
  * - Handles data validation and error recovery
- * - FIXED: Removes BOM character from CSV headers
+ * - Properly handles BOM characters and CSV edge cases
  * 
- * Confidence Rating: High - Standard CSV parsing with BOM handling
+ * Confidence Rating: High - Using Papa Parse for reliable CSV parsing
  */
 
 export class HygStarsCatalog {
@@ -48,7 +50,7 @@ export class HygStarsCatalog {
         csvText = await response.text();
       }
 
-      const stars = this.parseCsvData(csvText);
+      const stars = this.parseCsvDataWithPapa(csvText);
       console.log(`HygStarsCatalog: Loaded ${stars.length} stars from catalog`);
       
       return new HygStarsCatalog(stars);
@@ -94,154 +96,197 @@ export class HygStarsCatalog {
   }
 
   /**
-   * Parse CSV data into HygRecord objects
-   * FIXED: Properly handles BOM character in headers
+   * Parse CSV data using Papa Parse library
+   * This replaces the custom CSV parsing with a robust library solution
    */
-  private static parseCsvData(csvText: string): HygRecord[] {
-    const lines = csvText.trim().split('\n');
+  private static parseCsvDataWithPapa(csvText: string): HygRecord[] {
+    console.log('HygStarsCatalog: Parsing CSV data with Papa Parse...');
     
-    // FIXED: Remove BOM character from headers and clean them properly
-    const rawHeaders = lines[0].split(',');
-    const headers = rawHeaders.map((header, index) => {
-      let cleanHeader = header.trim();
-      
-      // Remove BOM character from the first header if present
-      if (index === 0 && cleanHeader.charCodeAt(0) === 0xFEFF) {
-        cleanHeader = cleanHeader.substring(1);
-        console.log('HygStarsCatalog: Removed BOM character from first header');
-      }
-      
-      return cleanHeader;
-    });
-    
-    console.log(`HygStarsCatalog: Parsed headers:`, headers);
-    console.log(`HygStarsCatalog: Parsing ${lines.length - 1} star records`);
-    
-    const stars: HygRecord[] = [];
-    
-    for (let i = 1; i < lines.length; i++) {
-      try {
-        const values = this.parseCsvLine(lines[i]);
-        if (values.length !== headers.length) {
-          console.warn(`HygStarsCatalog: Line ${i + 1} has ${values.length} values, expected ${headers.length}`);
-          continue;
+    try {
+      // Use Papa Parse to parse the CSV
+      const parseResult = Papa.parse<string[]>(csvText, {
+        header: false, // We'll handle headers manually for better control
+        skipEmptyLines: true,
+        dynamicTyping: false, // Keep as strings for manual type conversion
+        comments: '#', // Skip comment lines
+        delimiter: ',',
+        quoteChar: '"',
+        escapeChar: '"',
+        transformHeader: (header: string, index: number) => {
+          // Clean header and remove BOM from first header
+          let cleanHeader = header.trim();
+          if (index === 0 && cleanHeader.charCodeAt(0) === 0xFEFF) {
+            cleanHeader = cleanHeader.substring(1);
+            console.log('HygStarsCatalog: Removed BOM character from first header');
+          }
+          return cleanHeader;
         }
-        
-        const record = this.createHygRecord(headers, values);
-        if (record) {
-          stars.push(record);
-        }
-      } catch (error) {
-        console.warn(`HygStarsCatalog: Error parsing line ${i + 1}:`, error);
-      }
-    }
-    
-    return stars;
-  }
+      });
 
-  /**
-   * Parse a single CSV line, handling quoted values
-   */
-  private static parseCsvLine(line: string): string[] {
-    const values: string[] = [];
-    let current = '';
-    let inQuotes = false;
-    
-    for (let i = 0; i < line.length; i++) {
-      const char = line[i];
-      
-      if (char === '"') {
-        inQuotes = !inQuotes;
-      } else if (char === ',' && !inQuotes) {
-        values.push(current.trim());
-        current = '';
-      } else {
-        current += char;
+      if (parseResult.errors.length > 0) {
+        console.warn('HygStarsCatalog: Papa Parse warnings:', parseResult.errors);
       }
+
+      const rows = parseResult.data;
+      if (rows.length < 2) {
+        throw new Error('CSV file appears to be empty or invalid');
+      }
+
+      // Extract and clean headers from first row
+      const rawHeaders = rows[0];
+      const headers = rawHeaders.map((header, index) => {
+        let cleanHeader = header.trim();
+        // Remove BOM character from the first header if present
+        if (index === 0 && cleanHeader.charCodeAt(0) === 0xFEFF) {
+          cleanHeader = cleanHeader.substring(1);
+          console.log('HygStarsCatalog: Removed BOM character from first header');
+        }
+        return cleanHeader;
+      });
+
+      console.log(`HygStarsCatalog: Parsed headers:`, headers);
+      console.log(`HygStarsCatalog: Processing ${rows.length - 1} star records`);
+
+      const stars: HygRecord[] = [];
+      
+      // Process data rows (skip header row)
+      for (let i = 1; i < rows.length; i++) {
+        try {
+          const values = rows[i];
+          if (values.length !== headers.length) {
+            console.warn(`HygStarsCatalog: Row ${i + 1} has ${values.length} values, expected ${headers.length}`);
+            continue;
+          }
+          
+          const record = this.createHygRecord(headers, values);
+          if (record) {
+            stars.push(record);
+          }
+        } catch (error) {
+          console.warn(`HygStarsCatalog: Error parsing row ${i + 1}:`, error);
+        }
+      }
+
+      console.log(`HygStarsCatalog: Successfully parsed ${stars.length} star records using Papa Parse`);
+      return stars;
+
+    } catch (error) {
+      console.error('HygStarsCatalog: Papa Parse error:', error);
+      throw new Error(`Failed to parse CSV data: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
-    
-    values.push(current.trim());
-    return values;
   }
 
   /**
    * Create HygRecord from parsed CSV data
-   * Enhanced with better error logging for debugging
+   * Enhanced with better error logging and validation
    */
   private static createHygRecord(headers: string[], values: string[]): HygRecord | null {
     try {
       const getValue = (header: string): string => {
         const index = headers.indexOf(header);
         if (index === -1) {
-          console.warn(`HygStarsCatalog: Header '${header}' not found in headers:`, headers);
+          // Only log this once per header to avoid spam
+          if (!this.missingHeadersLogged) {
+            this.missingHeadersLogged = new Set();
+          }
+          if (!this.missingHeadersLogged.has(header)) {
+            console.warn(`HygStarsCatalog: Header '${header}' not found in headers`);
+            this.missingHeadersLogged.add(header);
+          }
           return '';
         }
-        return index >= 0 ? values[index] : '';
+        return values[index]?.trim() || '';
       };
 
       const getNumber = (header: string): number => {
         const value = getValue(header);
-        return value ? parseFloat(value) : 0;
+        if (!value || value === '') return 0;
+        const parsed = parseFloat(value);
+        return isNaN(parsed) ? 0 : parsed;
       };
 
       const getInteger = (header: string): number => {
         const value = getValue(header);
-        return value ? parseInt(value, 10) : 0;
+        if (!value || value === '') return 0;
+        const parsed = parseInt(value, 10);
+        return isNaN(parsed) ? 0 : parsed;
       };
 
-      // Required fields
+      const getOptionalNumber = (header: string): number | undefined => {
+        const value = getValue(header);
+        if (!value || value === '') return undefined;
+        const parsed = parseFloat(value);
+        return isNaN(parsed) ? undefined : parsed;
+      };
+
+      const getOptionalInteger = (header: string): number | undefined => {
+        const value = getValue(header);
+        if (!value || value === '') return undefined;
+        const parsed = parseInt(value, 10);
+        return isNaN(parsed) ? undefined : parsed;
+      };
+
+      const getOptionalString = (header: string): string | undefined => {
+        const value = getValue(header);
+        return value && value !== '' ? value : undefined;
+      };
+
+      // Required fields - validate ID exists
       const id = getInteger('id');
-      if (!id) {
-        console.warn('HygStarsCatalog: No ID found for record, skipping');
-        return null;
+      if (!id || id === 0) {
+        return null; // Skip records without valid ID
       }
 
+      // Build the HygRecord with proper type handling
       const record: HygRecord = {
         id,
-        hip: getInteger('hip') || undefined,
-        hd: getInteger('hd') || undefined,
-        hr: getInteger('hr') || undefined,
-        gl: getValue('gl') || undefined,
-        bf: getValue('bf') || undefined,
-        proper: getValue('proper') || undefined,
+        hip: getOptionalInteger('hip'),
+        hd: getOptionalInteger('hd'),
+        hr: getOptionalInteger('hr'),
+        gl: getOptionalString('gl'),
+        bf: getOptionalString('bf'),
+        proper: getOptionalString('proper'),
         ra: getNumber('ra'),
         dec: getNumber('dec'),
         dist: getNumber('dist'),
-        pmra: getNumber('pmra'),
-        pmdec: getNumber('pmdec'),
-        rv: getNumber('rv'),
+        pmra: getOptionalNumber('pmra'),
+        pmdec: getOptionalNumber('pmdec'),
+        rv: getOptionalNumber('rv'),
         mag: getNumber('mag'),
         absmag: getNumber('absmag'),
-        spect: getValue('spect') || undefined,
-        ci: getNumber('ci'),
+        spect: getOptionalString('spect'),
+        ci: getOptionalNumber('ci'),
         x: getNumber('x'),
         y: getNumber('y'),
         z: getNumber('z'),
-        vx: getNumber('vx'),
-        vy: getNumber('vy'),
-        vz: getNumber('vz'),
+        vx: getOptionalNumber('vx'),
+        vy: getOptionalNumber('vy'),
+        vz: getOptionalNumber('vz'),
         rarad: getNumber('rarad'),
         decrad: getNumber('decrad'),
-        pmrarad: getNumber('pmrarad'),
-        pmdecrad: getNumber('pmdecrad'),
-        bayer: getValue('bayer') || undefined,
-        flam: getInteger('flam') || undefined,
-        con: getValue('con') || undefined,
-        comp: getInteger('comp') || undefined,
-        comp_primary: getInteger('comp_primary') || undefined,
-        base: getValue('base') || undefined,
-        lum: getNumber('lum'),
-        var: getValue('var') || undefined,
-        var_min: getNumber('var_min') || undefined,
-        var_max: getNumber('var_max') || undefined
+        pmrarad: getOptionalNumber('pmrarad'),
+        pmdecrad: getOptionalNumber('pmdecrad'),
+        bayer: getOptionalString('bayer'),
+        flam: getOptionalInteger('flam'),
+        con: getOptionalString('con'),
+        comp: getOptionalInteger('comp'),
+        comp_primary: getOptionalInteger('comp_primary'),
+        base: getOptionalString('base'),
+        lum: getOptionalNumber('lum'),
+        var: getOptionalString('var'),
+        var_min: getOptionalNumber('var_min'),
+        var_max: getOptionalNumber('var_max')
       };
 
       return record;
     } catch (error) {
-      console.warn('Error creating HygRecord:', error);
+      console.warn('HygStarsCatalog: Error creating HygRecord:', error);
       return null;
     }
   }
+
+  // Static property to track missing headers (avoid log spam)
+  private static missingHeadersLogged: Set<string>;
 
   /**
    * Get all stars
@@ -276,6 +321,54 @@ export class HygStarsCatalog {
    */
   getNamedStars(): HygRecord[] {
     return this.stars.filter(star => star.proper && star.proper.trim() !== '');
+  }
+
+  /**
+   * Get stars by constellation
+   */
+  getStarsByConstellation(constellation: string): HygRecord[] {
+    const conLower = constellation.toLowerCase();
+    return this.stars.filter(star => star.con?.toLowerCase() === conLower);
+  }
+
+  /**
+   * Get variable stars
+   */
+  getVariableStars(): HygRecord[] {
+    return this.stars.filter(star => star.var && star.var.trim() !== '');
+  }
+
+  /**
+   * Filter stars by distance range (in parsecs)
+   */
+  getStarsByDistance(minDist: number, maxDist: number): HygRecord[] {
+    return this.stars.filter(star => star.dist >= minDist && star.dist <= maxDist);
+  }
+
+  /**
+   * Filter stars by spectral class
+   */
+  getStarsBySpectralClass(spectralClass: string): HygRecord[] {
+    const spectLower = spectralClass.toLowerCase();
+    return this.stars.filter(star => 
+      star.spect?.toLowerCase().startsWith(spectLower)
+    );
+  }
+
+  /**
+   * Search stars by name (proper name, Bayer designation, etc.)
+   */
+  searchStarsByName(query: string): HygRecord[] {
+    const queryLower = query.toLowerCase();
+    return this.stars.filter(star => {
+      const properName = star.proper?.toLowerCase() || '';
+      const bayerName = star.bayer?.toLowerCase() || '';
+      const catalogName = `hyg ${star.id}`.toLowerCase();
+      
+      return properName.includes(queryLower) || 
+             bayerName.includes(queryLower) || 
+             catalogName.includes(queryLower);
+    });
   }
 
   /**
