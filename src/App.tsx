@@ -38,7 +38,8 @@ function AppContent() {
         setCatalogLoading(true);
         
         // Load the HYG catalog from the public directory
-        const catalog = await HygStarsCatalog.fromUrl('/hygdata_v41.csv.gz', true); // Use compressed format
+        // Browser automatically decompresses gzipped files, so set isCompressed to false
+        const catalog = await HygStarsCatalog.fromUrl('/hygdata_v41.csv.gz', false);
         
         console.log(`HYG catalog loaded successfully: ${catalog.getTotalStars()} stars`);
         setHygCatalog(catalog);
