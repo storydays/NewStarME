@@ -260,6 +260,7 @@ function HighlightedStar({
           color={'white'}
           alphaTest={0.1} // REVERTED: Back to 0.1
           blending={THREE.AdditiveBlending}
+          visible= {false}
         />
       </sprite>
     </Billboard>
