@@ -3,22 +3,22 @@ import { useLoader } from '@react-three/fiber';
 import { TextureLoader } from 'three';
 import { Star } from './Star';
 import { StarLabels } from './StarLabels';
+import { InstancedRegularStars } from './InstancedRegularStars';
 
 /**
- * Starfield Component - Enhanced with Advanced Star Selection Interface
+ * Starfield Component - Optimized with Instanced Rendering
  * 
- * Purpose: Renders stars with enhanced highlighting, emotion-based coloring,
- * increased sizes for highlighted stars, and always-visible labels.
+ * Purpose: Efficiently renders large star catalogs using GPU instancing for regular stars
+ * and individual rendering for highlighted/selected stars.
  * 
  * Features:
- * - 400% size increase for highlighted stars
- * - 2x glow intensity for highlighted stars
- * - Emotion-based color tinting
- * - Enhanced click detection
- * - Always-visible star name labels
- * - Performance optimized rendering
+ * - Instanced rendering for 100K+ regular stars (single draw call)
+ * - Individual rendering for highlighted/selected stars (complex effects)
+ * - Automatic categorization of stars by importance
+ * - Performance-optimized label rendering
+ * - Maintains visual quality for important stars
  * 
- * Confidence Rating: High - Enhanced existing system with advanced highlighting
+ * Confidence Rating: High - Proven optimization technique for large datasets
  */
 
 interface StarfieldProps {
@@ -28,10 +28,10 @@ interface StarfieldProps {
     magnitude: number;
     name?: string;
     isHighlighted?: boolean;
-    enhancedSize?: number; // NEW: Size multiplier for highlighted stars
-    enhancedGlow?: number; // NEW: Glow multiplier for highlighted stars
-    emotionColor?: string; // NEW: Emotion-based color tinting
-    showLabel?: boolean | string; // NEW: Force show label with optional custom text
+    enhancedSize?: number;
+    enhancedGlow?: number;
+    emotionColor?: string;
+    showLabel?: boolean | string;
   }>;
   selectedStar?: string | null;
   onStarSelect?: (starId: string) => void;
@@ -58,44 +58,63 @@ export function Starfield({
     ];
   }, []);
 
-  // Handle star click events with enhanced detection
+  // Handle star click events
   const handleStarClick = useCallback((starId: string) => {
-    console.log('Starfield: Enhanced star clicked:', starId);
+    console.log('Starfield: Star clicked:', starId);
     if (onStarSelect) {
       onStarSelect(starId);
     }
   }, [onStarSelect]);
 
-  // Optimize performance: Memoize starSprites list with enhanced highlighting
-  const starSprites = useMemo(() => {
+  // Categorize stars for optimal rendering
+  const { regularStars, specialStars, labelStars } = useMemo(() => {
     if (!starTexture || !glowTexture) {
       console.log('Starfield: Textures not loaded yet');
-      return null;
+      return { regularStars: [], specialStars: [], labelStars: [] };
     }
 
-    console.log(`Starfield: Rendering ${catalog.length} stars with enhanced highlighting`);
+    console.log(`Starfield: Categorizing ${catalog.length} stars for optimized rendering`);
     
-    // Count highlighted stars for logging
-    const highlightedCount = catalog.filter(star => star.isHighlighted).length;
-    if (highlightedCount > 0) {
-      console.log(`Starfield: ${highlightedCount} stars are highlighted with enhanced visualization`);
-    }
+    const regular: typeof catalog = [];
+    const special: typeof catalog = [];
+    const labels: typeof catalog = [];
+    
+    catalog.forEach((star) => {
+      // Special rendering for highlighted or selected stars
+      if (star.isHighlighted || star.id === selectedStar) {
+        special.push(star);
+        labels.push(star); // Always include special stars in labels
+      } else {
+        regular.push(star);
+        
+        // Only include named stars in labels for performance
+        if (star.name && star.name.trim() !== '') {
+          labels.push(star);
+        }
+      }
+    });
 
-    return catalog.map((star, index) => {
-      // Calculate base star size based on magnitude
+    console.log(`Starfield: Categorized - ${regular.length} regular, ${special.length} special, ${labels.length} labeled stars`);
+    
+    return {
+      regularStars: regular,
+      specialStars: special,
+      labelStars: labels
+    };
+  }, [catalog, selectedStar, starTexture, glowTexture]);
+
+  // Render individual special stars with full effects
+  const specialStarSprites = useMemo(() => {
+    return specialStars.map((star) => {
+      // Calculate enhanced properties for special stars
       const baseMagnitudeSize = Math.max(0.02, Math.min(0.3, starSize * (6.0 - star.magnitude) * 0.2));
-      
-      // Apply enhanced size for highlighted stars (400% increase)
       const enhancedSize = star.enhancedSize || 1.0;
       const actualStarSize = baseMagnitudeSize * enhancedSize;
       
-      // Apply enhanced glow for highlighted stars (2x intensity)
       const enhancedGlow = star.enhancedGlow || 1.0;
       const actualGlowMultiplier = glowMultiplier * enhancedGlow;
 
-   //   console.log(`Starfield: Star ${star.id} - highlighted: ${star.isHighlighted}, size: ${actualStarSize.toFixed(3)}, glow: ${actualGlowMultiplier.toFixed(1)}`);
-
-      return true? <></>: (
+      return (
         <Star
           key={star.id}
           position={star.position}
@@ -106,35 +125,41 @@ export function Starfield({
           glowMultiplier={actualGlowMultiplier}
           isSelected={star.id === selectedStar}
           isHighlighted={star.isHighlighted || false}
-          emotionColor={star.emotionColor} // NEW: Pass emotion color for tinting
+          emotionColor={star.emotionColor}
           onClick={() => handleStarClick(star.id)}
         />
       );
     });
-  }, [catalog, selectedStar, starTexture, glowTexture, starSize, glowMultiplier, handleStarClick]);
-
-  // Prepare enhanced labels data
-  const enhancedLabelsData = useMemo(() => {
-    return catalog.map(star => ({
-      id: star.id,
-      position: star.position,
-      magnitude: star.magnitude,
-      name: star.name,
-      isHighlighted: star.isHighlighted,
-      showLabel: star.showLabel,
-      emotionColor: star.emotionColor
-    }));
-  }, [catalog]);
+  }, [specialStars, selectedStar, starTexture, glowTexture, starSize, glowMultiplier, handleStarClick]);
 
   return (
     <>
-      {/* Render enhanced star sprites */}
-      {starSprites}
+      {/* Render regular stars using instanced rendering for performance */}
+      {regularStars.length > 0 && (
+        <InstancedRegularStars
+          stars={regularStars}
+          starTexture={starTexture}
+          glowTexture={glowTexture}
+          starSize={starSize}
+          glowMultiplier={glowMultiplier}
+        />
+      )}
       
-      {/* Render enhanced labels with always-visible highlighted star names */}
+      {/* Render special stars individually for full effects */}
+      {specialStarSprites}
+      
+      {/* Render optimized labels */}
       {showLabels && (
         <StarLabels
-          stars={enhancedLabelsData}
+          stars={labelStars.map(star => ({
+            id: star.id,
+            position: star.position,
+            magnitude: star.magnitude,
+            name: star.name,
+            isHighlighted: star.isHighlighted,
+            showLabel: star.showLabel,
+            emotionColor: star.emotionColor
+          }))}
           selectedStar={selectedStar}
         />
       )}
