@@ -68,8 +68,9 @@ export function useStarsCatalog(): UseStarsCatalogReturn {
 
         // Create the loading promise
         catalogPromise = (async () => {
-          // Load HYG catalog
-          const hygCatalog = await HygStarsCatalog.fromUrl('/hygdata_v41.csv.gz', true);
+          // Load HYG catalog - compress: false because browser already decompresses gzipped files
+          // when server sends Content-Encoding: gzip header
+          const hygCatalog = await HygStarsCatalog.fromUrl('/hygdata_v41.csv.gz', false);
           
           // Create enriched catalog
           const starsCatalog = await StarsCatalog.fromHygCatalog(hygCatalog);
