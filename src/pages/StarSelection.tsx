@@ -101,7 +101,7 @@ export function StarSelection() {
       console.log('StarSelection: Clearing suggested stars on unmount');
       clearSuggestedStars();
     };
-  }, [emotionId, catalogStars, setSuggestedStars, clearSuggestedStars]);
+  }, [emotionId, catalogStars]);
 
   if (!emotion) {
     return (
