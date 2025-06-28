@@ -1,4 +1,4 @@
-import { HygStarsCatalog } from './StarsCatalog';
+import { HygStarsCatalog } from './HygStarsCatalog';
 import { HygRecord, HygStarData } from '../types';
 
 /**

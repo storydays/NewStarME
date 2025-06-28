@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { HygStarsCatalog } from '../data/StarsCatalog';
+import { HygStarsCatalog } from '../data/HygStarsCatalog';
 import { StarsCatalog } from '../data/StarsCatalog';
 import { HygStarData } from '../types';
 
@@ -69,7 +69,7 @@ export function useStarsCatalog(): UseStarsCatalogReturn {
         // Create the loading promise
         catalogPromise = (async () => {
           // Load HYG catalog
-          const hygCatalog = await HygStarsCatalog.fromUrl('/hygdata_v41.csv.gz', false);
+          const hygCatalog = await HygStarsCatalog.fromUrl('/hygdata_v41.csv.gz', true);
           
           // Create enriched catalog
           const starsCatalog = await StarsCatalog.fromHygCatalog(hygCatalog);
