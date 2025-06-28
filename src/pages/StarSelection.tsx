@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, X, Menu, Star as StarIcon, MapPin, Heart } from 'lucide-react';
+import { ArrowLeft, X, Menu, Star as StarIcon, MapPin, Heart, Sparkles } from 'lucide-react';
 import { useStars } from '../hooks/useStars';
 import { useStarNavigation } from '../hooks/useStarNavigation';
 import { useSuggestedStars } from '../context/SuggestedStarsContext';
@@ -41,15 +41,15 @@ export function StarSelection() {
   // Update suggested stars when stars are loaded with enhanced highlighting
   useEffect(() => {
     if (stars && stars.length > 0) {
-      console.log(`StarSelection: Setting ${stars.length} suggested stars for enhanced 3D highlighting`);
+      console.log(`StarSelection: Setting ${stars.length} suggested stars for enhanced 3D highlighting with bigger sizes`);
       
-      // Apply aurora-inspired gradient to suggested stars
+      // Apply aurora-inspired gradient to suggested stars with bigger sizes
       const enhancedStars = stars.map(star => ({
         ...star,
         visual_data: {
           ...star.visual_data,
-          // Reduce size by 15-20% and apply aurora gradient
-          size: star.visual_data.size * 0.8, // 20% reduction
+          // Bigger size for suggested stars
+          size: star.visual_data.size * 2.5, // 2.5x bigger for suggested
           color: '#7FFF94', // Aurora green start
           gradientEnd: '#39FF14' // Aurora green end
         }
@@ -78,7 +78,7 @@ export function StarSelection() {
   };
 
   const handleStarSelect = (star: Star) => {
-    console.log(`StarSelection: Star selected for modal: ${star.scientific_name}`);
+    console.log(`StarSelection: Star selected for modal with purple styling: ${star.scientific_name}`);
     setSelectedStar(star);
   };
 
@@ -153,86 +153,191 @@ export function StarSelection() {
         </button>
       </div>
 
-      {/* Right Sidebar */}
+      {/* Enhanced Right Sidebar with High Transparency */}
       <div className="fixed right-0 top-0 h-full z-30">
-        {/* Hamburger trigger */}
+        {/* Fancy hamburger trigger with enhanced styling */}
         <motion.button
           onClick={() => setSidebarExpanded(!sidebarExpanded)}
-          className="absolute top-6 right-6 w-12 h-12 frosted-glass-strong rounded-lg flex items-center justify-center text-cosmic-observation hover:text-cosmic-cherenkov-blue transition-colors"
-          whileHover={{ scale: 1.05 }}
+          className="absolute top-6 right-6 w-14 h-14 rounded-xl flex items-center justify-center text-cosmic-observation hover:text-cosmic-cherenkov-blue transition-all duration-300 group"
+          style={{
+            background: 'rgba(248, 250, 252, 0.03)',
+            backdropFilter: 'blur(20px)',
+            border: '1px solid rgba(248, 250, 252, 0.08)',
+            boxShadow: '0 8px 32px rgba(37, 99, 235, 0.1)'
+          }}
+          whileHover={{ 
+            scale: 1.05,
+            boxShadow: '0 12px 40px rgba(37, 99, 235, 0.2)',
+            background: 'rgba(248, 250, 252, 0.05)'
+          }}
           whileTap={{ scale: 0.95 }}
         >
-          <Menu className="w-6 h-6" />
+          <Menu className="w-6 h-6 group-hover:rotate-90 transition-transform duration-300" />
+          
+          {/* Fancy glow effect */}
+          <div 
+            className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+            style={{
+              background: 'linear-gradient(135deg, rgba(127, 255, 148, 0.1) 0%, rgba(57, 255, 20, 0.1) 100%)',
+              filter: 'blur(8px)'
+            }}
+          />
         </motion.button>
 
-        {/* Sidebar panel */}
+        {/* Enhanced Sidebar panel with high transparency */}
         <AnimatePresence>
           {sidebarExpanded && (
             <motion.div
-              className="h-full w-80 bg-black/80 backdrop-blur-lg border-l border-cosmic-particle-trace"
+              className="h-full w-80 border-l"
+              style={{
+                background: 'rgba(0, 0, 0, 0.15)', // High transparency
+                backdropFilter: 'blur(25px)',
+                borderColor: 'rgba(248, 250, 252, 0.08)',
+                boxShadow: '-8px 0 32px rgba(0, 0, 0, 0.3)'
+              }}
               initial={{ x: '100%' }}
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ duration: 0.3, ease: 'easeInOut' }}
             >
               <div className="p-6 h-full flex flex-col">
-                {/* Sidebar header */}
+                {/* Enhanced sidebar header with fancy styling */}
                 <div className="mb-6">
-                  <h3 className="text-xl font-light text-cosmic-observation mb-2">
-                    {emotion.name} Stars
-                  </h3>
-                  <p className="text-cosmic-stellar-wind text-sm font-light">
-                    {stars?.length || 0} celestial beacons available
-                  </p>
+                  <motion.div
+                    className="flex items-center gap-3 mb-4"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 }}
+                  >
+                    <div 
+                      className="w-10 h-10 rounded-full flex items-center justify-center"
+                      style={{
+                        background: 'linear-gradient(135deg, #7FFF94 0%, #39FF14 100%)',
+                        boxShadow: '0 0 20px rgba(127, 255, 148, 0.4)'
+                      }}
+                    >
+                      <Sparkles className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-light text-cosmic-observation">
+                        {emotion.name} Stars
+                      </h3>
+                      <p className="text-cosmic-stellar-wind text-sm font-light">
+                        {stars?.length || 0} celestial beacons
+                      </p>
+                    </div>
+                  </motion.div>
+                  
+                  {/* Fancy divider */}
+                  <div 
+                    className="h-px w-full"
+                    style={{
+                      background: 'linear-gradient(90deg, transparent 0%, rgba(127, 255, 148, 0.3) 50%, transparent 100%)'
+                    }}
+                  />
                 </div>
 
-                {/* Scrollable star list */}
-                <div className="flex-1 overflow-y-auto space-y-3">
+                {/* Enhanced scrollable star list */}
+                <div className="flex-1 overflow-y-auto space-y-3 pr-2">
                   {stars?.map((star, index) => (
                     <motion.div
                       key={star.id}
-                      className="frosted-glass rounded-lg p-4 cursor-pointer hover:frosted-glass-strong transition-all duration-300 border border-cosmic-particle-trace hover:border-cosmic-energy-flux"
-                      whileHover={{ scale: 1.02, x: -4 }}
+                      className="rounded-xl p-4 cursor-pointer transition-all duration-300 border group"
+                      style={{
+                        background: index === currentIndex 
+                          ? 'rgba(248, 250, 252, 0.08)' 
+                          : 'rgba(248, 250, 252, 0.03)',
+                        backdropFilter: 'blur(15px)',
+                        borderColor: index === currentIndex 
+                          ? 'rgba(127, 255, 148, 0.3)' 
+                          : 'rgba(248, 250, 252, 0.08)'
+                      }}
+                      whileHover={{ 
+                        scale: 1.02, 
+                        x: -4,
+                        background: 'rgba(248, 250, 252, 0.1)',
+                        borderColor: 'rgba(127, 255, 148, 0.4)'
+                      }}
                       whileTap={{ scale: 0.98 }}
                       onClick={() => handleSidebarStarClick(star, index)}
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.1 + index * 0.05 }}
                     >
                       <div className="flex items-center gap-3">
-                        {/* Star thumbnail with aurora gradient */}
+                        {/* Enhanced star thumbnail with aurora gradient */}
                         <div 
-                          className="w-8 h-8 rounded-full flex items-center justify-center relative"
+                          className="w-10 h-10 rounded-full flex items-center justify-center relative overflow-hidden"
                           style={{
                             background: `linear-gradient(135deg, #7FFF94 0%, #39FF14 100%)`,
-                            boxShadow: '0 0 12px #7FFF9460'
+                            boxShadow: '0 0 15px rgba(127, 255, 148, 0.4)'
                           }}
                         >
-                          <StarIcon className="w-4 h-4 text-white" />
+                          <StarIcon className="w-5 h-5 text-white relative z-10" />
+                          
+                          {/* Fancy rotating glow */}
+                          <motion.div
+                            className="absolute inset-0 rounded-full"
+                            style={{
+                              background: 'conic-gradient(from 0deg, rgba(127, 255, 148, 0.8), rgba(57, 255, 20, 0.8), rgba(127, 255, 148, 0.8))',
+                              filter: 'blur(4px)'
+                            }}
+                            animate={{ rotate: 360 }}
+                            transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}
+                          />
                         </div>
                         
-                        {/* Star info */}
+                        {/* Enhanced star info */}
                         <div className="flex-1 min-w-0">
-                          <h4 className="text-cosmic-observation font-light text-sm truncate">
+                          <h4 className="text-cosmic-observation font-light text-sm truncate group-hover:text-cosmic-light-echo transition-colors">
                             {star.scientific_name}
                           </h4>
-                          <p className="text-cosmic-stellar-wind text-xs font-light">
+                          <p className="text-cosmic-stellar-wind text-xs font-light opacity-70 group-hover:opacity-100 transition-opacity">
                             {star.coordinates}
                           </p>
                         </div>
 
-                        {/* Current indicator */}
+                        {/* Enhanced current indicator */}
                         {index === currentIndex && (
-                          <div className="w-2 h-2 bg-cosmic-cherenkov-blue rounded-full animate-pulse" />
+                          <motion.div 
+                            className="w-3 h-3 rounded-full"
+                            style={{
+                              background: 'linear-gradient(135deg, #7FFF94 0%, #39FF14 100%)',
+                              boxShadow: '0 0 10px rgba(127, 255, 148, 0.6)'
+                            }}
+                            animate={{ 
+                              scale: [1, 1.2, 1],
+                              opacity: [0.7, 1, 0.7]
+                            }}
+                            transition={{ duration: 2, repeat: Infinity }}
+                          />
                         )}
                       </div>
                     </motion.div>
                   ))}
                 </div>
+
+                {/* Enhanced footer with fancy styling */}
+                <motion.div
+                  className="mt-6 pt-4"
+                  style={{
+                    borderTop: '1px solid rgba(248, 250, 252, 0.08)'
+                  }}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.3 }}
+                >
+                  <p className="text-cosmic-stellar-wind text-xs text-center font-light opacity-60">
+                    Navigate through the cosmic catalog
+                  </p>
+                </motion.div>
               </div>
             </motion.div>
           )}
         </AnimatePresence>
       </div>
 
-      {/* Selected Star Modal */}
+      {/* Enhanced Selected Star Modal with Purple Styling */}
       <AnimatePresence>
         {selectedStar && (
           <motion.div
@@ -241,46 +346,60 @@ export function StarSelection() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
-            {/* Backdrop */}
+            {/* Enhanced backdrop */}
             <div 
-              className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+              className="absolute inset-0 backdrop-blur-sm"
+              style={{
+                background: 'rgba(0, 0, 0, 0.4)'
+              }}
               onClick={handleCloseModal}
             />
             
-            {/* Modal */}
+            {/* Enhanced Modal with purple theme */}
             <motion.div
-              className="relative w-full max-w-2xl mx-6 mb-6 frosted-glass-strong rounded-2xl border border-cosmic-particle-trace overflow-hidden"
+              className="relative w-full max-w-2xl mx-6 mb-6 rounded-2xl border overflow-hidden"
+              style={{
+                background: 'rgba(248, 250, 252, 0.05)',
+                backdropFilter: 'blur(25px)',
+                borderColor: 'rgba(157, 78, 221, 0.3)',
+                boxShadow: '0 20px 60px rgba(157, 78, 221, 0.2)'
+              }}
               initial={{ y: 100, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: 100, opacity: 0 }}
               transition={{ type: 'spring', stiffness: 300, damping: 30 }}
             >
-              {/* Close button */}
+              {/* Enhanced close button */}
               <button
                 onClick={handleCloseModal}
-                className="absolute top-4 right-4 w-8 h-8 rounded-full frosted-glass flex items-center justify-center text-cosmic-stellar-wind hover:text-cosmic-observation transition-colors z-10"
+                className="absolute top-4 right-4 w-10 h-10 rounded-full flex items-center justify-center text-cosmic-stellar-wind hover:text-cosmic-observation transition-all duration-300 z-10"
+                style={{
+                  background: 'rgba(248, 250, 252, 0.05)',
+                  backdropFilter: 'blur(15px)',
+                  border: '1px solid rgba(248, 250, 252, 0.1)'
+                }}
               >
                 <X className="w-5 h-5" />
               </button>
 
               <div className="p-8">
-                {/* Star visualization with warm cosmic gradient */}
+                {/* Enhanced star visualization with purple cosmic gradient */}
                 <div className="text-center mb-6">
-                  <div className="relative mb-4 h-20 flex items-center justify-center">
+                  <div className="relative mb-4 h-24 flex items-center justify-center">
                     <motion.div
                       className="relative rounded-full flex items-center justify-center"
                       style={{ 
-                        background: 'linear-gradient(135deg, #FF69B4 0%, #8B0000 100%)',
-                        width: selectedStar.visual_data.size * 60,
-                        height: selectedStar.visual_data.size * 60,
-                        boxShadow: '0 0 40px #FF69B480, 0 0 80px #8B000040'
+                        background: 'linear-gradient(135deg, #9D4EDD 0%, #6A0572 100%)',
+                        width: selectedStar.visual_data.size * 80,
+                        height: selectedStar.visual_data.size * 80,
+                        boxShadow: '0 0 50px rgba(157, 78, 221, 0.6), 0 0 100px rgba(106, 5, 114, 0.3)'
                       }}
                       animate={{ 
-                        scale: [1, 1.05, 1],
+                        scale: [1, 1.08, 1],
                         boxShadow: [
-                          '0 0 40px #FF69B480, 0 0 80px #8B000040',
-                          '0 0 60px #FF69B4A0, 0 0 120px #8B000060',
-                          '0 0 40px #FF69B480, 0 0 80px #8B000040'
+                          '0 0 50px rgba(157, 78, 221, 0.6), 0 0 100px rgba(106, 5, 114, 0.3)',
+                          '0 0 70px rgba(157, 78, 221, 0.8), 0 0 140px rgba(106, 5, 114, 0.4)',
+                          '0 0 50px rgba(157, 78, 221, 0.6), 0 0 100px rgba(106, 5, 114, 0.3)'
                         ]
                       }}
                       transition={{ 
@@ -289,11 +408,35 @@ export function StarSelection() {
                         ease: "easeInOut"
                       }}
                     >
-                      <StarIcon className="w-8 h-8 text-white" />
+                      <StarIcon className="w-10 h-10 text-white" />
+                      
+                      {/* Purple particle effects */}
+                      {[...Array(6)].map((_, i) => (
+                        <motion.div
+                          key={i}
+                          className="absolute w-2 h-2 rounded-full"
+                          style={{ 
+                            background: 'linear-gradient(135deg, #9D4EDD, #6A0572)',
+                            boxShadow: '0 0 8px rgba(157, 78, 221, 0.8)'
+                          }}
+                          animate={{
+                            x: [0, (Math.random() - 0.5) * 100],
+                            y: [0, (Math.random() - 0.5) * 100],
+                            opacity: [0, 1, 0],
+                            scale: [0, 1.5, 0]
+                          }}
+                          transition={{
+                            duration: 4,
+                            delay: i * 0.3,
+                            repeat: Infinity,
+                            ease: "easeOut"
+                          }}
+                        />
+                      ))}
                     </motion.div>
                   </div>
 
-                  <h2 className="text-2xl font-light text-cosmic-observation mb-2">
+                  <h2 className="text-3xl font-light text-cosmic-observation mb-2">
                     {selectedStar.scientific_name}
                   </h2>
                   
@@ -303,7 +446,7 @@ export function StarSelection() {
                   </div>
                 </div>
 
-                {/* Star description */}
+                {/* Enhanced star description */}
                 <div className="mb-6">
                   <p className="text-cosmic-light-echo text-center leading-relaxed font-light">
                     {selectedStar.poetic_description.length > 150 
@@ -313,16 +456,25 @@ export function StarSelection() {
                   </p>
                 </div>
 
-                {/* Action button */}
+                {/* Enhanced action button with purple theme */}
                 <div className="text-center">
                   <motion.button
                     onClick={() => handleDedicate(selectedStar)}
-                    className="bg-gradient-to-r from-cosmic-cherenkov-blue to-cosmic-plasma-glow hover:from-cosmic-plasma-glow hover:to-cosmic-stellar-wind text-cosmic-observation font-light py-3 px-8 rounded-xl transition-all duration-500 flex items-center justify-center gap-3 mx-auto cherenkov-glow"
-                    whileHover={{ scale: 1.02, y: -2 }}
+                    className="text-cosmic-observation font-light py-4 px-10 rounded-xl transition-all duration-500 flex items-center justify-center gap-3 mx-auto text-lg"
+                    style={{
+                      background: 'linear-gradient(135deg, #9D4EDD 0%, #6A0572 100%)',
+                      boxShadow: '0 0 30px rgba(157, 78, 221, 0.4)'
+                    }}
+                    whileHover={{ 
+                      scale: 1.02, 
+                      y: -2,
+                      boxShadow: '0 0 40px rgba(157, 78, 221, 0.6)'
+                    }}
                     whileTap={{ scale: 0.98 }}
                   >
-                    <Heart className="w-5 h-5" />
+                    <Heart className="w-6 h-6" />
                     Dedicate This Star
+                    <Sparkles className="w-6 h-6" />
                   </motion.button>
                 </div>
               </div>

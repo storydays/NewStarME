@@ -4,19 +4,18 @@ import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
 /**
- * Star Component - Enhanced with Aurora Gradients for Star Selection
+ * Star Component - Enhanced with Bigger Suggested/Selected Stars and Purple Selected Stars
  * 
  * Purpose: Main dispatcher component that renders appropriate star type based on highlighting state.
- * Enhanced with aurora-inspired gradients for suggested stars and warm cosmic gradients for selected stars.
+ * Enhanced with bigger sizes for suggested/selected stars and purple-ish tones for selected stars.
  * 
  * Features:
- * - Aurora gradient (#7FFF94 to #39FF14) for suggested stars
- * - Warm cosmic gradient (#FF69B4 to #8B0000) for selected stars
- * - 15-20% size reduction for suggested stars
+ * - Aurora gradient (#7FFF94 to #39FF14) for suggested stars with bigger size
+ * - Purple-ish gradient (#9D4EDD to #6A0572) for selected stars with bigger size
  * - Enhanced glow effects for better visibility
  * - Conditional rendering based on isHighlighted prop
  * 
- * Confidence Rating: High - Enhanced existing system with gradient support
+ * Confidence Rating: High - Enhanced existing system with bigger stars and purple selection
  */
 
 interface BaseStarProps {
@@ -33,7 +32,7 @@ interface BaseStarProps {
 interface StarProps extends BaseStarProps {
   isHighlighted?: boolean;
   emotionColor?: string;
-  isSuggested?: boolean; // NEW: Flag for suggested stars with aurora gradient
+  isSuggested?: boolean;
 }
 
 interface HighlightedStarProps extends BaseStarProps {
@@ -125,10 +124,10 @@ function RegularStar({
 }
 
 /**
- * HighlightedStar Component - Enhanced with Aurora and Cosmic Gradients
+ * HighlightedStar Component - Enhanced with Bigger Stars and Purple Selection
  * 
- * Purpose: Specialized component for highlighted stars with gradient effects.
- * Features aurora gradients for suggested stars and warm cosmic gradients for selected stars.
+ * Purpose: Specialized component for highlighted stars with enhanced size and purple selection.
+ * Features aurora gradients for suggested stars and purple gradients for selected stars.
  */
 function HighlightedStar({
   position,
@@ -159,17 +158,17 @@ function HighlightedStar({
     onClick(event);
   }, [onClick]);
 
-  // Apply size reduction for suggested stars (15-20%)
-  const sizeMultiplier = isSuggested ? 0.8 : 4.0; // 20% reduction for suggested, 400% for others
+  // ENHANCED: Bigger sizes for both suggested and selected stars
+  const sizeMultiplier = isSuggested ? 2.5 : (isSelected ? 3.0 : 4.0); // Bigger for suggested (2.5x), even bigger for selected (3x)
   const enhancedStarSize = starSize * sizeMultiplier;
-  const enhancedGlowMultiplier = glowMultiplier * (isSuggested ? 1.5 : 4.0); // Enhanced glow for suggested
+  const enhancedGlowMultiplier = glowMultiplier * (isSuggested ? 2.0 : (isSelected ? 2.5 : 4.0)); // Enhanced glow
 
   const getStarColors = useCallback(() => {
     if (isSelected) {
-      // Selected: Warm cosmic gradient (#FF69B4 to #8B0000)
+      // ENHANCED: Purple-ish gradient for selected stars (#9D4EDD to #6A0572)
       return {
-        coreColor: new THREE.Color('#FF69B4'), // Hot pink
-        glowColor: new THREE.Color('#8B0000').multiplyScalar(enhancedGlowMultiplier), // Dark red glow
+        coreColor: new THREE.Color('#9D4EDD'), // Purple start
+        glowColor: new THREE.Color('#6A0572').multiplyScalar(enhancedGlowMultiplier), // Dark purple glow
         baseCoreOpacity: opacity
       };
     } else if (isSuggested) {
@@ -193,20 +192,36 @@ function HighlightedStar({
 
   const colors = getStarColors();
 
-  // Enhanced pulsing animation for suggested and selected stars
+  // Enhanced pulsing animation with different effects for selected vs suggested
   useFrame((state) => {
     if (glowMaterialRef.current && coreMaterialRef.current) {
       const time = state.clock.elapsedTime;
-      const pulseSpeed = isSuggested ? 1.5 : (isSelected ? 2.5 : 2.0); // Different speeds
-      const pulseIntensity = isSuggested ? 0.2 : (isSelected ? 0.4 : 0.3); // Different intensities
       
-      const pulseMultiplier = 1.0 + Math.sin(time * pulseSpeed) * pulseIntensity;
-      
-      // Apply pulsing to glow color intensity
-      glowMaterialRef.current.color = colors.glowColor.clone().multiplyScalar(pulseMultiplier);
-      
-      // Subtle pulsing on core
-      coreMaterialRef.current.opacity = colors.baseCoreOpacity * (1.0 + Math.sin(time * pulseSpeed) * 0.1);
+      if (isSelected) {
+        // Selected stars: Slower, more dramatic pulsing with purple tones
+        const pulseSpeed = 1.8;
+        const pulseIntensity = 0.5;
+        const pulseMultiplier = 1.0 + Math.sin(time * pulseSpeed) * pulseIntensity;
+        
+        glowMaterialRef.current.color = colors.glowColor.clone().multiplyScalar(pulseMultiplier);
+        coreMaterialRef.current.opacity = colors.baseCoreOpacity * (1.0 + Math.sin(time * pulseSpeed) * 0.15);
+      } else if (isSuggested) {
+        // Suggested stars: Gentle aurora-like pulsing
+        const pulseSpeed = 1.2;
+        const pulseIntensity = 0.3;
+        const pulseMultiplier = 1.0 + Math.sin(time * pulseSpeed) * pulseIntensity;
+        
+        glowMaterialRef.current.color = colors.glowColor.clone().multiplyScalar(pulseMultiplier);
+        coreMaterialRef.current.opacity = colors.baseCoreOpacity * (1.0 + Math.sin(time * pulseSpeed) * 0.1);
+      } else {
+        // Regular highlighted: Standard pulsing
+        const pulseSpeed = 2.0;
+        const pulseIntensity = 0.3;
+        const pulseMultiplier = 1.0 + Math.sin(time * pulseSpeed) * pulseIntensity;
+        
+        glowMaterialRef.current.color = colors.glowColor.clone().multiplyScalar(pulseMultiplier);
+        coreMaterialRef.current.opacity = colors.baseCoreOpacity * (1.0 + Math.sin(time * pulseSpeed) * 0.1);
+      }
     }
   });
 
@@ -217,7 +232,7 @@ function HighlightedStar({
         <meshBasicMaterial transparent opacity={0} visible={false} />
       </mesh>
 
-      {/* Enhanced glow sprite with gradient-based colors */}
+      {/* Enhanced glow sprite with bigger size and color-specific effects */}
       <sprite scale={[enhancedStarSize * 2.5, enhancedStarSize * 2.5, enhancedStarSize * 2.5]}>
         <spriteMaterial
           ref={glowMaterialRef}
@@ -231,8 +246,8 @@ function HighlightedStar({
         />
       </sprite>
 
-      {/* Star sprite with gradient colors */}
-      <sprite scale={[starSize*2, starSize*2, starSize*2]}>
+      {/* Star sprite with enhanced size */}
+      <sprite scale={[starSize*2.5, starSize*2.5, starSize*2.5]}>
         <spriteMaterial
           ref={coreMaterialRef}
           map={starTexture}
@@ -249,7 +264,7 @@ function HighlightedStar({
 }
 
 /**
- * Main Star Component - Enhanced dispatcher with gradient support
+ * Main Star Component - Enhanced dispatcher with bigger stars and purple selection
  */
 export function Star({
   position,
@@ -261,13 +276,13 @@ export function Star({
   isSelected,
   isHighlighted = false,
   emotionColor,
-  isSuggested = false, // NEW: Support for suggested star styling
+  isSuggested = false,
   onClick
 }: StarProps) {
   
-  console.log(`Star: Rendering ${isHighlighted ? 'highlighted' : 'normal'} star${isSuggested ? ' (suggested)' : ''} at position [${position.join(', ')}]`);
+  console.log(`Star: Rendering ${isHighlighted ? 'highlighted' : 'normal'} star${isSuggested ? ' (suggested)' : ''}${isSelected ? ' (SELECTED - PURPLE)' : ''} at position [${position.join(', ')}]`);
 
-  if (isHighlighted) {
+  if (isHighlighted || isSelected) {
     return (
       <HighlightedStar
         position={position}

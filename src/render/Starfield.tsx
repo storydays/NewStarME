@@ -6,19 +6,19 @@ import { StarLabels } from './StarLabels';
 import { InstancedRegularStars } from './InstancedRegularStars';
 
 /**
- * Starfield Component - Enhanced with Star Selection Support
+ * Starfield Component - Enhanced with Bigger Suggested/Selected Stars
  * 
- * Purpose: Renders stars with enhanced highlighting, aurora gradients for suggested stars,
- * warm cosmic gradients for selected stars, and click detection for star selection.
+ * Purpose: Renders stars with enhanced highlighting, bigger aurora gradients for suggested stars,
+ * bigger purple gradients for selected stars, and enhanced click detection for star selection.
  * 
  * Features:
- * - Aurora gradient (#7FFF94 to #39FF14) for suggested stars with 15-20% size reduction
- * - Warm cosmic gradient (#FF69B4 to #8B0000) for selected stars
+ * - Bigger aurora gradient (#7FFF94 to #39FF14) for suggested stars
+ * - Bigger purple gradient (#9D4EDD to #6A0572) for selected stars
  * - Enhanced click detection for star selection modal
  * - Configurable rendering modes (classic/instanced)
  * - Performance optimized rendering
  * 
- * Confidence Rating: High - Enhanced existing system with star selection support
+ * Confidence Rating: High - Enhanced existing system with bigger star selection support
  */
 
 interface StarfieldProps {
@@ -39,7 +39,7 @@ interface StarfieldProps {
   glowMultiplier?: number;
   showLabels?: boolean;
   renderingMode?: 'classic' | 'instanced';
-  onStarClick?: (starId: string) => void; // NEW: Callback for star selection modal
+  onStarClick?: (starId: string) => void;
 }
 
 export function Starfield({
@@ -50,7 +50,7 @@ export function Starfield({
   glowMultiplier = 1.0,
   showLabels = true,
   renderingMode = 'classic',
-  onStarClick // NEW: Star click handler for modal
+  onStarClick
 }: StarfieldProps) {
   
   // Initialize textures
@@ -84,11 +84,11 @@ export function Starfield({
       return { regularStars: [], specialStars: [], labelStars: [] };
     }
 
-    console.log(`Starfield: Processing ${catalog.length} stars for ${renderingMode} rendering mode with star selection support`);
+    console.log(`Starfield: Processing ${catalog.length} stars for ${renderingMode} rendering mode with bigger star selection support`);
     
     if (renderingMode === 'classic') {
       // Classic mode: All stars rendered individually
-      console.log(`Starfield: Classic mode - all ${catalog.length} stars will be rendered individually with enhanced effects`);
+      console.log(`Starfield: Classic mode - all ${catalog.length} stars will be rendered individually with enhanced bigger effects`);
       
       return {
         regularStars: [],
@@ -102,7 +102,7 @@ export function Starfield({
       const labels: typeof catalog = [];
       
       catalog.forEach((star) => {
-        // Special rendering for highlighted or selected stars
+        // Special rendering for highlighted or selected stars (bigger sizes)
         if (star.isHighlighted || star.id === selectedStar) {
           special.push(star);
           labels.push(star);
@@ -115,7 +115,7 @@ export function Starfield({
         }
       });
 
-      console.log(`Starfield: Instanced mode - ${regular.length} regular, ${special.length} special, ${labels.length} labeled stars`);
+      console.log(`Starfield: Instanced mode - ${regular.length} regular, ${special.length} special (bigger), ${labels.length} labeled stars`);
       
       return {
         regularStars: regular,
@@ -125,7 +125,7 @@ export function Starfield({
     }
   }, [catalog, selectedStar, starTexture, glowTexture, renderingMode]);
 
-  // Render individual stars with enhanced gradient support
+  // Render individual stars with enhanced bigger gradient support
   const starSprites = useMemo(() => {
     const starsToRender = renderingMode === 'classic' ? catalog : specialStars;
     
@@ -133,18 +133,24 @@ export function Starfield({
       // Calculate enhanced properties
       const baseMagnitudeSize = Math.max(0.02, Math.min(0.3, starSize * (6.0 - star.magnitude) * 0.2));
       
-      // Apply size reduction for suggested stars (15-20%)
+      // ENHANCED: Bigger sizes for suggested and selected stars
       let enhancedSize = star.enhancedSize || 1.0;
       if (star.isHighlighted) {
-        enhancedSize = 0.8; // 20% reduction for suggested stars
+        enhancedSize = 2.5; // Bigger for suggested stars (2.5x)
+      }
+      if (star.id === selectedStar) {
+        enhancedSize = 3.0; // Even bigger for selected stars (3x)
       }
       
       const actualStarSize = baseMagnitudeSize * enhancedSize;
       
-      // Enhanced glow for suggested stars
+      // Enhanced glow for bigger stars
       let enhancedGlow = star.enhancedGlow || 1.0;
       if (star.isHighlighted) {
-        enhancedGlow = 1.5; // Enhanced glow for better visibility
+        enhancedGlow = 2.0; // Enhanced glow for bigger suggested stars
+      }
+      if (star.id === selectedStar) {
+        enhancedGlow = 2.5; // Even more enhanced glow for bigger selected stars
       }
       
       const actualGlowMultiplier = glowMultiplier * enhancedGlow;
@@ -161,7 +167,7 @@ export function Starfield({
           isSelected={star.id === selectedStar}
           isHighlighted={star.isHighlighted || false}
           emotionColor={star.emotionColor}
-          isSuggested={star.isHighlighted || false} // NEW: Mark highlighted stars as suggested
+          isSuggested={star.isHighlighted || false} // Mark highlighted stars as suggested
           onClick={() => handleStarClick(star.id)}
         />
       );
@@ -181,7 +187,7 @@ export function Starfield({
     <>
       {/* Conditional rendering based on mode */}
       {renderingMode === 'classic' ? (
-        // Classic mode: Render all stars individually with enhanced effects
+        // Classic mode: Render all stars individually with enhanced bigger effects
         <>
           {starSprites}
         </>
@@ -199,7 +205,7 @@ export function Starfield({
             />
           )}
           
-          {/* Render special stars individually for full effects */}
+          {/* Render special stars individually for full bigger effects */}
           {starSprites}
         </>
       )}
