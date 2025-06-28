@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, X, Star as StarIcon, MapPin, Heart, Sparkles, ChevronRight } from 'lucide-react';
 import { useStars } from '../hooks/useStars';
 import { useStarNavigation } from '../hooks/useStarNavigation';
 import { useSuggestedStars } from '../context/SuggestedStarsContext';
+import { StarService } from '../services/starService';
 import { emotions } from '../data/emotions';
 import { Star } from '../types';
 
@@ -12,10 +13,15 @@ export function StarSelection() {
   const { emotionId } = useParams<{ emotionId: string }>();
   const navigate = useNavigate();
   const { stars, loading, error } = useStars(emotionId);
-  const { setSuggestedStars, clearSuggestedStars, triggerStarFocus } = useSuggestedStars();
-  
-  // Local state for selected star modal
-  const [selectedStar, setSelectedStar] = useState<Star | null>(null);
+  const { 
+    setSuggestedStars, 
+    clearSuggestedStars, 
+    triggerStarFocus,
+    selectedHygRecord,
+    setSelectedHygRecord,
+    selectedModalStar,
+    setSelectedModalStar
+  } = useSuggestedStars();
   
   const emotion = emotions.find(e => e.id === emotionId);
 
@@ -41,19 +47,7 @@ export function StarSelection() {
   useEffect(() => {
     if (stars && stars.length > 0) {
       console.log(`StarSelection: Setting ${stars.length} suggested stars for enhanced 3D highlighting`);
-      
-      // Apply aurora-inspired gradient to suggested stars
-      const enhancedStars = stars.map(star => ({
-        ...star,
-        visual_data: {
-          ...star.visual_data,
-          size: star.visual_data.size * 2.5, // Bigger size for suggested
-          color: '#7FFF94', // Aurora green start
-          gradientEnd: '#39FF14' // Aurora green end
-        }
-      }));
-      
-      setSuggestedStars(enhancedStars);
+      setSuggestedStars(stars);
     }
     
     // Clear suggested stars when leaving this page
@@ -61,7 +55,7 @@ export function StarSelection() {
       console.log('StarSelection: Clearing suggested stars on unmount');
       clearSuggestedStars();
     };
-  }, [stars]);
+  }, [stars, setSuggestedStars, clearSuggestedStars]);
 
   if (!emotion) {
     return (
@@ -75,14 +69,10 @@ export function StarSelection() {
     navigate('/');
   };
 
-  const handleStarSelect = (star: Star) => {
-    console.log(`StarSelection: Star selected for modal: ${star.scientific_name}`);
-    setSelectedStar(star);
-  };
-
   const handleCloseModal = () => {
-    console.log('StarSelection: Closing modal');
-    setSelectedStar(null);
+    console.log('StarSelection: Closing modal and clearing selections');
+    setSelectedModalStar(null);
+    setSelectedHygRecord(null);
   };
 
   const handleDedicate = (star: Star) => {
@@ -90,10 +80,29 @@ export function StarSelection() {
     navigate(`/dedicate/${star.id}?emotion=${emotionId}`);
   };
 
-  const handleSidebarStarClick = (star: Star, index: number) => {
+  const handleSidebarStarClick = async (star: Star, index: number) => {
     console.log(`StarSelection: Sidebar star clicked: ${star.scientific_name}`);
+    
+    // Focus camera on the star
     goToIndex(index);
-    setSelectedStar(star); // Open modal when clicking from sidebar
+    
+    // Show modal immediately
+    setSelectedModalStar(star);
+    
+    // Get corresponding HYG record for purple color in 3D view
+    try {
+      const hygCatalog = await StarService.getHygCatalog();
+      if (hygCatalog && star.id.startsWith('hyg-')) {
+        const hygId = parseInt(star.id.replace('hyg-', ''));
+        const hygRecord = hygCatalog.getStar(hygId);
+        if (hygRecord) {
+          console.log(`StarSelection: Found HYG record for ${star.scientific_name}, making it purple in 3D view`);
+          setSelectedHygRecord(hygRecord);
+        }
+      }
+    } catch (error) {
+      console.warn('Failed to get HYG record for star:', error);
+    }
   };
 
   if (loading) {
@@ -257,21 +266,20 @@ export function StarSelection() {
         </div>
       </div>
 
-      {/* Compact Bottom Modal */}
+      {/* Compact Bottom Modal - FIXED: Removed full-screen backdrop blur */}
       <AnimatePresence>
-        {selectedStar && (
+        {selectedModalStar && (
           <motion.div
             className="fixed inset-0 z-40 flex items-end justify-center pointer-events-auto"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
-            {/* Subtle Backdrop Blur */}
+            {/* FIXED: Removed backdrop blur that was causing full-screen blur */}
             <div 
               className="absolute inset-0"
               style={{
-                backdropFilter: 'blur(8px)',
-                background: 'rgba(0, 0, 0, 0.2)'
+                background: 'rgba(0, 0, 0, 0.2)' // Only dimming, no blur
               }}
               onClick={handleCloseModal}
             />
@@ -281,7 +289,7 @@ export function StarSelection() {
               className="relative w-full max-w-2xl mx-6 rounded-2xl border overflow-hidden"
               style={{
                 background: 'rgba(248, 250, 252, 0.03)', // High transparency
-                backdropFilter: 'blur(25px)',
+                backdropFilter: 'blur(25px)', // Only modal content is blurred
                 borderColor: 'rgba(157, 78, 221, 0.2)',
                 boxShadow: '0 20px 60px rgba(157, 78, 221, 0.15)',
                 marginBottom: '32px' // 32px from bottom edge
@@ -313,8 +321,8 @@ export function StarSelection() {
                         className="relative rounded-full flex items-center justify-center"
                         style={{ 
                           background: 'linear-gradient(135deg, #9D4EDD 0%, #6A0572 100%)',
-                          width: selectedStar.visual_data.size * 64,
-                          height: selectedStar.visual_data.size * 64,
+                          width: selectedModalStar.visual_data.size * 64,
+                          height: selectedModalStar.visual_data.size * 64,
                           boxShadow: '0 0 30px rgba(157, 78, 221, 0.4), 0 0 60px rgba(106, 5, 114, 0.2)'
                         }}
                         animate={{ 
@@ -339,19 +347,19 @@ export function StarSelection() {
                   {/* Star Information */}
                   <div className="flex-1 min-w-0">
                     <h2 className="text-xl font-light text-cosmic-observation mb-1 truncate">
-                      {selectedStar.scientific_name}
+                      {selectedModalStar.scientific_name}
                     </h2>
                     
                     <div className="flex items-center gap-2 text-cosmic-stellar-wind text-xs mb-2">
                       <MapPin className="w-3 h-3" />
-                      <span className="font-mono">{selectedStar.coordinates}</span>
+                      <span className="font-mono">{selectedModalStar.coordinates}</span>
                     </div>
 
                     {/* Brief Description - Max 2 lines */}
                     <p className="text-cosmic-light-echo text-sm leading-relaxed font-light line-clamp-2">
-                      {selectedStar.poetic_description.length > 120 
-                        ? selectedStar.poetic_description.substring(0, 120) + '...'
-                        : selectedStar.poetic_description
+                      {selectedModalStar.poetic_description.length > 120 
+                        ? selectedModalStar.poetic_description.substring(0, 120) + '...'
+                        : selectedModalStar.poetic_description
                       }
                     </p>
                   </div>
@@ -359,7 +367,7 @@ export function StarSelection() {
                   {/* Prominent Dedicate Button */}
                   <div className="flex-shrink-0">
                     <motion.button
-                      onClick={() => handleDedicate(selectedStar)}
+                      onClick={() => handleDedicate(selectedModalStar)}
                       className="text-cosmic-observation font-light py-3 px-6 rounded-xl transition-all duration-300 flex items-center gap-2 text-sm"
                       style={{
                         background: 'linear-gradient(135deg, #9D4EDD 0%, #6A0572 100%)',

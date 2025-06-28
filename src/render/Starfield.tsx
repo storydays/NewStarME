@@ -3,22 +3,22 @@ import { useLoader } from '@react-three/fiber';
 import { TextureLoader } from 'three';
 import { Star } from './Star';
 import { StarLabels } from './StarLabels';
-import { InstancedRegularStars } from './InstancedRegularStars';
 
 /**
- * Starfield Component - Enhanced with Bigger Suggested/Selected Stars
+ * Starfield Component - Enhanced with Star Click Detection for Modal
  * 
- * Purpose: Renders stars with enhanced highlighting, bigger aurora gradients for suggested stars,
- * bigger purple gradients for selected stars, and enhanced click detection for star selection.
+ * Purpose: Renders stars with enhanced highlighting and click detection
+ * for modal display. Supports both star selection and star click events.
  * 
  * Features:
- * - Bigger aurora gradient (#7FFF94 to #39FF14) for suggested stars
- * - Bigger purple gradient (#9D4EDD to #6A0572) for selected stars
  * - Enhanced click detection for star selection modal
- * - Configurable rendering modes (classic/instanced)
+ * - 400% size increase for highlighted stars
+ * - 2x glow intensity for highlighted stars
+ * - Emotion-based color tinting
+ * - Always-visible star name labels
  * - Performance optimized rendering
  * 
- * Confidence Rating: High - Enhanced existing system with bigger star selection support
+ * Confidence Rating: High - Enhanced existing system with modal click support
  */
 
 interface StarfieldProps {
@@ -38,8 +38,7 @@ interface StarfieldProps {
   starSize?: number;
   glowMultiplier?: number;
   showLabels?: boolean;
-  renderingMode?: 'classic' | 'instanced';
-  onStarClick?: (starId: string) => void;
+  onStarClick?: (starId: string) => void; // NEW: Click handler for modal
 }
 
 export function Starfield({
@@ -49,8 +48,7 @@ export function Starfield({
   starSize = 0.08,
   glowMultiplier = 1.0,
   showLabels = true,
-  renderingMode = 'classic',
-  onStarClick
+  onStarClick // NEW: Star click handler for modal
 }: StarfieldProps) {
   
   // Initialize textures
@@ -64,7 +62,7 @@ export function Starfield({
 
   // Handle star click events with enhanced detection for modal
   const handleStarClick = useCallback((starId: string) => {
-    console.log(`Starfield: Star clicked in ${renderingMode} mode:`, starId);
+    console.log('Starfield: Star clicked:', starId);
     
     // Trigger modal if callback provided
     if (onStarClick) {
@@ -75,84 +73,33 @@ export function Starfield({
     if (onStarSelect) {
       onStarSelect(starId);
     }
-  }, [onStarSelect, onStarClick, renderingMode]);
+  }, [onStarSelect, onStarClick]);
 
-  // Mode-aware star categorization with enhanced highlighting
-  const { regularStars, specialStars, labelStars } = useMemo(() => {
+  // Optimize performance: Memoize starSprites list with enhanced highlighting
+  const starSprites = useMemo(() => {
     if (!starTexture || !glowTexture) {
       console.log('Starfield: Textures not loaded yet');
-      return { regularStars: [], specialStars: [], labelStars: [] };
+      return null;
     }
 
-    console.log(`Starfield: Processing ${catalog.length} stars for ${renderingMode} rendering mode with bigger star selection support`);
+    console.log(`Starfield: Rendering ${catalog.length} stars with enhanced highlighting and modal click support`);
     
-    if (renderingMode === 'classic') {
-      // Classic mode: All stars rendered individually
-      console.log(`Starfield: Classic mode - all ${catalog.length} stars will be rendered individually with enhanced bigger effects`);
-      
-      return {
-        regularStars: [],
-        specialStars: catalog, // All stars are "special" in classic mode
-        labelStars: catalog.filter(star => star.name && star.name.trim() !== '')
-      };
-    } else {
-      // Instanced mode: Categorize for optimal rendering
-      const regular: typeof catalog = [];
-      const special: typeof catalog = [];
-      const labels: typeof catalog = [];
-      
-      catalog.forEach((star) => {
-        // Special rendering for highlighted or selected stars (bigger sizes)
-        if (star.isHighlighted || star.id === selectedStar) {
-          special.push(star);
-          labels.push(star);
-        } else {
-          regular.push(star);
-          
-          if (star.name && star.name.trim() !== '') {
-            labels.push(star);
-          }
-        }
-      });
-
-      console.log(`Starfield: Instanced mode - ${regular.length} regular, ${special.length} special (bigger), ${labels.length} labeled stars`);
-      
-      return {
-        regularStars: regular,
-        specialStars: special,
-        labelStars: labels
-      };
+    // Count highlighted stars for logging
+    const highlightedCount = catalog.filter(star => star.isHighlighted).length;
+    if (highlightedCount > 0) {
+      console.log(`Starfield: ${highlightedCount} stars are highlighted with enhanced visualization`);
     }
-  }, [catalog, selectedStar, starTexture, glowTexture, renderingMode]);
 
-  // Render individual stars with enhanced bigger gradient support
-  const starSprites = useMemo(() => {
-    const starsToRender = renderingMode === 'classic' ? catalog : specialStars;
-    
-    return starsToRender.map((star) => {
-      // Calculate enhanced properties
+    return catalog.map((star, index) => {
+      // Calculate base star size based on magnitude
       const baseMagnitudeSize = Math.max(0.02, Math.min(0.3, starSize * (6.0 - star.magnitude) * 0.2));
       
-      // ENHANCED: Bigger sizes for suggested and selected stars
-      let enhancedSize = star.enhancedSize || 1.0;
-      if (star.isHighlighted) {
-        enhancedSize = 2.5; // Bigger for suggested stars (2.5x)
-      }
-      if (star.id === selectedStar) {
-        enhancedSize = 3.0; // Even bigger for selected stars (3x)
-      }
-      
+      // Apply enhanced size for highlighted stars (400% increase)
+      const enhancedSize = star.enhancedSize || 1.0;
       const actualStarSize = baseMagnitudeSize * enhancedSize;
       
-      // Enhanced glow for bigger stars
-      let enhancedGlow = star.enhancedGlow || 1.0;
-      if (star.isHighlighted) {
-        enhancedGlow = 2.0; // Enhanced glow for bigger suggested stars
-      }
-      if (star.id === selectedStar) {
-        enhancedGlow = 2.5; // Even more enhanced glow for bigger selected stars
-      }
-      
+      // Apply enhanced glow for highlighted stars (2x intensity)
+      const enhancedGlow = star.enhancedGlow || 1.0;
       const actualGlowMultiplier = glowMultiplier * enhancedGlow;
 
       return (
@@ -167,63 +114,35 @@ export function Starfield({
           isSelected={star.id === selectedStar}
           isHighlighted={star.isHighlighted || false}
           emotionColor={star.emotionColor}
-          isSuggested={star.isHighlighted || false} // Mark highlighted stars as suggested
-          onClick={() => handleStarClick(star.id)}
+          onClick={() => handleStarClick(star.id)} // Enhanced click handler
         />
       );
     });
-  }, [renderingMode, catalog, specialStars, selectedStar, starTexture, glowTexture, starSize, glowMultiplier]);
+  }, [catalog, selectedStar, starTexture, glowTexture, starSize, glowMultiplier, handleStarClick]);
 
-  // Prepare label data based on rendering mode
-  const labelData = useMemo(() => {
-    if (renderingMode === 'classic') {
-      return catalog.filter(star => star.name && star.name.trim() !== '');
-    } else {
-      return labelStars;
-    }
-  }, [renderingMode, catalog, labelStars]);
+  // Prepare enhanced labels data
+  const enhancedLabelsData = useMemo(() => {
+    return catalog.map(star => ({
+      id: star.id,
+      position: star.position,
+      magnitude: star.magnitude,
+      name: star.name,
+      isHighlighted: star.isHighlighted,
+      showLabel: star.showLabel,
+      emotionColor: star.emotionColor
+    }));
+  }, [catalog]);
 
   return (
     <>
-      {/* Conditional rendering based on mode */}
-      {renderingMode === 'classic' ? (
-        // Classic mode: Render all stars individually with enhanced bigger effects
-        <>
-          {starSprites}
-        </>
-      ) : (
-        // Instanced mode: Use optimized rendering
-        <>
-          {/* Render regular stars using instanced rendering for performance */}
-          {regularStars.length > 0 && (
-            <InstancedRegularStars
-              stars={regularStars}
-              starTexture={starTexture}
-              glowTexture={glowTexture}
-              starSize={starSize}
-              glowMultiplier={glowMultiplier}
-            />
-          )}
-          
-          {/* Render special stars individually for full bigger effects */}
-          {starSprites}
-        </>
-      )}
+      {/* Render enhanced star sprites with modal click support */}
+      {starSprites}
       
-      {/* Render labels with mode-aware configuration */}
+      {/* Render enhanced labels with always-visible highlighted star names */}
       {showLabels && (
         <StarLabels
-          stars={labelData.map(star => ({
-            id: star.id,
-            position: star.position,
-            magnitude: star.magnitude,
-            name: star.name,
-            isHighlighted: star.isHighlighted,
-            showLabel: star.showLabel,
-            emotionColor: star.emotionColor
-          }))}
+          stars={enhancedLabelsData}
           selectedStar={selectedStar}
-          renderingMode={renderingMode}
         />
       )}
     </>
