@@ -1,24 +1,23 @@
 import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
-import { Star, HygRecord } from '../types';
+import { Star } from '../types';
 
 /**
- * SuggestedStarsContext - Enhanced with Centralized Selection State
+ * SuggestedStarsContext - Enhanced with Deep Comparison to Prevent Infinite Loops
  * 
- * Purpose: Provides centralized state management for star selection, modal display,
- * and camera focus to prevent synchronization issues between components.
+ * Purpose: Provides a way for pages to communicate which stars should be
+ * highlighted in the 3D visualization and trigger camera focus animations.
  * 
- * Key Enhancement: Added selectedHygRecord and selectedModalStar to centralize
- * selection state and prevent conflicts between 3D view and modal display.
+ * Key Enhancement: Added deep comparison logic to prevent infinite re-render loops
+ * when the same star data is set repeatedly with different array references.
  * 
  * Features:
  * - Global state management for suggested/highlighted stars
- * - Centralized selected star state for 3D view (HygRecord)
- * - Centralized modal star state for modal display (Star)
  * - Camera focus trigger for smooth star-to-star navigation
  * - Deep comparison to prevent unnecessary updates
  * - Context provider for easy consumption across components
+ * - Type-safe interface with TypeScript
  * 
- * Confidence Rating: High - Centralized state management to fix synchronization issues
+ * Confidence Rating: High - Enhanced context with deep comparison to fix infinite loops
  */
 
 interface SuggestedStarsContextType {
@@ -28,11 +27,6 @@ interface SuggestedStarsContextType {
   focusedStarIndex: number | null;
   setFocusedStarIndex: (index: number | null) => void;
   triggerStarFocus: (star: Star, index: number) => void;
-  // NEW: Centralized selection state
-  selectedHygRecord: HygRecord | null;
-  setSelectedHygRecord: (star: HygRecord | null) => void;
-  selectedModalStar: Star | null;
-  setSelectedModalStar: (star: Star | null) => void;
 }
 
 const SuggestedStarsContext = createContext<SuggestedStarsContextType | undefined>(undefined);
@@ -80,23 +74,17 @@ function areStarsDeepEqual(stars1: Star[], stars2: Star[]): boolean {
 export function SuggestedStarsProvider({ children }: SuggestedStarsProviderProps) {
   const [suggestedStars, setSuggestedStarsState] = useState<Star[]>([]);
   const [focusedStarIndex, setFocusedStarIndex] = useState<number | null>(null);
-  
-  // NEW: Centralized selection state
-  const [selectedHygRecord, setSelectedHygRecord] = useState<HygRecord | null>(null);
-  const [selectedModalStar, setSelectedModalStar] = useState<Star | null>(null);
 
   const clearSuggestedStars = useCallback(() => {
-    console.log('SuggestedStarsContext: Clearing suggested stars and selections');
+    console.log('SuggestedStarsContext: Clearing suggested stars');
     setSuggestedStarsState([]);
     setFocusedStarIndex(null);
-    setSelectedHygRecord(null);
-    setSelectedModalStar(null);
   }, []);
 
   const handleSetSuggestedStars = useCallback((stars: Star[]) => {
     console.log(`SuggestedStarsContext: Attempting to set ${stars.length} suggested stars`);
     
-    // Deep comparison to prevent infinite loops
+    // CRITICAL FIX: Deep comparison to prevent infinite loops
     if (areStarsDeepEqual(suggestedStars, stars)) {
       console.log('SuggestedStarsContext: Stars are deeply equal, skipping update to prevent infinite loop');
       return;
@@ -104,22 +92,15 @@ export function SuggestedStarsProvider({ children }: SuggestedStarsProviderProps
     
     console.log('SuggestedStarsContext: Stars are different, updating state');
     setSuggestedStarsState(stars);
+    
+    // REMOVED: Auto-focus first star when stars are set
+    // This was causing the navigation to reset to index 0 on every update
+    // The initial focus is now managed by useStarNavigation hook
   }, [suggestedStars]);
 
   const triggerStarFocus = useCallback((star: Star, index: number) => {
     console.log(`SuggestedStarsContext: Triggering focus on star ${star.scientific_name} at index ${index}`);
     setFocusedStarIndex(index);
-  }, []);
-
-  // NEW: Enhanced setters with logging
-  const handleSetSelectedHygRecord = useCallback((star: HygRecord | null) => {
-    console.log('SuggestedStarsContext: Setting selected HYG record:', star?.proper || star?.id || 'null');
-    setSelectedHygRecord(star);
-  }, []);
-
-  const handleSetSelectedModalStar = useCallback((star: Star | null) => {
-    console.log('SuggestedStarsContext: Setting selected modal star:', star?.scientific_name || 'null');
-    setSelectedModalStar(star);
   }, []);
 
   return (
@@ -130,12 +111,7 @@ export function SuggestedStarsProvider({ children }: SuggestedStarsProviderProps
         clearSuggestedStars,
         focusedStarIndex,
         setFocusedStarIndex,
-        triggerStarFocus,
-        // NEW: Centralized selection state
-        selectedHygRecord,
-        setSelectedHygRecord: handleSetSelectedHygRecord,
-        selectedModalStar,
-        setSelectedModalStar: handleSetSelectedModalStar
+        triggerStarFocus
       }}
     >
       {children}
