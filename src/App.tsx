@@ -7,15 +7,14 @@ import { StarSelection } from './pages/StarSelection';
 import { Dedication } from './pages/Dedication';
 import { SharedStar } from './pages/SharedStar';
 import { HygStarsCatalog } from './data/StarsCatalog';
-import { HygRecord } from './types';
+import { HygRecord, Star } from './types';
 import { SuggestedStarsProvider, useSuggestedStars } from './context/SuggestedStarsContext';
 
 /**
- * AppContent Component - Contains the main app logic with context access
+ * AppContent Component - Enhanced with Star Selection Modal Support
  * 
  * Separated from App to allow access to SuggestedStarsContext
- * Enhanced with camera focus integration for star navigation
- * Added rendering mode configuration
+ * Enhanced with camera focus integration for star navigation and modal support
  */
 function AppContent() {
   const [hygCatalog, setHygCatalog] = useState<HygStarsCatalog | null>(null);
@@ -23,12 +22,12 @@ function AppContent() {
   const [selectedStar, setSelectedStar] = useState<HygRecord | null>(null);
   const { suggestedStars, focusedStarIndex } = useSuggestedStars();
 
-  // Control settings for the star visualization - LABELS DISABLED BY DEFAULT
+  // Control settings for the star visualization
   const [controlSettings] = useState({
     starSize: 0.25,
     glowMultiplier: 2,
     showLabels: false, // Changed from true to false
-    renderingMode: 'classic' as 'classic' | 'instanced' // NEW: Default to classic rendering
+    renderingMode: 'classic' as 'classic' | 'instanced' // Default to classic rendering
   });
 
   useEffect(() => {
@@ -60,6 +59,13 @@ function AppContent() {
     setSelectedStar(star);
   };
 
+  // NEW: Handle star click for modal display (used in StarSelection page)
+  const handleStarClick = (star: Star) => {
+    console.log('Star clicked for modal display:', star.scientific_name);
+    // This will be handled by the StarSelection page component
+    // The callback is passed through to enable modal functionality
+  };
+
   return (
     <Router>
       <div className="App cosmic-viewport" onClick={() => console.log('Click event received on App div!')}>
@@ -74,7 +80,8 @@ function AppContent() {
           showLabels={controlSettings.showLabels}
           highlightedStars={suggestedStars}
           focusedStarIndex={focusedStarIndex}
-          renderingMode={controlSettings.renderingMode} // NEW: Pass rendering mode
+          renderingMode={controlSettings.renderingMode}
+          onStarClick={handleStarClick} // NEW: Pass star click handler for modal support
         />
         
         <motion.div

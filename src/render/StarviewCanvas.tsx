@@ -7,20 +7,19 @@ import { Starfield } from './Starfield';
 import { AnimationController } from './AnimationController';
 
 /**
- * StarviewCanvas Component with Configurable Rendering Modes
+ * StarviewCanvas Component with Enhanced Star Selection Support
  * 
- * Enhanced 3D background canvas that supports both classic individual rendering
- * and optimized instanced rendering for large star catalogs.
+ * Enhanced 3D background canvas that supports star selection for modal display,
+ * aurora gradients for suggested stars, and warm cosmic gradients for selected stars.
  * 
  * Features:
+ * - Enhanced star click detection for modal display
+ * - Aurora gradient support for suggested stars
+ * - Warm cosmic gradient support for selected stars
  * - Configurable rendering mode: 'classic' or 'instanced'
- * - Classic mode: Individual Star.tsx components with full effects
- * - Instanced mode: GPU-accelerated shader-based rendering
- * - Automatic lighting adjustments per mode
  * - Maintains compatibility with existing star selection system
- * - UPDATED: Fog effect removed for clearer star visibility
  * 
- * Confidence Rating: High - Clean separation of rendering modes
+ * Confidence Rating: High - Enhanced existing system with star selection modal support
  */
 
 interface StarviewCanvasProps {
@@ -33,7 +32,8 @@ interface StarviewCanvasProps {
   showLabels?: boolean;
   highlightedStars?: Star[];
   focusedStarIndex?: number | null;
-  renderingMode?: 'classic' | 'instanced'; // NEW: Rendering mode configuration
+  renderingMode?: 'classic' | 'instanced';
+  onStarClick?: (star: Star) => void; // NEW: Callback for star selection modal
 }
 
 interface AnimationCommand {
@@ -116,13 +116,6 @@ function calculateOptimalCameraPosition(highlightedStars: Star[]): {
     center[2] + distance
   ];
 
-  console.log('StarviewCanvas: Calculated optimal camera position:', {
-    position: cameraPosition,
-    target: center,
-    distance,
-    boundingBox: { min, max }
-  });
-
   return {
     position: cameraPosition,
     target: center,
@@ -131,7 +124,7 @@ function calculateOptimalCameraPosition(highlightedStars: Star[]): {
 }
 
 /**
- * StarfieldWrapper Component - Mode-aware star processing
+ * StarfieldWrapper Component - Enhanced with star selection modal support
  */
 function StarfieldWrapper({ 
   hygCatalog, 
@@ -144,7 +137,8 @@ function StarfieldWrapper({
   highlightedStars = [],
   focusedStarIndex = null,
   emotionColor = '#2563EB',
-  renderingMode = 'classic'
+  renderingMode = 'classic',
+  onStarClick // NEW: Star click handler for modal
 }: { 
   hygCatalog: HygStarsCatalog;
   selectedStar?: HygRecord | null;
@@ -157,17 +151,18 @@ function StarfieldWrapper({
   focusedStarIndex?: number | null;
   emotionColor?: string;
   renderingMode?: 'classic' | 'instanced';
+  onStarClick?: (star: Star) => void;
 }) {
   
-  // Convert HYG catalog data to Starfield format - mode-aware processing
+  // Convert HYG catalog data to Starfield format with enhanced highlighting
   const catalogData = useMemo(() => {
     if (!hygCatalog) {
       console.log('StarfieldWrapper: No catalog available');
       return [];
     }
 
-    console.log(`StarfieldWrapper: Processing HYG catalog for ${renderingMode} rendering mode...`);
-    console.log(`StarfieldWrapper: ${highlightedStars.length} stars to highlight`);
+    console.log(`StarfieldWrapper: Processing HYG catalog for ${renderingMode} rendering mode with star selection support...`);
+    console.log(`StarfieldWrapper: ${highlightedStars.length} stars to highlight with aurora gradients`);
     
     // Create a set of highlighted star names for fast lookup
     const highlightedStarNames = new Set(
@@ -177,13 +172,11 @@ function StarfieldWrapper({
     // Filter stars based on rendering mode
     let filteredStars;
     if (renderingMode === 'classic') {
-      // Classic mode: Filter by magnitude and limit count for performance
       filteredStars = hygCatalog
         .filterByMagnitude(-2, 6.5)
         .slice(0, 5000);
       console.log(`StarfieldWrapper: Classic mode - processing ${filteredStars.length} filtered stars`);
     } else {
-      // Instanced mode: Use all stars for complete view
       filteredStars = hygCatalog.getStars();
       console.log(`StarfieldWrapper: Instanced mode - processing ALL ${filteredStars.length} stars`);
     }
@@ -198,7 +191,7 @@ function StarfieldWrapper({
       const y = distance * Math.cos(decRad) * Math.sin(raRad);
       const z = distance * Math.sin(decRad);
 
-      // Check if this star should be highlighted
+      // Check if this star should be highlighted with aurora gradient
       const starName = (star.proper || `HYG ${star.id}`).toLowerCase();
       const isHighlighted = highlightedStarNames.has(starName);
 
@@ -209,10 +202,10 @@ function StarfieldWrapper({
         name: star.proper || undefined,
         isHighlighted,
         hygRecord: star,
-        // Enhanced highlighting properties
-        enhancedSize: isHighlighted ? 4.0 : 1.0,
-        enhancedGlow: isHighlighted ? 2.0 : 1.0,
-        emotionColor: isHighlighted ? emotionColor : undefined,
+        // Enhanced highlighting properties for aurora gradient
+        enhancedSize: isHighlighted ? 0.8 : 1.0, // 20% size reduction for suggested stars
+        enhancedGlow: isHighlighted ? 1.5 : 1.0, // Enhanced glow for better visibility
+        emotionColor: isHighlighted ? '#7FFF94' : undefined, // Aurora green start
         showLabel: isHighlighted && (star.proper || `HYG ${star.id}`)
       };
     });
@@ -236,13 +229,12 @@ function StarfieldWrapper({
     }
   }, [focusedStarIndex, highlightedStars, catalogData, onStarFocus]);
 
-  // Handle star selection from Starfield - mode-aware
+  // Handle star selection from Starfield with modal support
   const handleStarSelect = useCallback((starId: string) => {
     if (!hygCatalog || !onStarSelect) return;
 
     if (renderingMode === 'instanced') {
       console.log('StarfieldWrapper: Star selection disabled for performance in instanced mode');
-      // Individual star selection disabled for performance with instanced rendering
       return;
     }
 
@@ -264,6 +256,30 @@ function StarfieldWrapper({
     }
   }, [hygCatalog, onStarSelect, onStarFocus, renderingMode]);
 
+  // Handle star click for modal display
+  const handleStarClick = useCallback((starId: string) => {
+    if (!hygCatalog || !onStarClick) return;
+
+    console.log('StarfieldWrapper: Star clicked for modal display:', starId);
+
+    // Find the corresponding highlighted star
+    const starIdNum = parseInt(starId);
+    const clickedStar = highlightedStars.find(star => {
+      // Match by scientific name or ID
+      const hygStar = catalogData.find(catStar => catStar.id === starId);
+      if (hygStar && hygStar.hygRecord) {
+        const starName = (hygStar.hygRecord.proper || `HYG ${hygStar.hygRecord.id}`).toLowerCase();
+        return starName === star.scientific_name.toLowerCase();
+      }
+      return false;
+    });
+
+    if (clickedStar) {
+      console.log('StarfieldWrapper: Triggering modal for star:', clickedStar.scientific_name);
+      onStarClick(clickedStar);
+    }
+  }, [hygCatalog, onStarClick, highlightedStars, catalogData]);
+
   // Get selected star ID for Starfield
   const selectedStarId = selectedStar ? selectedStar.id.toString() : null;
 
@@ -275,13 +291,14 @@ function StarfieldWrapper({
       starSize={starSize}
       glowMultiplier={glowMultiplier}
       showLabels={showLabels}
-      renderingMode={renderingMode} // NEW: Pass rendering mode to Starfield
+      renderingMode={renderingMode}
+      onStarClick={handleStarClick} // NEW: Pass star click handler for modal
     />
   );
 }
 
 /**
- * Scene Content Component - Mode-aware lighting and effects
+ * Scene Content Component - Enhanced with star selection modal support
  */
 function SceneContent({ 
   hygCatalog, 
@@ -295,7 +312,8 @@ function SceneContent({
   highlightedStars = [],
   focusedStarIndex = null,
   emotionColor = '#2563EB',
-  renderingMode = 'classic'
+  renderingMode = 'classic',
+  onStarClick // NEW: Star click handler for modal
 }: {
   hygCatalog: HygStarsCatalog | null;
   catalogLoading: boolean;
@@ -309,6 +327,7 @@ function SceneContent({
   focusedStarIndex?: number | null;
   emotionColor?: string;
   renderingMode?: 'classic' | 'instanced';
+  onStarClick?: (star: Star) => void;
 }) {
   // Camera controls ref for AnimationController
   const cameraControlsRef = useRef<CameraControls>(null);
@@ -319,7 +338,7 @@ function SceneContent({
   // Auto-center camera when highlighted stars are available
   useEffect(() => {
     if (highlightedStars.length > 0 && !selectedStar && focusedStarIndex === null) {
-      console.log('SceneContent: Auto-centering camera for highlighted stars');
+      console.log('SceneContent: Auto-centering camera for highlighted stars with aurora gradients');
       
       const optimalView = calculateOptimalCameraPosition(highlightedStars);
       
@@ -437,7 +456,7 @@ function SceneContent({
         onAnimationComplete={handleAnimationComplete}
       />
       
-      {/* Render star field with mode configuration */}
+      {/* Render star field with enhanced star selection support */}
       {hygCatalog && !catalogLoading && (
         <StarfieldWrapper 
           hygCatalog={hygCatalog}
@@ -450,11 +469,10 @@ function SceneContent({
           highlightedStars={highlightedStars}
           focusedStarIndex={focusedStarIndex}
           emotionColor={emotionColor}
-          renderingMode={renderingMode} // NEW: Pass rendering mode
+          renderingMode={renderingMode}
+          onStarClick={onStarClick} // NEW: Pass star click handler for modal
         />
       )}
-      
-      {/* REMOVED: Fog effect for clearer star visibility */}
       
       {/* Invisible plane for pointer miss detection */}
       <mesh
@@ -470,7 +488,7 @@ function SceneContent({
 }
 
 /**
- * Main StarviewCanvas Component - Mode-configurable rendering
+ * Main StarviewCanvas Component - Enhanced with star selection modal support
  */
 export function StarviewCanvas({ 
   hygCatalog, 
@@ -482,16 +500,17 @@ export function StarviewCanvas({
   showLabels = false,
   highlightedStars = [],
   focusedStarIndex = null,
-  renderingMode = 'classic' // NEW: Default to classic mode
+  renderingMode = 'classic',
+  onStarClick // NEW: Star click handler for modal
 }: StarviewCanvasProps) {
   
-  const emotionColor = highlightedStars.length > 0 ? '#2563EB' : '#2563EB';
+  const emotionColor = highlightedStars.length > 0 ? '#7FFF94' : '#2563EB'; // Aurora green for suggested stars
   
   const handlePointerMissed = useCallback(() => {
     console.log('StarviewCanvas: Pointer missed event');
   }, []);
 
-  console.log(`StarviewCanvas: Initializing with ${renderingMode} rendering mode`);
+  console.log(`StarviewCanvas: Initializing with ${renderingMode} rendering mode and star selection modal support`);
 
   return (
     <div className="fixed inset-0 w-full h-full">
@@ -519,7 +538,7 @@ export function StarviewCanvas({
         }}
         onPointerMissed={handlePointerMissed}
       >
-        {/* Mode-configurable scene content */}
+        {/* Enhanced scene content with star selection modal support */}
         <SceneContent
           hygCatalog={hygCatalog}
           catalogLoading={catalogLoading}
@@ -532,7 +551,8 @@ export function StarviewCanvas({
           highlightedStars={highlightedStars}
           focusedStarIndex={focusedStarIndex}
           emotionColor={emotionColor}
-          renderingMode={renderingMode} // NEW: Pass rendering mode
+          renderingMode={renderingMode}
+          onStarClick={onStarClick} // NEW: Pass star click handler for modal
         />
       </Canvas>
     </div>

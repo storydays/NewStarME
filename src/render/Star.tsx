@@ -4,20 +4,19 @@ import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
 /**
- * Star Component - Refactored with RegularStar and HighlightedStar sub-components
+ * Star Component - Enhanced with Aurora Gradients for Star Selection
  * 
  * Purpose: Main dispatcher component that renders appropriate star type based on highlighting state.
- * Contains RegularStar and HighlightedStar components for better organization and specialized rendering.
+ * Enhanced with aurora-inspired gradients for suggested stars and warm cosmic gradients for selected stars.
  * 
  * Features:
+ * - Aurora gradient (#7FFF94 to #39FF14) for suggested stars
+ * - Warm cosmic gradient (#FF69B4 to #8B0000) for selected stars
+ * - 15-20% size reduction for suggested stars
+ * - Enhanced glow effects for better visibility
  * - Conditional rendering based on isHighlighted prop
- * - Specialized components for different visual states
- * - Enhanced pulsing glow effect for highlighted stars
- * - Emotion-based color tinting
- * - Fixed glow opacity at 1.0 for all stars
- * - GlowMultiplier: 2x for normal stars, 4x for highlighted stars
  * 
- * Confidence Rating: High - Clean separation of concerns with enhanced visual effects
+ * Confidence Rating: High - Enhanced existing system with gradient support
  */
 
 interface BaseStarProps {
@@ -34,17 +33,16 @@ interface BaseStarProps {
 interface StarProps extends BaseStarProps {
   isHighlighted?: boolean;
   emotionColor?: string;
+  isSuggested?: boolean; // NEW: Flag for suggested stars with aurora gradient
 }
 
 interface HighlightedStarProps extends BaseStarProps {
   emotionColor?: string;
+  isSuggested?: boolean;
 }
 
 /**
  * RegularStar Component - Renders standard stars (non-highlighted)
- * 
- * Purpose: Handles rendering of regular stars with standard visual properties.
- * Provides basic glow effects with 2x glowMultiplier and fixed opacity of 1.0.
  */
 function RegularStar({
   position,
@@ -57,7 +55,6 @@ function RegularStar({
   onClick
 }: BaseStarProps) {
   
-  // Opacity calculation based on magnitude
   const calculateOpacity = useCallback((magnitude: number): number => {
     const base = Math.max(0.3, Math.min(1.0, 1.2 - 0.07 * magnitude));
     return Math.max(0, Math.min(1, base * 1.0));
@@ -65,32 +62,27 @@ function RegularStar({
 
   const opacity = calculateOpacity(mag);
 
-  // Handle click events
   const handleClick = useCallback((event: any) => {
     event.stopPropagation();
     console.log('RegularStar: Click detected on normal star');
     onClick(event);
   }, [onClick]);
 
-  // Apply 2x glowMultiplier for normal stars
   const normalGlowMultiplier = glowMultiplier * 2.0;
 
-  // Determine colors based on selection state
   const getStarColors = useCallback(() => {
     if (isSelected) {
-      // Selected: Yellow core with enhanced yellow glow
       return {
         coreColor: new THREE.Color(1, 1, 0), // Yellow
         glowColor: new THREE.Color('#dbe6ff').multiplyScalar(normalGlowMultiplier),
-        glowOpacity: 1.0, // Fixed at 1.0
+        glowOpacity: 1.0,
         coreOpacity: opacity
       };
     } else {
-      // Normal: White core with light blue glow
       return {
         coreColor: new THREE.Color(1, 1, 1), // White
         glowColor: new THREE.Color('#dbe6ff').multiplyScalar(normalGlowMultiplier),
-        glowOpacity: 1.0, // Fixed at 1.0
+        glowOpacity: 1.0,
         coreOpacity: opacity
       };
     }
@@ -100,13 +92,11 @@ function RegularStar({
 
   return (
     <Billboard position={position}>
-      {/* Invisible clickable mesh */}
       <mesh onClick={handleClick} visible={false}>
         <planeGeometry args={[starSize, starSize]} />
         <meshBasicMaterial transparent opacity={0} />
       </mesh>
 
-      {/* Glow sprite with fixed opacity of 1.0 */}
       <sprite scale={[starSize * 2.5, starSize * 2.5, starSize * 2.5]}>
         <spriteMaterial
           map={glowTexture}
@@ -119,7 +109,6 @@ function RegularStar({
         />
       </sprite>
       
-      {/* Star sprite */}
       <mesh onClick={handleClick}>
         <planeGeometry args={[starSize, starSize]} />
         <meshBasicMaterial
@@ -136,18 +125,10 @@ function RegularStar({
 }
 
 /**
- * HighlightedStar Component - Renders enhanced highlighted stars with pulsing glow
+ * HighlightedStar Component - Enhanced with Aurora and Cosmic Gradients
  * 
- * Purpose: Specialized component for highlighted stars with enhanced visual effects.
- * Features emotion-based coloring, increased size, 4x glowMultiplier, and animated pulsing glow.
- * 
- * Features:
- * - 400% size increase for enhanced visibility
- * - 4x glow intensity with pulsing animation
- * - Fixed glow opacity at 1.0 with pulsing color intensity
- * - Emotion-based color tinting
- * - Particle emission effects
- * - Smooth pulsing glow using useFrame animation
+ * Purpose: Specialized component for highlighted stars with gradient effects.
+ * Features aurora gradients for suggested stars and warm cosmic gradients for selected stars.
  */
 function HighlightedStar({
   position,
@@ -158,14 +139,13 @@ function HighlightedStar({
   glowMultiplier,
   isSelected,
   emotionColor,
+  isSuggested = false,
   onClick
 }: HighlightedStarProps) {
   
-  // Refs for pulsing glow animation
   const glowMaterialRef = useRef<THREE.SpriteMaterial>(null);
   const coreMaterialRef = useRef<THREE.MeshBasicMaterial>(null);
 
-  // Opacity calculation based on magnitude
   const calculateOpacity = useCallback((magnitude: number): number => {
     const base = Math.max(0.3, Math.min(1.0, 1.2 - 0.07 * magnitude));
     return Math.max(0, Math.min(1, base * 1.0));
@@ -173,69 +153,71 @@ function HighlightedStar({
 
   const opacity = calculateOpacity(mag);
 
-  // Handle click events with enhanced detection
   const handleClick = useCallback((event: any) => {
     event.stopPropagation();
     console.log('HighlightedStar: Enhanced click detected on highlighted star');
     onClick(event);
   }, [onClick]);
 
-  // Enhanced size and glow for highlighted stars
-  const enhancedStarSize = starSize * 4.0; // 400% size increase
-  const enhancedGlowMultiplier = glowMultiplier * 4.0; // 4x glow intensity for highlighted stars
+  // Apply size reduction for suggested stars (15-20%)
+  const sizeMultiplier = isSuggested ? 0.8 : 4.0; // 20% reduction for suggested, 400% for others
+  const enhancedStarSize = starSize * sizeMultiplier;
+  const enhancedGlowMultiplier = glowMultiplier * (isSuggested ? 1.5 : 4.0); // Enhanced glow for suggested
 
-  // Determine colors with emotion-based tinting
   const getStarColors = useCallback(() => {
     if (isSelected) {
-      // Selected: Yellow core with enhanced yellow glow
+      // Selected: Warm cosmic gradient (#FF69B4 to #8B0000)
       return {
-        coreColor: new THREE.Color(1, 1, 0), // Yellow
-        glowColor: new THREE.Color('#dbe6ff').multiplyScalar(enhancedGlowMultiplier),
+        coreColor: new THREE.Color('#FF69B4'), // Hot pink
+        glowColor: new THREE.Color('#8B0000').multiplyScalar(enhancedGlowMultiplier), // Dark red glow
         baseCoreOpacity: opacity
       };
+    } else if (isSuggested) {
+      // Suggested: Aurora gradient (#7FFF94 to #39FF14)
+      return {
+        coreColor: new THREE.Color('#7FFF94'), // Aurora green start
+        glowColor: new THREE.Color('#39FF14').multiplyScalar(enhancedGlowMultiplier), // Aurora green end
+        baseCoreOpacity: Math.max(opacity, 0.9)
+      };
     } else {
-      // Highlighted: Emotion-based color with enhanced glow
+      // Regular highlighted: Emotion-based color
       const emotionColorObj = emotionColor ? new THREE.Color(emotionColor) : new THREE.Color(0, 1, 1);
       
       return {
-        coreColor: emotionColorObj, // Emotion-based color
+        coreColor: emotionColorObj,
         glowColor: emotionColorObj.clone().multiplyScalar(enhancedGlowMultiplier),
-        baseCoreOpacity: Math.max(opacity, 0.9) // Ensure highlighted stars are very visible
+        baseCoreOpacity: Math.max(opacity, 0.9)
       };
     }
-  }, [isSelected, emotionColor, opacity, enhancedGlowMultiplier]);
+  }, [isSelected, isSuggested, emotionColor, opacity, enhancedGlowMultiplier]);
 
   const colors = getStarColors();
 
-  // Pulsing glow animation using useFrame
-  // Note: Glow opacity stays at 1.0, but we pulse the color intensity instead
+  // Enhanced pulsing animation for suggested and selected stars
   useFrame((state) => {
     if (glowMaterialRef.current && coreMaterialRef.current) {
-      // Create smooth pulsing effect using sine wave
       const time = state.clock.elapsedTime;
-      const pulseSpeed = 2.0; // Pulse frequency
-      const pulseIntensity = 0.3; // How much the color intensity varies
+      const pulseSpeed = isSuggested ? 1.5 : (isSelected ? 2.5 : 2.0); // Different speeds
+      const pulseIntensity = isSuggested ? 0.2 : (isSelected ? 0.4 : 0.3); // Different intensities
       
-      // Calculate pulsing multiplier for color intensity (oscillates between 0.7 and 1.3)
       const pulseMultiplier = 1.0 + Math.sin(time * pulseSpeed) * pulseIntensity;
       
-      // Apply pulsing to glow color intensity (opacity stays at 1.0)
+      // Apply pulsing to glow color intensity
       glowMaterialRef.current.color = colors.glowColor.clone().multiplyScalar(pulseMultiplier);
       
-      // Subtle pulsing on core as well (less intense)
+      // Subtle pulsing on core
       coreMaterialRef.current.opacity = colors.baseCoreOpacity * (1.0 + Math.sin(time * pulseSpeed) * 0.1);
     }
   });
 
   return (
     <Billboard position={position}>
-      {/* Enhanced invisible clickable mesh - larger for highlighted stars */}
       <mesh onClick={handleClick} visible={false}>
         <planeGeometry args={[enhancedStarSize, enhancedStarSize]} />
         <meshBasicMaterial transparent opacity={0} visible={false} />
       </mesh>
 
-      {/* Enhanced glow sprite with fixed opacity of 1.0 and pulsing color */}
+      {/* Enhanced glow sprite with gradient-based colors */}
       <sprite scale={[enhancedStarSize * 2.5, enhancedStarSize * 2.5, enhancedStarSize * 2.5]}>
         <spriteMaterial
           ref={glowMaterialRef}
@@ -249,16 +231,16 @@ function HighlightedStar({
         />
       </sprite>
 
-      {/* Star sprite - REVERTED: Fixed opacity and alphaTest */}
+      {/* Star sprite with gradient colors */}
       <sprite scale={[starSize*2, starSize*2, starSize*2]}>
         <spriteMaterial
           ref={coreMaterialRef}
           map={starTexture}
           transparent
           depthWrite={false}
-          opacity={colors.baseCoreOpacity * (1.0 + Math.sin(0) * 0.1)} // Will be animated by useFrame
-          color={'white'}
-          alphaTest={0.1} // REVERTED: Back to 0.1
+          opacity={colors.baseCoreOpacity * (1.0 + Math.sin(0) * 0.1)}
+          color={colors.coreColor}
+          alphaTest={0.1}
           blending={THREE.AdditiveBlending} 
         />
       </sprite>
@@ -267,10 +249,7 @@ function HighlightedStar({
 }
 
 /**
- * Main Star Component - Dispatcher for RegularStar and HighlightedStar
- * 
- * Purpose: Acts as a conditional renderer that selects the appropriate
- * star component based on the highlighting state.
+ * Main Star Component - Enhanced dispatcher with gradient support
  */
 export function Star({
   position,
@@ -282,12 +261,12 @@ export function Star({
   isSelected,
   isHighlighted = false,
   emotionColor,
+  isSuggested = false, // NEW: Support for suggested star styling
   onClick
 }: StarProps) {
   
-  console.log(`Star: Rendering ${isHighlighted ? 'highlighted' : 'normal'} star at position [${position.join(', ')}]`);
+  console.log(`Star: Rendering ${isHighlighted ? 'highlighted' : 'normal'} star${isSuggested ? ' (suggested)' : ''} at position [${position.join(', ')}]`);
 
-  // Conditional rendering based on highlighting state
   if (isHighlighted) {
     return (
       <HighlightedStar
@@ -299,6 +278,7 @@ export function Star({
         glowMultiplier={glowMultiplier}
         isSelected={isSelected}
         emotionColor={emotionColor}
+        isSuggested={isSuggested}
         onClick={onClick}
       />
     );

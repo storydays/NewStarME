@@ -6,19 +6,19 @@ import { StarLabels } from './StarLabels';
 import { InstancedRegularStars } from './InstancedRegularStars';
 
 /**
- * Starfield Component - Configurable Rendering Modes
+ * Starfield Component - Enhanced with Star Selection Support
  * 
- * Purpose: Renders stars using either classic individual components or
- * optimized instanced rendering based on the specified rendering mode.
+ * Purpose: Renders stars with enhanced highlighting, aurora gradients for suggested stars,
+ * warm cosmic gradients for selected stars, and click detection for star selection.
  * 
  * Features:
- * - Classic mode: Individual Star.tsx components with full effects
- * - Instanced mode: GPU-accelerated shader-based rendering for performance
- * - Automatic categorization and optimization per mode
- * - Maintains visual quality for highlighted/selected stars
- * - Mode-aware label rendering
+ * - Aurora gradient (#7FFF94 to #39FF14) for suggested stars with 15-20% size reduction
+ * - Warm cosmic gradient (#FF69B4 to #8B0000) for selected stars
+ * - Enhanced click detection for star selection modal
+ * - Configurable rendering modes (classic/instanced)
+ * - Performance optimized rendering
  * 
- * Confidence Rating: High - Clean separation of rendering logic
+ * Confidence Rating: High - Enhanced existing system with star selection support
  */
 
 interface StarfieldProps {
@@ -38,7 +38,8 @@ interface StarfieldProps {
   starSize?: number;
   glowMultiplier?: number;
   showLabels?: boolean;
-  renderingMode?: 'classic' | 'instanced'; // NEW: Rendering mode configuration
+  renderingMode?: 'classic' | 'instanced';
+  onStarClick?: (starId: string) => void; // NEW: Callback for star selection modal
 }
 
 export function Starfield({
@@ -48,7 +49,8 @@ export function Starfield({
   starSize = 0.08,
   glowMultiplier = 1.0,
   showLabels = true,
-  renderingMode = 'classic' // NEW: Default to classic mode
+  renderingMode = 'classic',
+  onStarClick // NEW: Star click handler for modal
 }: StarfieldProps) {
   
   // Initialize textures
@@ -60,28 +62,34 @@ export function Starfield({
     ];
   }, []);
 
-  // Handle star click events
+  // Handle star click events with enhanced detection for modal
   const handleStarClick = useCallback((starId: string) => {
     console.log(`Starfield: Star clicked in ${renderingMode} mode:`, starId);
+    
+    // Trigger modal if callback provided
+    if (onStarClick) {
+      onStarClick(starId);
+    }
+    
+    // Also trigger selection if callback provided
     if (onStarSelect) {
       onStarSelect(starId);
     }
-  }, [onStarSelect, renderingMode]);
+  }, [onStarSelect, onStarClick, renderingMode]);
 
-  // Mode-aware star categorization
+  // Mode-aware star categorization with enhanced highlighting
   const { regularStars, specialStars, labelStars } = useMemo(() => {
     if (!starTexture || !glowTexture) {
       console.log('Starfield: Textures not loaded yet');
       return { regularStars: [], specialStars: [], labelStars: [] };
     }
 
-    console.log(`Starfield: Processing ${catalog.length} stars for ${renderingMode} rendering mode`);
+    console.log(`Starfield: Processing ${catalog.length} stars for ${renderingMode} rendering mode with star selection support`);
     
     if (renderingMode === 'classic') {
-      // Classic mode: All stars rendered individually, no categorization needed
-      console.log(`Starfield: Classic mode - all ${catalog.length} stars will be rendered individually`);
+      // Classic mode: All stars rendered individually
+      console.log(`Starfield: Classic mode - all ${catalog.length} stars will be rendered individually with enhanced effects`);
       
-      // For classic mode, we don't need categorization - all stars use Star.tsx
       return {
         regularStars: [],
         specialStars: catalog, // All stars are "special" in classic mode
@@ -97,11 +105,10 @@ export function Starfield({
         // Special rendering for highlighted or selected stars
         if (star.isHighlighted || star.id === selectedStar) {
           special.push(star);
-          labels.push(star); // Always include special stars in labels
+          labels.push(star);
         } else {
           regular.push(star);
           
-          // Only include named stars in labels for performance
           if (star.name && star.name.trim() !== '') {
             labels.push(star);
           }
@@ -118,17 +125,28 @@ export function Starfield({
     }
   }, [catalog, selectedStar, starTexture, glowTexture, renderingMode]);
 
-  // Render individual stars (used in both modes for special stars)
+  // Render individual stars with enhanced gradient support
   const starSprites = useMemo(() => {
     const starsToRender = renderingMode === 'classic' ? catalog : specialStars;
     
     return starsToRender.map((star) => {
       // Calculate enhanced properties
       const baseMagnitudeSize = Math.max(0.02, Math.min(0.3, starSize * (6.0 - star.magnitude) * 0.2));
-      const enhancedSize = star.enhancedSize || 1.0;
+      
+      // Apply size reduction for suggested stars (15-20%)
+      let enhancedSize = star.enhancedSize || 1.0;
+      if (star.isHighlighted) {
+        enhancedSize = 0.8; // 20% reduction for suggested stars
+      }
+      
       const actualStarSize = baseMagnitudeSize * enhancedSize;
       
-      const enhancedGlow = star.enhancedGlow || 1.0;
+      // Enhanced glow for suggested stars
+      let enhancedGlow = star.enhancedGlow || 1.0;
+      if (star.isHighlighted) {
+        enhancedGlow = 1.5; // Enhanced glow for better visibility
+      }
+      
       const actualGlowMultiplier = glowMultiplier * enhancedGlow;
 
       return (
@@ -143,6 +161,7 @@ export function Starfield({
           isSelected={star.id === selectedStar}
           isHighlighted={star.isHighlighted || false}
           emotionColor={star.emotionColor}
+          isSuggested={star.isHighlighted || false} // NEW: Mark highlighted stars as suggested
           onClick={() => handleStarClick(star.id)}
         />
       );
@@ -152,10 +171,8 @@ export function Starfield({
   // Prepare label data based on rendering mode
   const labelData = useMemo(() => {
     if (renderingMode === 'classic') {
-      // Classic mode: Filter for named stars with priority for highlighted/selected
       return catalog.filter(star => star.name && star.name.trim() !== '');
     } else {
-      // Instanced mode: Use pre-filtered labelStars
       return labelStars;
     }
   }, [renderingMode, catalog, labelStars]);
@@ -164,7 +181,7 @@ export function Starfield({
     <>
       {/* Conditional rendering based on mode */}
       {renderingMode === 'classic' ? (
-        // Classic mode: Render all stars individually
+        // Classic mode: Render all stars individually with enhanced effects
         <>
           {starSprites}
         </>
@@ -200,7 +217,7 @@ export function Starfield({
             emotionColor: star.emotionColor
           }))}
           selectedStar={selectedStar}
-          renderingMode={renderingMode} // NEW: Pass rendering mode to labels
+          renderingMode={renderingMode}
         />
       )}
     </>
