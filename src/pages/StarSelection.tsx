@@ -109,8 +109,8 @@ export function StarSelection() {
 
   if (loading) {
     return (
-      <div className="min-h-screen relative">
-        <div className="relative z-10 flex items-center justify-center min-h-screen">
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="relative z-10 flex items-center justify-center min-h-screen pointer-events-auto">
           <motion.div
             className="text-center"
             initial={{ opacity: 0 }}
@@ -126,24 +126,26 @@ export function StarSelection() {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-red-400 text-xl mb-4">Unable to access star catalog</p>
-          <button 
-            onClick={handleBack}
-            className="text-cosmic-cherenkov-blue hover:text-cosmic-plasma-glow transition-colors font-light"
-          >
-            ← Return to emotion selection
-          </button>
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="relative z-10 flex items-center justify-center min-h-screen pointer-events-auto">
+          <div className="text-center">
+            <p className="text-red-400 text-xl mb-4">Unable to access star catalog</p>
+            <button 
+              onClick={handleBack}
+              className="text-cosmic-cherenkov-blue hover:text-cosmic-plasma-glow transition-colors font-light"
+            >
+              ← Return to emotion selection
+            </button>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen relative">
-      {/* Header */}
-      <div className="absolute top-6 left-6 z-20">
+    <div className="absolute inset-0 pointer-events-none">
+      {/* Header - FIXED: Added pointer-events-auto to make button clickable */}
+      <div className="absolute top-6 left-6 z-20 pointer-events-auto">
         <button
           onClick={handleBack}
           className="flex items-center gap-2 text-cosmic-stellar-wind hover:text-cosmic-observation transition-colors group font-light frosted-glass px-4 py-2 rounded-lg"
@@ -153,8 +155,8 @@ export function StarSelection() {
         </button>
       </div>
 
-      {/* Enhanced Right Sidebar with High Transparency */}
-      <div className="fixed right-0 top-0 h-full z-30">
+      {/* Enhanced Right Sidebar with High Transparency - FIXED: Added pointer-events-auto */}
+      <div className="fixed right-0 top-0 h-full z-30 pointer-events-auto">
         {/* Fancy hamburger trigger with enhanced styling */}
         <motion.button
           onClick={() => setSidebarExpanded(!sidebarExpanded)}
@@ -337,11 +339,11 @@ export function StarSelection() {
         </AnimatePresence>
       </div>
 
-      {/* Enhanced Selected Star Modal with Purple Styling */}
+      {/* Enhanced Selected Star Modal with Purple Styling - FIXED: Added pointer-events-auto */}
       <AnimatePresence>
         {selectedStar && (
           <motion.div
-            className="fixed inset-0 z-40 flex items-end justify-center"
+            className="fixed inset-0 z-40 flex items-end justify-center pointer-events-auto"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
