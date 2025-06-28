@@ -434,7 +434,7 @@ function SceneContent({
       )}
       
       {/* Cosmic fog for depth perception */}
-      <fog attach="fog" args={['#0A0A0F', 5, 25]} />
+      {/* <fog attach="fog" args={['#0A0A0F', 5, 25]} />*/}
       
       {/* Enhanced invisible plane for pointer miss detection */}
       <mesh
