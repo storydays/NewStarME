@@ -252,12 +252,12 @@ export function StarSelection() {
               <p className="text-cosmic-stellar-wind text-xs text-center font-light opacity-50">
                 Click any star to view details
               </p>
-            </motion.div>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Compact Bottom Modal */}
+      {/* Compact Bottom Modal - FIXED: No background effects */}
       <AnimatePresence>
         {selectedStar && (
           <motion.div
@@ -266,13 +266,9 @@ export function StarSelection() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
-            {/* Subtle Backdrop Blur */}
+            {/* REMOVED: All backdrop effects - no blur, no background */}
             <div 
               className="absolute inset-0"
-              style={{
-                backdropFilter: 'blur(8px)',
-                background: 'rgba(0, 0, 0, 0.2)'
-              }}
               onClick={handleCloseModal}
             />
             
