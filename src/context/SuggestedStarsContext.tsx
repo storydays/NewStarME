@@ -1,23 +1,19 @@
-import React, { createContext, useContext, useState, ReactNode, useCallback } from 'react';
+import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { Star } from '../types';
 
 /**
- * SuggestedStarsContext - Enhanced with Deep Comparison to Prevent Infinite Re-renders
+ * SuggestedStarsContext - Enhanced with camera focus support
  * 
  * Purpose: Provides a way for pages to communicate which stars should be
  * highlighted in the 3D visualization and trigger camera focus animations.
  * 
- * Key Enhancement: Added deep comparison logic to prevent infinite re-render loops
- * caused by array reference changes when the actual content hasn't changed.
- * 
  * Features:
  * - Global state management for suggested/highlighted stars
  * - Camera focus trigger for smooth star-to-star navigation
- * - Deep comparison to prevent unnecessary updates
  * - Context provider for easy consumption across components
  * - Type-safe interface with TypeScript
  * 
- * Confidence Rating: High - Enhanced context with deep comparison to fix re-render loops
+ * Confidence Rating: High - Enhanced context with camera integration
  */
 
 interface SuggestedStarsContextType {
@@ -35,73 +31,28 @@ interface SuggestedStarsProviderProps {
   children: ReactNode;
 }
 
-/**
- * Deep comparison function for Star arrays
- * Compares essential properties to determine if stars have actually changed
- */
-function areStarsDeepEqual(stars1: Star[], stars2: Star[]): boolean {
-  if (stars1.length !== stars2.length) {
-    return false;
-  }
-
-  for (let i = 0; i < stars1.length; i++) {
-    const star1 = stars1[i];
-    const star2 = stars2[i];
-
-    // Compare essential star properties
-    if (
-      star1.id !== star2.id ||
-      star1.scientific_name !== star2.scientific_name ||
-      star1.emotion_id !== star2.emotion_id ||
-      star1.visual_data.size !== star2.visual_data.size ||
-      star1.visual_data.color !== star2.visual_data.color ||
-      star1.visual_data.brightness !== star2.visual_data.brightness
-    ) {
-      return false;
-    }
-
-    // Compare enhanced visual properties that might be added by StarSelection
-    const visual1 = star1.visual_data as any;
-    const visual2 = star2.visual_data as any;
-    
-    if (visual1.gradientEnd !== visual2.gradientEnd) {
-      return false;
-    }
-  }
-
-  return true;
-}
-
 export function SuggestedStarsProvider({ children }: SuggestedStarsProviderProps) {
-  const [suggestedStars, setSuggestedStarsState] = useState<Star[]>([]);
+  const [suggestedStars, setSuggestedStars] = useState<Star[]>([]);
   const [focusedStarIndex, setFocusedStarIndex] = useState<number | null>(null);
 
-  const clearSuggestedStars = useCallback(() => {
+  const clearSuggestedStars = () => {
     console.log('SuggestedStarsContext: Clearing suggested stars');
-    setSuggestedStarsState([]);
+    setSuggestedStars([]);
     setFocusedStarIndex(null);
-  }, []);
+  };
 
-  const handleSetSuggestedStars = useCallback((stars: Star[]) => {
-    console.log(`SuggestedStarsContext: Attempting to set ${stars.length} suggested stars`);
-    
-    // CRITICAL FIX: Perform deep comparison before updating state
-    if (areStarsDeepEqual(suggestedStars, stars)) {
-      console.log('SuggestedStarsContext: Stars are deeply equal, skipping update to prevent re-render loop');
-      return;
-    }
-    
-    console.log('SuggestedStarsContext: Stars have changed, updating state');
-    setSuggestedStarsState(stars);
-    
-    // Don't auto-focus when setting stars to prevent navigation resets
+  const handleSetSuggestedStars = (stars: Star[]) => {
+    console.log(`SuggestedStarsContext: Setting ${stars.length} suggested stars`);
+    setSuggestedStars(stars);
+    // REMOVED: Auto-focus first star when stars are set
+    // This was causing the navigation to reset to index 0 on every update
     // The initial focus is now managed by useStarNavigation hook
-  }, [suggestedStars]);
+  };
 
-  const triggerStarFocus = useCallback((star: Star, index: number) => {
+  const triggerStarFocus = (star: Star, index: number) => {
     console.log(`SuggestedStarsContext: Triggering focus on star ${star.scientific_name} at index ${index}`);
     setFocusedStarIndex(index);
-  }, []);
+  };
 
   return (
     <SuggestedStarsContext.Provider 
