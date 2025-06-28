@@ -154,7 +154,8 @@ export function InstancedRegularStars({
       transparent: true,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
-      side: THREE.DoubleSide
+      side: THREE.DoubleSide,
+      alphaTest: 0.01
     });
   }, [glowTexture, starTexture]);
 
@@ -172,7 +173,8 @@ export function InstancedRegularStars({
       transparent: true,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
-      side: THREE.DoubleSide
+      side: THREE.DoubleSide,
+      alphaTest: 0.01
     });
   }, [glowTexture, starTexture]);
   
