@@ -257,7 +257,7 @@ function HighlightedStar({
           depthWrite={false}
           opacity={1.0}
           color={ 'white'}
-          alphaTest={0.1}
+          alphaTest={0.2}
           blending={THREE.AdditiveBlending}
         />
       </sprite>
