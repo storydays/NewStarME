@@ -1,32 +1,39 @@
 import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
-import { Star } from '../types';
+import { HygStarData, SuggestedStar } from '../types';
 
 /**
- * SuggestedStarsContext - Enhanced with Deep Comparison to Prevent Infinite Loops
+ * SuggestedStarsContext - Enhanced with HygStarData Integration
  * 
- * Purpose: Provides a way for pages to communicate which stars should be
- * highlighted in the 3D visualization and trigger camera focus animations.
+ * Purpose: Manages suggested stars from AI and their mapping to the central StarsCatalog.
+ * Provides global state for highlighted stars and camera focus control.
  * 
- * Key Enhancement: Added deep comparison logic to prevent infinite re-render loops
- * when the same star data is set repeatedly with different array references.
+ * Key Features:
+ * - Manages SuggestedStar objects with starCatalogId links
+ * - Provides selectedStar state (always HygStarData from catalog)
+ * - Camera focus control for 3D visualization
+ * - Deep comparison to prevent infinite loops
  * 
- * Features:
- * - Global state management for suggested/highlighted stars
- * - Camera focus trigger for smooth star-to-star navigation
- * - Deep comparison to prevent unnecessary updates
- * - Context provider for easy consumption across components
- * - Type-safe interface with TypeScript
- * 
- * Confidence Rating: High - Enhanced context with deep comparison to fix infinite loops
+ * Confidence Rating: High - Clean integration with new architecture
  */
 
 interface SuggestedStarsContextType {
-  suggestedStars: Star[];
-  setSuggestedStars: (stars: Star[]) => void;
+  // Suggested stars from AI (volatile)
+  suggestedStars: SuggestedStar[];
+  setSuggestedStars: (stars: SuggestedStar[]) => void;
   clearSuggestedStars: () => void;
+  
+  // Selected star from catalog (immutable source)
+  selectedStar: HygStarData | null;
+  setSelectedStar: (star: HygStarData | null) => void;
+  
+  // Camera focus control
   focusedStarIndex: number | null;
   setFocusedStarIndex: (index: number | null) => void;
-  triggerStarFocus: (star: Star, index: number) => void;
+  triggerStarFocus: (star: HygStarData, index: number) => void;
+  
+  // Utility functions
+  getSuggestedStarByCatalogId: (catalogId: string) => SuggestedStar | null;
+  isStarSuggested: (catalogId: string) => boolean;
 }
 
 const SuggestedStarsContext = createContext<SuggestedStarsContextType | undefined>(undefined);
@@ -36,10 +43,9 @@ interface SuggestedStarsProviderProps {
 }
 
 /**
- * Deep comparison function for Star arrays
- * Compares essential properties to determine if arrays are functionally equivalent
+ * Deep comparison function for SuggestedStar arrays
  */
-function areStarsDeepEqual(stars1: Star[], stars2: Star[]): boolean {
+function areSuggestedStarsEqual(stars1: SuggestedStar[], stars2: SuggestedStar[]): boolean {
   if (stars1.length !== stars2.length) {
     return false;
   }
@@ -48,22 +54,12 @@ function areStarsDeepEqual(stars1: Star[], stars2: Star[]): boolean {
     const star1 = stars1[i];
     const star2 = stars2[i];
 
-    // Compare essential star properties
     if (
       star1.id !== star2.id ||
-      star1.scientific_name !== star2.scientific_name ||
-      star1.emotion_id !== star2.emotion_id ||
-      star1.visual_data.size !== star2.visual_data.size ||
-      star1.visual_data.color !== star2.visual_data.color ||
-      star1.visual_data.brightness !== star2.visual_data.brightness
+      star1.name !== star2.name ||
+      star1.starCatalogId !== star2.starCatalogId ||
+      JSON.stringify(star1.metadata) !== JSON.stringify(star2.metadata)
     ) {
-      return false;
-    }
-
-    // Compare gradientEnd if it exists (added by StarSelection)
-    const gradientEnd1 = (star1.visual_data as any).gradientEnd;
-    const gradientEnd2 = (star2.visual_data as any).gradientEnd;
-    if (gradientEnd1 !== gradientEnd2) {
       return false;
     }
   }
@@ -72,7 +68,8 @@ function areStarsDeepEqual(stars1: Star[], stars2: Star[]): boolean {
 }
 
 export function SuggestedStarsProvider({ children }: SuggestedStarsProviderProps) {
-  const [suggestedStars, setSuggestedStarsState] = useState<Star[]>([]);
+  const [suggestedStars, setSuggestedStarsState] = useState<SuggestedStar[]>([]);
+  const [selectedStar, setSelectedStar] = useState<HygStarData | null>(null);
   const [focusedStarIndex, setFocusedStarIndex] = useState<number | null>(null);
 
   const clearSuggestedStars = useCallback(() => {
@@ -81,27 +78,32 @@ export function SuggestedStarsProvider({ children }: SuggestedStarsProviderProps
     setFocusedStarIndex(null);
   }, []);
 
-  const handleSetSuggestedStars = useCallback((stars: Star[]) => {
+  const handleSetSuggestedStars = useCallback((stars: SuggestedStar[]) => {
     console.log(`SuggestedStarsContext: Attempting to set ${stars.length} suggested stars`);
     
-    // CRITICAL FIX: Deep comparison to prevent infinite loops
-    if (areStarsDeepEqual(suggestedStars, stars)) {
-      console.log('SuggestedStarsContext: Stars are deeply equal, skipping update to prevent infinite loop');
+    // Deep comparison to prevent infinite loops
+    if (areSuggestedStarsEqual(suggestedStars, stars)) {
+      console.log('SuggestedStarsContext: Suggested stars are equal, skipping update');
       return;
     }
     
-    console.log('SuggestedStarsContext: Stars are different, updating state');
+    console.log('SuggestedStarsContext: Suggested stars are different, updating state');
     setSuggestedStarsState(stars);
-    
-    // REMOVED: Auto-focus first star when stars are set
-    // This was causing the navigation to reset to index 0 on every update
-    // The initial focus is now managed by useStarNavigation hook
   }, [suggestedStars]);
 
-  const triggerStarFocus = useCallback((star: Star, index: number) => {
-    console.log(`SuggestedStarsContext: Triggering focus on star ${star.scientific_name} at index ${index}`);
+  const triggerStarFocus = useCallback((star: HygStarData, index: number) => {
+    console.log(`SuggestedStarsContext: Triggering focus on star ${star.hyg.proper || star.hyg.id} at index ${index}`);
+    setSelectedStar(star);
     setFocusedStarIndex(index);
   }, []);
+
+  const getSuggestedStarByCatalogId = useCallback((catalogId: string): SuggestedStar | null => {
+    return suggestedStars.find(star => star.starCatalogId === catalogId) || null;
+  }, [suggestedStars]);
+
+  const isStarSuggested = useCallback((catalogId: string): boolean => {
+    return suggestedStars.some(star => star.starCatalogId === catalogId);
+  }, [suggestedStars]);
 
   return (
     <SuggestedStarsContext.Provider 
@@ -109,9 +111,13 @@ export function SuggestedStarsProvider({ children }: SuggestedStarsProviderProps
         suggestedStars, 
         setSuggestedStars: handleSetSuggestedStars, 
         clearSuggestedStars,
+        selectedStar,
+        setSelectedStar,
         focusedStarIndex,
         setFocusedStarIndex,
-        triggerStarFocus
+        triggerStarFocus,
+        getSuggestedStarByCatalogId,
+        isStarSuggested
       }}
     >
       {children}

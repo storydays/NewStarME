@@ -17,8 +17,8 @@ export interface Star {
     size: number;
   };
   emotion_id: string;
-  source?: 'static' | 'ai' | 'fallback'; // Added source tracking
-  generated_at?: string; // Added generation timestamp
+  source?: 'static' | 'ai' | 'fallback';
+  generated_at?: string;
 }
 
 export interface Dedication {
@@ -49,7 +49,7 @@ export interface AIStarResponse {
   error?: string;
 }
 
-// HYG Catalog Types
+// HYG Catalog Types - Raw CSV data, untouched
 export interface HygRecord {
   id: number;
   hip?: number;
@@ -94,6 +94,33 @@ export interface HygData {
   stars: HygRecord[];
   headers: string[];
   totalStars: number;
+}
+
+// NEW: Enhanced star data structure used throughout the app
+export interface HygStarData {
+  hyg: HygRecord;
+  render: {
+    color: string;
+    size: number;
+    brightness: number;
+    position: [number, number, number];
+    isHighlighted?: boolean;
+    emotionColor?: string;
+    [key: string]: any; // Extend as needed
+  };
+}
+
+// NEW: Volatile AI suggestion with catalog link
+export interface SuggestedStar {
+  id: string; // AI identifier
+  name?: string;
+  description?: string;
+  metadata?: {
+    emotion: string;
+    confidence: number;
+    [key: string]: any;
+  };
+  starCatalogId: string; // Points to corresponding HygStarData
 }
 
 export interface CatalogStar {

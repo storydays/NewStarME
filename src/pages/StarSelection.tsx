@@ -2,66 +2,106 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, X, Star as StarIcon, MapPin, Heart, Sparkles, ChevronRight } from 'lucide-react';
-import { useStars } from '../hooks/useStars';
-import { useStarNavigation } from '../hooks/useStarNavigation';
+import { useStarsForEmotion } from '../hooks/useStarsCatalog';
 import { useSuggestedStars } from '../context/SuggestedStarsContext';
+import { StarService } from '../services/starService';
 import { emotions } from '../data/emotions';
-import { Star } from '../types';
+import { HygStarData, SuggestedStar } from '../types';
 
+/**
+ * StarSelection Component - Enhanced with Refined Architecture
+ * 
+ * Purpose: Displays emotion-specific star selection using the refined architecture.
+ * Integrates SuggestedStars from AI with StarsCatalog data seamlessly.
+ * 
+ * Features:
+ * - Uses useStarsForEmotion hook for catalog-based selection
+ * - Generates SuggestedStar objects with catalog links
+ * - Modal display for star details
+ * - Camera focus integration for 3D visualization
+ * 
+ * Confidence Rating: High - Clean integration with refined architecture
+ */
 export function StarSelection() {
   const { emotionId } = useParams<{ emotionId: string }>();
   const navigate = useNavigate();
-  const { stars, loading, error } = useStars(emotionId);
-  const { setSuggestedStars, clearSuggestedStars, triggerStarFocus } = useSuggestedStars();
+  const { stars: catalogStars, loading, error } = useStarsForEmotion(emotionId, 5);
+  const { 
+    setSuggestedStars, 
+    clearSuggestedStars, 
+    selectedStar, 
+    setSelectedStar,
+    triggerStarFocus 
+  } = useSuggestedStars();
   
-  // Local state for selected star modal
-  const [selectedStar, setSelectedStar] = useState<Star | null>(null);
+  // Local state for modal
+  const [modalStar, setModalStar] = useState<HygStarData | null>(null);
+  const [suggestedStarsData, setSuggestedStarsData] = useState<SuggestedStar[]>([]);
   
   const emotion = emotions.find(e => e.id === emotionId);
 
-  // Star navigation hook with camera focus integration
-  const {
-    currentIndex,
-    currentStar,
-    canGoPrev,
-    canGoNext,
-    goToPrev,
-    goToNext,
-    goToIndex,
-    setCurrentIndex
-  } = useStarNavigation({
-    stars,
-    onStarFocus: (star, index) => {
-      console.log(`StarSelection: Focusing camera on star ${star.scientific_name} at index ${index}`);
-      triggerStarFocus(star, index);
-    }
-  });
-
-  // Update suggested stars when stars are loaded
+  // Generate SuggestedStar objects when catalog stars are loaded
   useEffect(() => {
-    if (stars && stars.length > 0) {
-      console.log(`StarSelection: Setting ${stars.length} suggested stars for enhanced 3D highlighting`);
-      
-      // Apply aurora-inspired gradient to suggested stars
-      const enhancedStars = stars.map(star => ({
-        ...star,
-        visual_data: {
-          ...star.visual_data,
-          size: star.visual_data.size * 2.5, // Bigger size for suggested
-          color: '#7FFF94', // Aurora green start
-          gradientEnd: '#39FF14' // Aurora green end
+    async function generateSuggestedStars() {
+      if (!emotionId || catalogStars.length === 0) return;
+
+      try {
+        console.log(`StarSelection: Generating suggested stars for emotion: ${emotionId}`);
+        
+        // Try to get AI-generated suggestions first
+        const aiSuggestedStars = await StarService.getSuggestedStarsForEmotion(emotionId);
+        
+        if (aiSuggestedStars.length > 0) {
+          console.log(`StarSelection: Using ${aiSuggestedStars.length} AI-generated suggested stars`);
+          setSuggestedStarsData(aiSuggestedStars);
+          setSuggestedStars(aiSuggestedStars);
+        } else {
+          // Fallback to catalog-based suggestions
+          console.log('StarSelection: Falling back to catalog-based suggestions');
+          const catalogSuggestions: SuggestedStar[] = catalogStars.map((catalogStar, index) => ({
+            id: `catalog-${catalogStar.hyg.id}`,
+            name: catalogStar.hyg.proper || `HYG ${catalogStar.hyg.id}`,
+            description: `A magnificent ${emotionId} star shining in the cosmic depths`,
+            metadata: {
+              emotion: emotionId,
+              confidence: 0.8,
+              source: 'catalog'
+            },
+            starCatalogId: catalogStar.hyg.id.toString()
+          }));
+          
+          setSuggestedStarsData(catalogSuggestions);
+          setSuggestedStars(catalogSuggestions);
         }
-      }));
-      
-      setSuggestedStars(enhancedStars);
+      } catch (error) {
+        console.error('Error generating suggested stars:', error);
+        
+        // Create basic fallback suggestions
+        const fallbackSuggestions: SuggestedStar[] = catalogStars.map((catalogStar, index) => ({
+          id: `fallback-${catalogStar.hyg.id}`,
+          name: catalogStar.hyg.proper || `Star ${index + 1}`,
+          description: `A beautiful star perfect for ${emotionId}`,
+          metadata: {
+            emotion: emotionId,
+            confidence: 0.5,
+            source: 'fallback'
+          },
+          starCatalogId: catalogStar.hyg.id.toString()
+        }));
+        
+        setSuggestedStarsData(fallbackSuggestions);
+        setSuggestedStars(fallbackSuggestions);
+      }
     }
+
+    generateSuggestedStars();
     
     // Clear suggested stars when leaving this page
     return () => {
       console.log('StarSelection: Clearing suggested stars on unmount');
       clearSuggestedStars();
     };
-  }, [stars]);
+  }, [emotionId, catalogStars, setSuggestedStars, clearSuggestedStars]);
 
   if (!emotion) {
     return (
@@ -75,25 +115,23 @@ export function StarSelection() {
     navigate('/');
   };
 
-  const handleStarSelect = (star: Star) => {
-    console.log(`StarSelection: Star selected for modal: ${star.scientific_name}`);
-    setSelectedStar(star);
+  const handleStarSelect = (catalogStar: HygStarData, index: number) => {
+    console.log(`StarSelection: Star selected: ${catalogStar.hyg.proper || catalogStar.hyg.id}`);
+    setSelectedStar(catalogStar);
+    setModalStar(catalogStar);
+    triggerStarFocus(catalogStar, index);
   };
 
   const handleCloseModal = () => {
     console.log('StarSelection: Closing modal');
-    setSelectedStar(null);
+    setModalStar(null);
   };
 
-  const handleDedicate = (star: Star) => {
-    console.log(`StarSelection: Navigating to dedication for star: ${star.scientific_name}`);
-    navigate(`/dedicate/${star.id}?emotion=${emotionId}`);
-  };
-
-  const handleSidebarStarClick = (star: Star, index: number) => {
-    console.log(`StarSelection: Sidebar star clicked: ${star.scientific_name}`);
-    goToIndex(index);
-    setSelectedStar(star); // Open modal when clicking from sidebar
+  const handleDedicate = (catalogStar: HygStarData) => {
+    console.log(`StarSelection: Navigating to dedication for star: ${catalogStar.hyg.proper || catalogStar.hyg.id}`);
+    // For now, use a placeholder star ID - this would need to be enhanced
+    // to create a proper Star record or use the catalog ID
+    navigate(`/dedicate/catalog-${catalogStar.hyg.id}?emotion=${emotionId}`);
   };
 
   if (loading) {
@@ -119,6 +157,7 @@ export function StarSelection() {
         <div className="relative z-10 flex items-center justify-center min-h-screen pointer-events-auto">
           <div className="text-center">
             <p className="text-red-400 text-xl mb-4">Unable to access star catalog</p>
+            <p className="text-cosmic-stellar-wind text-sm mb-4">{error}</p>
             <button 
               onClick={handleBack}
               className="text-cosmic-cherenkov-blue hover:text-cosmic-plasma-glow transition-colors font-light"
@@ -144,19 +183,19 @@ export function StarSelection() {
         </button>
       </div>
 
-      {/* Minimalist Transparent Right Sidebar */}
+      {/* Enhanced Right Sidebar */}
       <div className="fixed right-0 top-0 h-full w-80 z-30 pointer-events-auto">
         <div 
           className="h-full border-l"
           style={{
-            background: 'rgba(248, 250, 252, 0.02)', // 98% transparency
+            background: 'rgba(248, 250, 252, 0.02)',
             backdropFilter: 'blur(20px)',
             borderColor: 'rgba(248, 250, 252, 0.06)',
             boxShadow: '-4px 0 24px rgba(0, 0, 0, 0.1)'
           }}
         >
           <div className="p-6 h-full flex flex-col">
-            {/* Minimalist Header */}
+            {/* Header */}
             <div className="mb-6">
               <motion.div
                 className="flex items-center gap-3 mb-4"
@@ -178,25 +217,24 @@ export function StarSelection() {
                     {emotion.name} Stars
                   </h3>
                   <p className="text-cosmic-stellar-wind text-xs font-light opacity-70">
-                    {stars?.length || 0} celestial beacons
+                    {catalogStars?.length || 0} celestial beacons
                   </p>
                 </div>
               </motion.div>
             </div>
 
-            {/* Elegant Star List - REVERTED: Move dynamic styles back to style prop */}
+            {/* Star List */}
             <div className="flex-1 overflow-y-auto space-y-2 pr-2">
-              {stars?.map((star, index) => (
+              {catalogStars?.map((catalogStar, index) => (
                 <motion.div
-                  key={star.id}
+                  key={catalogStar.hyg.id}
                   className="rounded-lg p-3 cursor-pointer transition-all duration-300 border group"
                   style={{
-                    // REVERTED: Dynamic styles moved back to style prop
                     backdropFilter: 'blur(12px)',
-                    background: index === currentIndex 
+                    background: selectedStar?.hyg.id === catalogStar.hyg.id
                       ? 'rgba(248, 250, 252, 0.06)' 
                       : 'rgba(248, 250, 252, 0.02)',
-                    borderColor: index === currentIndex 
+                    borderColor: selectedStar?.hyg.id === catalogStar.hyg.id
                       ? 'rgba(127, 255, 148, 0.2)' 
                       : 'rgba(248, 250, 252, 0.04)'
                   }}
@@ -206,16 +244,12 @@ export function StarSelection() {
                     borderColor: 'rgba(127, 255, 148, 0.3)'
                   }}
                   whileTap={{ scale: 0.99 }}
-                  onClick={() => handleSidebarStarClick(star, index)}
+                  onClick={() => handleStarSelect(catalogStar, index)}
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ 
-                    delay: 0.1 + index * 0.03
-                    // REVERTED: Removed specific transition settings for background and border
-                  }}
+                  transition={{ delay: 0.1 + index * 0.03 }}
                 >
                   <div className="flex items-center gap-3">
-                    {/* Minimalist Star Icon */}
                     <div 
                       className="w-8 h-8 rounded-full flex items-center justify-center relative"
                       style={{
@@ -226,24 +260,22 @@ export function StarSelection() {
                       <StarIcon className="w-4 h-4 text-cosmic-observation" />
                     </div>
                     
-                    {/* Star Info */}
                     <div className="flex-1 min-w-0">
                       <h4 className="text-cosmic-observation font-light text-sm truncate group-hover:text-cosmic-light-echo transition-colors">
-                        {star.scientific_name}
+                        {catalogStar.hyg.proper || `HYG ${catalogStar.hyg.id}`}
                       </h4>
                       <p className="text-cosmic-stellar-wind text-xs font-light opacity-60 group-hover:opacity-80 transition-opacity truncate">
-                        {star.coordinates}
+                        Magnitude: {catalogStar.hyg.mag.toFixed(2)}
                       </p>
                     </div>
 
-                    {/* Subtle Arrow */}
                     <ChevronRight className="w-4 h-4 text-cosmic-stellar-wind opacity-0 group-hover:opacity-60 transition-all transform group-hover:translate-x-1" />
                   </div>
                 </motion.div>
               ))}
             </div>
 
-            {/* Minimalist Footer */}
+            {/* Footer */}
             <motion.div
               className="mt-4 pt-4"
               style={{
@@ -261,30 +293,28 @@ export function StarSelection() {
         </div>
       </div>
 
-      {/* Compact Bottom Modal - FIXED: Pointer events configuration */}
+      {/* Star Detail Modal */}
       <AnimatePresence>
-        {selectedStar && (
+        {modalStar && (
           <motion.div
             className="fixed inset-0 z-40 flex items-end justify-center pointer-events-none"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={(e) => {
-              // Only close modal if clicking directly on the backdrop
               if (e.target === e.currentTarget) {
                 handleCloseModal();
               }
             }}
           >
-            {/* Compact Modal - 32px from bottom, centered */}
             <motion.div
               className="relative w-full max-w-2xl mx-6 rounded-2xl border overflow-hidden pointer-events-auto"
               style={{
-                background: 'rgba(248, 250, 252, 0.03)', // High transparency
+                background: 'rgba(248, 250, 252, 0.03)',
                 backdropFilter: 'blur(25px)',
                 borderColor: 'rgba(157, 78, 221, 0.2)',
                 boxShadow: '0 20px 60px rgba(157, 78, 221, 0.15)',
-                marginBottom: '32px' // 32px from bottom edge
+                marginBottom: '32px'
               }}
               initial={{ y: 100, opacity: 0, scale: 0.95 }}
               animate={{ y: 0, opacity: 1, scale: 1 }}
@@ -306,23 +336,23 @@ export function StarSelection() {
 
               <div className="p-6">
                 <div className="flex items-center gap-6">
-                  {/* High-Quality Star Thumbnail */}
+                  {/* Star Visualization */}
                   <div className="flex-shrink-0">
                     <div className="relative h-16 w-16 flex items-center justify-center">
                       <motion.div
                         className="relative rounded-full flex items-center justify-center"
                         style={{ 
-                          background: 'linear-gradient(135deg, #9D4EDD 0%, #6A0572 100%)',
-                          width: selectedStar.visual_data.size * 64,
-                          height: selectedStar.visual_data.size * 64,
-                          boxShadow: '0 0 30px rgba(157, 78, 221, 0.4), 0 0 60px rgba(106, 5, 114, 0.2)'
+                          background: `linear-gradient(135deg, ${modalStar.render.color} 0%, ${modalStar.render.color}80 100%)`,
+                          width: modalStar.render.size * 64,
+                          height: modalStar.render.size * 64,
+                          boxShadow: `0 0 30px ${modalStar.render.color}40, 0 0 60px ${modalStar.render.color}20`
                         }}
                         animate={{ 
                           scale: [1, 1.05, 1],
                           boxShadow: [
-                            '0 0 30px rgba(157, 78, 221, 0.4), 0 0 60px rgba(106, 5, 114, 0.2)',
-                            '0 0 40px rgba(157, 78, 221, 0.6), 0 0 80px rgba(106, 5, 114, 0.3)',
-                            '0 0 30px rgba(157, 78, 221, 0.4), 0 0 60px rgba(106, 5, 114, 0.2)'
+                            `0 0 30px ${modalStar.render.color}40, 0 0 60px ${modalStar.render.color}20`,
+                            `0 0 40px ${modalStar.render.color}60, 0 0 80px ${modalStar.render.color}30`,
+                            `0 0 30px ${modalStar.render.color}40, 0 0 60px ${modalStar.render.color}20`
                           ]
                         }}
                         transition={{ 
@@ -339,27 +369,28 @@ export function StarSelection() {
                   {/* Star Information */}
                   <div className="flex-1 min-w-0">
                     <h2 className="text-xl font-light text-cosmic-observation mb-1 truncate">
-                      {selectedStar.scientific_name}
+                      {modalStar.hyg.proper || `HYG ${modalStar.hyg.id}`}
                     </h2>
                     
                     <div className="flex items-center gap-2 text-cosmic-stellar-wind text-xs mb-2">
                       <MapPin className="w-3 h-3" />
-                      <span className="font-mono">{selectedStar.coordinates}</span>
+                      <span className="font-mono">
+                        RA: {modalStar.hyg.ra.toFixed(3)}°, Dec: {modalStar.hyg.dec.toFixed(3)}°
+                      </span>
                     </div>
 
-                    {/* Brief Description - Max 2 lines */}
-                    <p className="text-cosmic-light-echo text-sm leading-relaxed font-light line-clamp-2">
-                      {selectedStar.poetic_description.length > 120 
-                        ? selectedStar.poetic_description.substring(0, 120) + '...'
-                        : selectedStar.poetic_description
-                      }
-                    </p>
+                    <div className="text-cosmic-light-echo text-sm leading-relaxed font-light space-y-1">
+                      <p>Magnitude: {modalStar.hyg.mag.toFixed(2)}</p>
+                      <p>Distance: {modalStar.hyg.dist.toFixed(1)} parsecs</p>
+                      {modalStar.hyg.spect && <p>Spectral Class: {modalStar.hyg.spect}</p>}
+                      {modalStar.hyg.con && <p>Constellation: {modalStar.hyg.con}</p>}
+                    </div>
                   </div>
 
-                  {/* Prominent Dedicate Button */}
+                  {/* Dedicate Button */}
                   <div className="flex-shrink-0">
                     <motion.button
-                      onClick={() => handleDedicate(selectedStar)}
+                      onClick={() => handleDedicate(modalStar)}
                       className="text-cosmic-observation font-light py-3 px-6 rounded-xl transition-all duration-300 flex items-center gap-2 text-sm pointer-events-auto"
                       style={{
                         background: 'linear-gradient(135deg, #9D4EDD 0%, #6A0572 100%)',
