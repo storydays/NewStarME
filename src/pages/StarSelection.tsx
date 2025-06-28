@@ -257,24 +257,24 @@ export function StarSelection() {
         </div>
       </div>
 
-      {/* Compact Bottom Modal - FIXED: No background effects */}
+      {/* Compact Bottom Modal - FIXED: Pointer events configuration */}
       <AnimatePresence>
         {selectedStar && (
           <motion.div
-            className="fixed inset-0 z-40 flex items-end justify-center pointer-events-auto"
+            className="fixed inset-0 z-40 flex items-end justify-center pointer-events-none"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            onClick={(e) => {
+              // Only close modal if clicking directly on the backdrop
+              if (e.target === e.currentTarget) {
+                handleCloseModal();
+              }
+            }}
           >
-            {/* REMOVED: All backdrop effects - no blur, no background */}
-            <div 
-              className="absolute inset-0"
-              onClick={handleCloseModal}
-            />
-            
             {/* Compact Modal - 32px from bottom, centered */}
             <motion.div
-              className="relative w-full max-w-2xl mx-6 rounded-2xl border overflow-hidden"
+              className="relative w-full max-w-2xl mx-6 rounded-2xl border overflow-hidden pointer-events-auto"
               style={{
                 background: 'rgba(248, 250, 252, 0.03)', // High transparency
                 backdropFilter: 'blur(25px)',
@@ -290,7 +290,7 @@ export function StarSelection() {
               {/* Close Button */}
               <button
                 onClick={handleCloseModal}
-                className="absolute top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center text-cosmic-stellar-wind hover:text-cosmic-observation transition-all duration-300 z-10"
+                className="absolute top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center text-cosmic-stellar-wind hover:text-cosmic-observation transition-all duration-300 z-10 pointer-events-auto"
                 style={{
                   background: 'rgba(248, 250, 252, 0.05)',
                   backdropFilter: 'blur(15px)',
@@ -356,7 +356,7 @@ export function StarSelection() {
                   <div className="flex-shrink-0">
                     <motion.button
                       onClick={() => handleDedicate(selectedStar)}
-                      className="text-cosmic-observation font-light py-3 px-6 rounded-xl transition-all duration-300 flex items-center gap-2 text-sm"
+                      className="text-cosmic-observation font-light py-3 px-6 rounded-xl transition-all duration-300 flex items-center gap-2 text-sm pointer-events-auto"
                       style={{
                         background: 'linear-gradient(135deg, #9D4EDD 0%, #6A0572 100%)',
                         boxShadow: '0 0 20px rgba(157, 78, 221, 0.3)'
