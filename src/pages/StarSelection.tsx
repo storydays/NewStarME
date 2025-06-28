@@ -191,12 +191,10 @@ export function StarSelection() {
                   key={star.id}
                   className="rounded-lg p-3 cursor-pointer transition-all duration-300 border group"
                   style={{
-                    backdropFilter: 'blur(12px)'
-                  }}
-                  animate={{
                     background: index === currentIndex 
                       ? 'rgba(248, 250, 252, 0.06)' 
                       : 'rgba(248, 250, 252, 0.02)',
+                    backdropFilter: 'blur(12px)',
                     borderColor: index === currentIndex 
                       ? 'rgba(127, 255, 148, 0.2)' 
                       : 'rgba(248, 250, 252, 0.04)'
@@ -209,6 +207,7 @@ export function StarSelection() {
                   whileTap={{ scale: 0.99 }}
                   onClick={() => handleSidebarStarClick(star, index)}
                   initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.1 + index * 0.03 }}
                 >
                   <div className="flex items-center gap-3">
