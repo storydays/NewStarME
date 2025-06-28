@@ -259,8 +259,7 @@ function HighlightedStar({
           opacity={colors.baseCoreOpacity * (1.0 + Math.sin(0) * 0.1)} // Will be animated by useFrame
           color={'white'}
           alphaTest={0.1} // REVERTED: Back to 0.1
-          blending={THREE.AdditiveBlending}
-          visible= {false}
+          blending={THREE.AdditiveBlending} 
         />
       </sprite>
     </Billboard>
