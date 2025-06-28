@@ -4,18 +4,18 @@ import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
 /**
- * Star Component - Enhanced with Bigger Suggested/Selected Stars and Purple Selected Stars
+ * Star Component - Enhanced with React.memo to prevent unnecessary re-renders
  * 
  * Purpose: Main dispatcher component that renders appropriate star type based on highlighting state.
- * Enhanced with bigger sizes for suggested/selected stars and purple-ish tones for selected stars.
+ * Enhanced with React.memo to prevent re-rendering when props haven't changed.
  * 
  * Features:
  * - Aurora gradient (#7FFF94 to #39FF14) for suggested stars with bigger size
  * - Purple-ish gradient (#9D4EDD to #6A0572) for selected stars with bigger size
  * - Enhanced glow effects for better visibility
- * - Conditional rendering based on isHighlighted prop
+ * - React.memo optimization to prevent unnecessary re-renders
  * 
- * Confidence Rating: High - Enhanced existing system with bigger stars and purple selection
+ * Confidence Rating: High - Enhanced existing system with re-render prevention
  */
 
 interface BaseStarProps {
@@ -43,7 +43,7 @@ interface HighlightedStarProps extends BaseStarProps {
 /**
  * RegularStar Component - Renders standard stars (non-highlighted)
  */
-function RegularStar({
+const RegularStar = React.memo(function RegularStar({
   position,
   mag,
   starTexture,
@@ -63,7 +63,6 @@ function RegularStar({
 
   const handleClick = useCallback((event: any) => {
     event.stopPropagation();
-    console.log('RegularStar: Click detected on normal star');
     onClick(event);
   }, [onClick]);
 
@@ -121,7 +120,7 @@ function RegularStar({
       </mesh>
     </Billboard>
   );
-}
+});
 
 /**
  * HighlightedStar Component - Enhanced with Bigger Stars and Purple Selection
@@ -129,7 +128,7 @@ function RegularStar({
  * Purpose: Specialized component for highlighted stars with enhanced size and purple selection.
  * Features aurora gradients for suggested stars and purple gradients for selected stars.
  */
-function HighlightedStar({
+const HighlightedStar = React.memo(function HighlightedStar({
   position,
   mag,
   starTexture,
@@ -154,7 +153,6 @@ function HighlightedStar({
 
   const handleClick = useCallback((event: any) => {
     event.stopPropagation();
-    console.log('HighlightedStar: Enhanced click detected on highlighted star');
     onClick(event);
   }, [onClick]);
 
@@ -261,12 +259,12 @@ function HighlightedStar({
       </sprite>
     </Billboard>
   );
-}
+});
 
 /**
- * Main Star Component - Enhanced dispatcher with bigger stars and purple selection
+ * Main Star Component - Enhanced dispatcher with React.memo optimization
  */
-export function Star({
+export const Star = React.memo(function Star({
   position,
   mag,
   starTexture,
@@ -280,8 +278,9 @@ export function Star({
   onClick
 }: StarProps) {
   
-  console.log(`Star: Rendering ${isHighlighted ? 'highlighted' : 'normal'} star${isSuggested ? ' (suggested)' : ''}${isSelected ? ' (SELECTED - PURPLE)' : ''} at position [${position.join(', ')}]`);
-
+  // REMOVED: Excessive logging that was causing console spam
+  // Only log when actually needed for debugging
+  
   if (isHighlighted || isSelected) {
     return (
       <HighlightedStar
@@ -311,6 +310,23 @@ export function Star({
       />
     );
   }
-}
+}, (prevProps, nextProps) => {
+  // Custom comparison function for React.memo
+  // Only re-render if essential props have changed
+  return (
+    prevProps.position[0] === nextProps.position[0] &&
+    prevProps.position[1] === nextProps.position[1] &&
+    prevProps.position[2] === nextProps.position[2] &&
+    prevProps.mag === nextProps.mag &&
+    prevProps.starSize === nextProps.starSize &&
+    prevProps.glowMultiplier === nextProps.glowMultiplier &&
+    prevProps.isSelected === nextProps.isSelected &&
+    prevProps.isHighlighted === nextProps.isHighlighted &&
+    prevProps.emotionColor === nextProps.emotionColor &&
+    prevProps.isSuggested === nextProps.isSuggested &&
+    prevProps.starTexture === nextProps.starTexture &&
+    prevProps.glowTexture === nextProps.glowTexture
+  );
+});
 
 export default Star;

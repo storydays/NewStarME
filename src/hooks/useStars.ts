@@ -3,14 +3,14 @@ import { Star } from '../types';
 import { StarService } from '../services/starService';
 
 /**
- * useStars Hook - Enhanced with array stability
+ * useStars Hook - Enhanced with array stability to prevent re-renders
  * 
  * Purpose: Provides stable star data for a given emotion to prevent
  * unnecessary re-renders and navigation resets.
  * 
- * Key Enhancement: Uses a ref to track the emotionId for which stars
- * were last fetched, preventing refetches for the same emotion and
- * ensuring the stars array reference remains stable.
+ * Key Enhancement: Uses deep comparison to check if fetched stars are
+ * actually different from current state before updating, preventing
+ * unnecessary re-renders when the same data is fetched.
  * 
  * Confidence Rating: High - Targeted fix for navigation stability
  */
@@ -22,6 +22,27 @@ export function useStars(emotionId?: string) {
   
   // Track the emotionId for which stars were last successfully fetched
   const lastFetchedEmotionRef = useRef<string | null>(null);
+
+  // Helper function to compare star arrays for equality
+  const areStarsEqual = (stars1: Star[], stars2: Star[]): boolean => {
+    if (stars1.length !== stars2.length) {
+      return false;
+    }
+    
+    // Compare each star by ID and key properties
+    for (let i = 0; i < stars1.length; i++) {
+      const star1 = stars1[i];
+      const star2 = stars2[i];
+      
+      if (star1.id !== star2.id || 
+          star1.scientific_name !== star2.scientific_name ||
+          star1.emotion_id !== star2.emotion_id) {
+        return false;
+      }
+    }
+    
+    return true;
+  };
 
   useEffect(() => {
     async function fetchStars() {
@@ -45,15 +66,25 @@ export function useStars(emotionId?: string) {
         console.log(`useStars: Fetching stars for emotion: ${emotionId}`);
         const fetchedStars = await StarService.fetchStarsForEmotion(emotionId);
         
-        // Only update state if we successfully fetched stars
+        // ENHANCED: Only update state if stars are actually different
         if (fetchedStars && fetchedStars.length > 0) {
-          setStars(fetchedStars);
-          // Update the ref to track this successful fetch
-          lastFetchedEmotionRef.current = emotionId;
-          console.log(`useStars: Successfully loaded ${fetchedStars.length} stars for ${emotionId}`);
+          // Check if the fetched stars are different from current stars
+          if (!areStarsEqual(stars, fetchedStars)) {
+            console.log(`useStars: Stars changed for ${emotionId}, updating state with ${fetchedStars.length} stars`);
+            setStars(fetchedStars);
+            // Update the ref to track this successful fetch
+            lastFetchedEmotionRef.current = emotionId;
+          } else {
+            console.log(`useStars: Stars unchanged for ${emotionId}, preserving array reference`);
+            // Don't update state - preserve existing array reference
+            lastFetchedEmotionRef.current = emotionId;
+          }
         } else {
           console.warn(`useStars: No stars returned for emotion ${emotionId}`);
-          setStars([]);
+          if (stars.length > 0) {
+            // Only update if we currently have stars
+            setStars([]);
+          }
           setError('No stars found for this emotion');
         }
       } catch (err) {
@@ -63,7 +94,9 @@ export function useStars(emotionId?: string) {
         
         // Set empty array on error but don't update the ref
         // This allows retry on next emotionId change
-        setStars([]);
+        if (stars.length > 0) {
+          setStars([]);
+        }
       } finally {
         setLoading(false);
       }
