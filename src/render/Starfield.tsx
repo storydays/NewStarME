@@ -95,8 +95,8 @@ export function Starfield({
 
    //   console.log(`Starfield: Star ${star.id} - highlighted: ${star.isHighlighted}, size: ${actualStarSize.toFixed(3)}, glow: ${actualGlowMultiplier.toFixed(1)}`);
 
-      return (
-        {true? <></>: <Star
+      return true? <></>: (
+        <Star
           key={star.id}
           position={star.position}
           mag={star.magnitude}
@@ -108,7 +108,7 @@ export function Starfield({
           isHighlighted={star.isHighlighted || false}
           emotionColor={star.emotionColor} // NEW: Pass emotion color for tinting
           onClick={() => handleStarClick(star.id)}
-        />}
+        />
       );
     });
   }, [catalog, selectedStar, starTexture, glowTexture, starSize, glowMultiplier, handleStarClick]);
