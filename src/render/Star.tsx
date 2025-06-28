@@ -255,7 +255,7 @@ function HighlightedStar({
           map={starTexture}
           transparent
           depthWrite={false}
-          opacity={0.0} 
+          opacity={1.0}
           color={ 'white'}
           alphaTest={0.1}
           blending={THREE.AdditiveBlending}
