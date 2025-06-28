@@ -96,7 +96,7 @@ export function Starfield({
    //   console.log(`Starfield: Star ${star.id} - highlighted: ${star.isHighlighted}, size: ${actualStarSize.toFixed(3)}, glow: ${actualGlowMultiplier.toFixed(1)}`);
 
       return (
-        {false && <Star
+        {true? <></>: <Star
           key={star.id}
           position={star.position}
           mag={star.magnitude}
