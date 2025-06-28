@@ -93,7 +93,7 @@ export function Starfield({
       const enhancedGlow = star.enhancedGlow || 1.0;
       const actualGlowMultiplier = glowMultiplier * enhancedGlow;
 
-      console.log(`Starfield: Star ${star.id} - highlighted: ${star.isHighlighted}, size: ${actualStarSize.toFixed(3)}, glow: ${actualGlowMultiplier.toFixed(1)}`);
+   //   console.log(`Starfield: Star ${star.id} - highlighted: ${star.isHighlighted}, size: ${actualStarSize.toFixed(3)}, glow: ${actualGlowMultiplier.toFixed(1)}`);
 
       return (
         <Star
