@@ -252,7 +252,7 @@ export function StarSelection() {
               <p className="text-cosmic-stellar-wind text-xs text-center font-light opacity-50">
                 Click any star to view details
               </p>
-            </div>
+            </motion.div>
           </div>
         </div>
       </div>
