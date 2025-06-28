@@ -172,7 +172,7 @@ export function Starfield({
         />
       );
     });
-  }, [renderingMode, catalog, specialStars, selectedStar, starTexture, glowTexture, starSize, glowMultiplier, handleStarClick]);
+  }, [renderingMode, catalog, specialStars, selectedStar, starTexture, glowTexture, starSize, glowMultiplier]);
 
   // Prepare label data based on rendering mode
   const labelData = useMemo(() => {
