@@ -11,8 +11,9 @@ import { HygRecord } from '../types';
  * - Parses CSV data into HygRecord objects
  * - Provides basic filtering and access methods
  * - Handles data validation and error recovery
+ * - FIXED: Removes BOM character from CSV headers
  * 
- * Confidence Rating: High - Standard CSV parsing with astronomical data
+ * Confidence Rating: High - Standard CSV parsing with BOM handling
  */
 
 export class HygStarsCatalog {
@@ -94,11 +95,26 @@ export class HygStarsCatalog {
 
   /**
    * Parse CSV data into HygRecord objects
+   * FIXED: Properly handles BOM character in headers
    */
   private static parseCsvData(csvText: string): HygRecord[] {
     const lines = csvText.trim().split('\n');
-    const headers = lines[0].split(',').map(h => h.trim());
     
+    // FIXED: Remove BOM character from headers and clean them properly
+    const rawHeaders = lines[0].split(',');
+    const headers = rawHeaders.map((header, index) => {
+      let cleanHeader = header.trim();
+      
+      // Remove BOM character from the first header if present
+      if (index === 0 && cleanHeader.charCodeAt(0) === 0xFEFF) {
+        cleanHeader = cleanHeader.substring(1);
+        console.log('HygStarsCatalog: Removed BOM character from first header');
+      }
+      
+      return cleanHeader;
+    });
+    
+    console.log(`HygStarsCatalog: Parsed headers:`, headers);
     console.log(`HygStarsCatalog: Parsing ${lines.length - 1} star records`);
     
     const stars: HygRecord[] = [];
@@ -150,11 +166,16 @@ export class HygStarsCatalog {
 
   /**
    * Create HygRecord from parsed CSV data
+   * Enhanced with better error logging for debugging
    */
   private static createHygRecord(headers: string[], values: string[]): HygRecord | null {
     try {
       const getValue = (header: string): string => {
         const index = headers.indexOf(header);
+        if (index === -1) {
+          console.warn(`HygStarsCatalog: Header '${header}' not found in headers:`, headers);
+          return '';
+        }
         return index >= 0 ? values[index] : '';
       };
 
@@ -170,7 +191,10 @@ export class HygStarsCatalog {
 
       // Required fields
       const id = getInteger('id');
-      if (!id) return null;
+      if (!id) {
+        console.warn('HygStarsCatalog: No ID found for record, skipping');
+        return null;
+      }
 
       const record: HygRecord = {
         id,
