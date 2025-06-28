@@ -15,7 +15,7 @@ import * as THREE from 'three';
  * - Emotion-based color styling
  * - Enhanced font sizing and visibility
  * - Camera-facing orientation
- * - Distance-based opacity for non-highlighted stars
+ * - UPDATED: Removed magnitude filtering to show all named stars
  * 
  * Confidence Rating: High - Enhanced existing label system with highlighting support
  */
@@ -37,6 +37,7 @@ export function StarLabels({ stars, selectedStar }: StarLabelsProps) {
   const { camera } = useThree();
 
   // Filter and prepare stars for labeling with enhanced highlighting
+  // REMOVED: Magnitude filtering - show ALL named stars
   const labeledStars = stars.filter(star => {
     // Always show labels for highlighted stars
     if (star.isHighlighted && star.name) {
@@ -48,13 +49,11 @@ export function StarLabels({ stars, selectedStar }: StarLabelsProps) {
       return true;
     }
     
-    // For non-highlighted stars, use original filtering logic
-    return star.name && 
-           star.name.trim() !== '' &&
-           star.magnitude < 4.0; // Only bright stars get labels normally
-  }).slice(0, 50); // Increased limit to accommodate highlighted stars
+    // REMOVED: Magnitude filtering - show all named stars
+    return star.name && star.name.trim() !== '';
+  }); // REMOVED: .slice(0, 50) limit
 
-  console.log(`StarLabels: Rendering ${labeledStars.length} labels (${labeledStars.filter(s => s.isHighlighted).length} highlighted)`);
+  console.log(`StarLabels: Rendering ${labeledStars.length} labels (${labeledStars.filter(s => s.isHighlighted).length} highlighted) from ${stars.length} total stars`);
 
   return (
     <>
@@ -84,15 +83,16 @@ export function StarLabels({ stars, selectedStar }: StarLabelsProps) {
           fontWeight = 500;
           color = '#FFD700'; // Gold for selected
         } else {
-          // Normal stars: Distance-based visibility
-          opacity = Math.max(0.3, Math.min(1.0, (30 / distanceFromCamera) * (4.0 - star.magnitude) / 4.0));
+          // Normal stars: Distance-based visibility but more lenient
+          opacity = Math.max(0.2, Math.min(1.0, (50 / distanceFromCamera))); // UPDATED: More lenient opacity calculation
           fontSize = Math.max(8, Math.min(16, 200 / distanceFromCamera));
           fontWeight = 300;
           color = '#F8FAFC'; // White for normal
         }
 
-        // Skip labels that would be too faint (except highlighted ones)
-        if (!star.isHighlighted && opacity < 0.3) return null;
+        // REMOVED: Skip labels that would be too faint - show all labels now
+        // Only skip if completely invisible
+        if (opacity < 0.1) return null;
 
         return (
           <Html

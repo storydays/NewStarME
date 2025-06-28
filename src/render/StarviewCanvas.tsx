@@ -20,6 +20,7 @@ import { AnimationController } from './AnimationController';
  * - Click detection on highlighted stars
  * - Smooth camera transitions to selected stars
  * - Optimal viewing distance positioning
+ * - UPDATED: Displays ALL stars from HYG catalog without filtering
  * 
  * Confidence Rating: High - Comprehensive enhancement of existing system
  */
@@ -138,6 +139,7 @@ function calculateOptimalCameraPosition(highlightedStars: Star[]): {
 
 /**
  * StarfieldWrapper Component - Enhanced with star selection interface
+ * UPDATED: Removed all filtering to display complete HYG catalog
  */
 function StarfieldWrapper({ 
   hygCatalog, 
@@ -164,13 +166,14 @@ function StarfieldWrapper({
 }) {
   
   // Convert HYG catalog data to Starfield format with enhanced highlighting
+  // REMOVED ALL FILTERING - Display complete catalog
   const catalogData = useMemo(() => {
     if (!hygCatalog) {
       console.log('StarfieldWrapper: No catalog available');
       return [];
     }
 
-    console.log('StarfieldWrapper: Processing star catalog with enhanced highlighting...');
+    console.log('StarfieldWrapper: Processing complete star catalog without filtering...');
     console.log(`StarfieldWrapper: ${highlightedStars.length} stars to highlight`);
     
     // Create a set of highlighted star names for fast lookup
@@ -178,14 +181,12 @@ function StarfieldWrapper({
       highlightedStars.map(star => star.scientific_name.toLowerCase())
     );
 
-    // Filter stars by magnitude and limit count for performance
-    const filteredStars = hygCatalog
-      .filterByMagnitude(-2, 6.5)
-      .slice(0, 5000);
+    // REMOVED: All filtering logic - get ALL stars from catalog
+    const allStars = hygCatalog.getStars();
 
-    console.log(`StarfieldWrapper: Processing ${filteredStars.length} stars`);
+    console.log(`StarfieldWrapper: Processing ALL ${allStars.length} stars from HYG catalog`);
 
-    return filteredStars.map((star) => {
+    return allStars.map((star) => {
       // Convert spherical coordinates to Cartesian for 3D positioning
       const distance = Math.min(star.dist, 100) / 5;
       const raRad = star.rarad;
@@ -417,7 +418,7 @@ function SceneContent({
         onAnimationComplete={handleAnimationComplete}
       />
       
-      {/* Render enhanced stars with highlighting */}
+      {/* Render enhanced stars with highlighting - ALL STARS */}
       {hygCatalog && !catalogLoading && (
         <StarfieldWrapper 
           hygCatalog={hygCatalog}
@@ -433,7 +434,7 @@ function SceneContent({
         />
       )}
       
-      {/* Cosmic fog for depth perception */}
+      {/* Cosmic fog for depth perception - DISABLED for better visibility of all stars */}
       {/* <fog attach="fog" args={['#0A0A0F', 5, 25]} />*/}
       
       {/* Enhanced invisible plane for pointer miss detection */}
@@ -451,6 +452,7 @@ function SceneContent({
 
 /**
  * Main StarviewCanvas Component with Enhanced Star Selection Interface
+ * UPDATED: Now displays complete HYG catalog without filtering
  */
 export function StarviewCanvas({ 
   hygCatalog, 
@@ -498,7 +500,7 @@ export function StarviewCanvas({
         }}
         onPointerMissed={handlePointerMissed}
       >
-        {/* Enhanced scene content with star selection interface */}
+        {/* Enhanced scene content with star selection interface - ALL STARS */}
         <SceneContent
           hygCatalog={hygCatalog}
           catalogLoading={catalogLoading}
