@@ -13,7 +13,7 @@ import { STAR_COLORS } from '../config/starColors';
  * StarSelection Component - Enhanced with Simplified Star Color Configuration
  * 
  * Purpose: Emotion-based star selection interface with simplified color management.
- * UPDATED: Uses simplified STAR_COLORS configuration with single solid colors applied to star_particle.png.
+ * UPDATED: Uses simplified STAR_COLORS configuration with direct color values.
  * 
  * Features:
  * - Emotion-based star catalog browsing
@@ -218,7 +218,7 @@ export function StarSelection({ selectedStar, setSelectedStar, onStarClick }: St
               <div 
                 className="star-icon-tint"
                 style={{
-                  backgroundColor: STAR_COLORS.suggested.main
+                  backgroundColor: STAR_COLORS.suggested
                 }}
               />
             </div>
@@ -231,7 +231,7 @@ export function StarSelection({ selectedStar, setSelectedStar, onStarClick }: St
               <div 
                 className="star-icon-tint"
                 style={{
-                  backgroundColor: STAR_COLORS.selected.main
+                  backgroundColor: STAR_COLORS.selected
                 }}
               />
             </div>
@@ -244,7 +244,7 @@ export function StarSelection({ selectedStar, setSelectedStar, onStarClick }: St
               <div 
                 className="star-icon-tint"
                 style={{
-                  backgroundColor: STAR_COLORS.normal.main
+                  backgroundColor: STAR_COLORS.normal
                 }}
               />
             </div>
@@ -367,7 +367,7 @@ export function StarSelection({ selectedStar, setSelectedStar, onStarClick }: St
               style={{
                 background: 'rgba(248, 250, 252, 0.03)',
                 backdropFilter: 'blur(25px)',
-                borderColor: `${STAR_COLORS.selected.main}33`, // Using simplified selected star color with opacity
+                borderColor: `${STAR_COLORS.selected}33`, // Using simplified selected star color with opacity
                 boxShadow: `0 20px 60px rgba(157, 78, 221, 0.3)`, // Simplified shadow
                 marginBottom: '32px'
               }}
@@ -448,7 +448,7 @@ export function StarSelection({ selectedStar, setSelectedStar, onStarClick }: St
                       onClick={() => handleDedicate(selectedStar)}
                       className="text-cosmic-observation font-light py-3 px-6 rounded-xl transition-all duration-300 flex items-center gap-2 text-sm pointer-events-auto"
                       style={{
-                        backgroundColor: STAR_COLORS.selected.main,
+                        backgroundColor: STAR_COLORS.selected,
                         boxShadow: `0 0 20px rgba(157, 78, 221, 0.3)`
                       }}
                       whileHover={{ 

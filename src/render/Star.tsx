@@ -5,19 +5,19 @@ import * as THREE from 'three';
 import { STAR_COLORS } from '../config/starColors';
 
 /**
- * Star Component - Enhanced with Centralized Color Configuration
+ * Star Component - Enhanced with Simplified Color Configuration
  * 
  * Purpose: Main dispatcher component that renders appropriate star type based on highlighting state.
- * Enhanced with centralized color management from starColors.ts configuration.
+ * UPDATED: Uses simplified STAR_COLORS configuration with direct color values.
  * 
  * Features:
- * - Centralized color configuration from STAR_COLORS
- * - Aurora gradient for suggested stars with bigger size
- * - Purple-ish gradient for selected stars with bigger size
+ * - Simplified color configuration from STAR_COLORS
+ * - Aurora green for suggested stars with bigger size
+ * - Purple for selected stars with bigger size
  * - Enhanced glow effects for better visibility
  * - React.memo optimization to prevent unnecessary re-renders
  * 
- * Confidence Rating: High - Enhanced with centralized color management
+ * Confidence Rating: High - Enhanced with simplified color management
  */
 
 interface BaseStarProps {
@@ -43,7 +43,7 @@ interface HighlightedStarProps extends BaseStarProps {
 }
 
 /**
- * RegularStar Component - Enhanced with centralized colors
+ * RegularStar Component - Enhanced with simplified colors
  */
 const RegularStar = React.memo(function RegularStar({
   position,
@@ -73,15 +73,15 @@ const RegularStar = React.memo(function RegularStar({
   const getStarColors = useCallback(() => {
     if (isSelected) {
       return {
-        coreColor: new THREE.Color(STAR_COLORS.selected.core),
-        glowColor: new THREE.Color(STAR_COLORS.selected.glow).multiplyScalar(normalGlowMultiplier),
+        coreColor: new THREE.Color(STAR_COLORS.selected),
+        glowColor: new THREE.Color(STAR_COLORS.selected).multiplyScalar(normalGlowMultiplier),
         glowOpacity: 1.0,
         coreOpacity: opacity
       };
     } else {
       return {
-        coreColor: new THREE.Color(STAR_COLORS.normal.core),
-        glowColor: new THREE.Color(STAR_COLORS.normal.glow).multiplyScalar(normalGlowMultiplier),
+        coreColor: new THREE.Color(STAR_COLORS.normal),
+        glowColor: new THREE.Color(STAR_COLORS.normal).multiplyScalar(normalGlowMultiplier),
         glowOpacity: 1.0,
         coreOpacity: opacity
       };
@@ -125,7 +125,7 @@ const RegularStar = React.memo(function RegularStar({
 });
 
 /**
- * HighlightedStar Component - Enhanced with centralized colors
+ * HighlightedStar Component - Enhanced with simplified colors
  */
 const HighlightedStar = React.memo(function HighlightedStar({
   position,
@@ -162,22 +162,22 @@ const HighlightedStar = React.memo(function HighlightedStar({
 
   const getStarColors = useCallback(() => {
     if (isSelected) {
-      // Selected: Purple gradient from centralized config
+      // Selected: Purple from simplified config
       return {
-        coreColor: new THREE.Color(STAR_COLORS.selected.core),
-        glowColor: new THREE.Color(STAR_COLORS.selected.glow).multiplyScalar(enhancedGlowMultiplier),
+        coreColor: new THREE.Color(STAR_COLORS.selected),
+        glowColor: new THREE.Color(STAR_COLORS.selected).multiplyScalar(enhancedGlowMultiplier),
         baseCoreOpacity: opacity
       };
     } else if (isSuggested) {
-      // Suggested: Aurora gradient from centralized config
+      // Suggested: Aurora green from simplified config
       return {
-        coreColor: new THREE.Color(STAR_COLORS.suggested.core),
-        glowColor: new THREE.Color(STAR_COLORS.suggested.glow).multiplyScalar(enhancedGlowMultiplier),
+        coreColor: new THREE.Color(STAR_COLORS.suggested),
+        glowColor: new THREE.Color(STAR_COLORS.suggested).multiplyScalar(enhancedGlowMultiplier),
         baseCoreOpacity: Math.max(opacity, 0.9)
       };
     } else {
       // Regular highlighted: Emotion-based color or fallback to suggested
-      const emotionColorObj = emotionColor ? new THREE.Color(emotionColor) : new THREE.Color(STAR_COLORS.suggested.core);
+      const emotionColorObj = emotionColor ? new THREE.Color(emotionColor) : new THREE.Color(STAR_COLORS.suggested);
       
       return {
         coreColor: emotionColorObj,
@@ -229,7 +229,7 @@ const HighlightedStar = React.memo(function HighlightedStar({
         <meshBasicMaterial transparent opacity={0} visible={false} />
       </mesh>
 
-      {/* Enhanced glow sprite with centralized colors */}
+      {/* Enhanced glow sprite with simplified colors */}
       <sprite scale={[enhancedStarSize * 2.5, enhancedStarSize * 2.5, enhancedStarSize * 2.5]}>
         <spriteMaterial
           ref={glowMaterialRef}
@@ -243,7 +243,7 @@ const HighlightedStar = React.memo(function HighlightedStar({
         />
       </sprite>
 
-      {/* Star sprite with centralized colors */}
+      {/* Star sprite with simplified colors */}
       <sprite scale={[starSize*2.5, starSize*2.5, starSize*2.5]}>
         <spriteMaterial
           ref={coreMaterialRef}
@@ -261,7 +261,7 @@ const HighlightedStar = React.memo(function HighlightedStar({
 });
 
 /**
- * Main Star Component - Enhanced dispatcher with centralized color management
+ * Main Star Component - Enhanced dispatcher with simplified color management
  */
 export const Star = React.memo(function Star({
   position,

@@ -5,9 +5,9 @@ import * as THREE from 'three';
 import { STAR_COLORS } from '../config/starColors';
 
 /**
- * StarLabels Component - Enhanced with Centralized Color Configuration
+ * StarLabels Component - Enhanced with Simplified Color Configuration
  * 
- * Purpose: Renders star name labels with centralized color management.
+ * Purpose: Renders star name labels with simplified color management.
  * Classic mode prioritizes visual quality, instanced mode prioritizes performance.
  * 
  * Features:
@@ -15,9 +15,9 @@ import { STAR_COLORS } from '../config/starColors';
  * - Classic mode: Enhanced visibility and effects
  * - Instanced mode: Performance-optimized with distance culling
  * - Always-visible labels for highlighted/selected stars
- * - Centralized color configuration from starColors.ts
+ * - Simplified color configuration from starColors.ts
  * 
- * Confidence Rating: High - Enhanced with centralized color management
+ * Confidence Rating: High - Enhanced with simplified color management
  */
 
 interface StarLabelsProps {
@@ -103,7 +103,7 @@ export function StarLabels({
         const starPosition = new THREE.Vector3(...star.position);
         const distanceFromCamera = camera.position.distanceTo(starPosition);
         
-        // Mode-aware styling and visibility with centralized colors
+        // Mode-aware styling and visibility with simplified colors
         let opacity: number;
         let fontSize: number;
         let fontWeight: number;
@@ -111,34 +111,34 @@ export function StarLabels({
         let opacityThreshold: number;
         
         if (star.isHighlighted) {
-          // Highlighted stars: Always visible with enhanced styling using centralized colors
+          // Highlighted stars: Always visible with enhanced styling using simplified colors
           opacity = 1.0;
           fontSize = Math.max(14, Math.min(20, 300 / distanceFromCamera));
           fontWeight = 600;
-          color = star.emotionColor || STAR_COLORS.suggested.core; // Use centralized color
+          color = star.emotionColor || STAR_COLORS.suggested; // Use simplified color
           opacityThreshold = 0; // Never skip highlighted stars
         } else if (star.id === selectedStar) {
-          // Selected stars: Enhanced visibility using centralized colors
+          // Selected stars: Enhanced visibility using simplified colors
           opacity = 1.0;
           fontSize = Math.max(12, Math.min(18, 250 / distanceFromCamera));
           fontWeight = 500;
-          color = STAR_COLORS.selected.core; // Use centralized color
+          color = STAR_COLORS.selected; // Use simplified color
           opacityThreshold = 0; // Never skip selected stars
         } else {
-          // Regular stars: Mode-aware calculations using centralized colors
+          // Regular stars: Mode-aware calculations using simplified colors
           if (renderingMode === 'classic') {
             // Classic mode: Enhanced visibility for better user experience
             opacity = Math.max(0.3, Math.min(1.0, (30 / distanceFromCamera) * (4.0 - star.magnitude) / 4.0));
             fontSize = Math.max(8, Math.min(16, 200 / distanceFromCamera));
             fontWeight = 300;
-            color = STAR_COLORS.normal.core; // Use centralized color
+            color = STAR_COLORS.normal; // Use simplified color
             opacityThreshold = 0.3;
           } else {
             // Instanced mode: Performance-optimized calculations
             opacity = Math.max(0.2, Math.min(1.0, (50 / distanceFromCamera)));
             fontSize = Math.max(8, Math.min(16, 200 / distanceFromCamera));
             fontWeight = 300;
-            color = STAR_COLORS.normal.core; // Use centralized color
+            color = STAR_COLORS.normal; // Use simplified color
             opacityThreshold = 0.15;
           }
         }
