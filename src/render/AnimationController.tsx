@@ -1,21 +1,22 @@
 import React, { useEffect, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { CameraControls } from '@react-three/drei';
+import { ORBIT_SPEED } from '../config/starConfig';
 
 /**
- * AnimationController Component - Enhanced with Center View Support
+ * AnimationController Component - Enhanced with Parameterized Orbit Speed
  * 
  * Purpose: Manages camera animations including discrete movements and continuous orbiting.
- * Now supports automatic centering for optimal viewing of highlighted stars.
+ * Now uses ORBIT_SPEED from starConfig for consistent orbit speed configuration.
  * 
  * Features:
  * - Discrete animations: focusStar, resetView, moveTo, centerView
- * - Continuous animations: orbit
+ * - Continuous animations: orbit with configurable speed
  * - Optimal camera positioning for star groups
  * - Smooth transitions between animation modes
  * - Enhanced error handling and completion callbacks
  * 
- * Confidence Rating: High - Enhanced existing system with center view capability
+ * Confidence Rating: High - Enhanced with parameterized orbit speed
  */
 
 interface AnimationCommand {
@@ -55,7 +56,7 @@ export const AnimationController: React.FC<AnimationControllerProps> = ({
     isOrbiting: false,
     center: [0, 0, 0] as [number, number, number],
     radius: 8,
-    speed: 0.3,
+    speed: ORBIT_SPEED, // Use parameterized orbit speed
     elevation: 0.2,
     currentAngle: 0,
     lastTime: 0
@@ -225,7 +226,7 @@ export const AnimationController: React.FC<AnimationControllerProps> = ({
     const orbit = orbitState.current;
     orbit.center = animationCommand.center || [0, 0, 0];
     orbit.radius = animationCommand.radius || 8;
-    orbit.speed = animationCommand.speed || 0.3;
+    orbit.speed = animationCommand.speed || ORBIT_SPEED; // Use parameterized speed
     orbit.elevation = animationCommand.elevation || 0.2;
     orbit.currentAngle = 0;
     orbit.lastTime = 0;

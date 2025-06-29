@@ -2,11 +2,12 @@
  * Star Configuration - Comprehensive Star Visual Settings
  * 
  * Purpose: Provides centralized configuration for all star visual properties
- * including colors, size multipliers, and glow multipliers for different star states.
+ * including colors, size multipliers, glow multipliers, and orbit speed.
  * 
  * Features:
  * - Three star categories: regular, highlighted (for suggested stars), selected
  * - Each category includes color, sizeMultiplier, and glowMultiplier
+ * - Parameterized orbit speed for camera animations
  * - Easy to modify and maintain
  * - Type-safe configuration with const assertion
  * 
@@ -30,6 +31,9 @@ export const STAR_SETTINGS = {
     glowMultiplier: 2.5,
   }
 } as const;
+
+// Camera orbit speed configuration
+export const ORBIT_SPEED = 0.3; // Default orbit speed for camera animations
 
 // Export individual settings for convenience
 export const REGULAR_STAR_SETTINGS = STAR_SETTINGS.regular;
