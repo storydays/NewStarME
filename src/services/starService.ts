@@ -8,17 +8,20 @@ import { HygStarsCatalog } from '../data/HygStarsCatalog';
  * 
  * Purpose: Handles star data operations with clean separation between:
  * - HygStarData (immutable catalog source)
- * - SuggestedStar (volatile AI suggestions)
+ * - SuggestedStar (volatile AI suggestions with direct catalog references)
  * - Star (legacy database format)
+ * 
+ * UPDATED: SuggestedStar now contains starCatalogRef (direct HygStarData reference)
+ * instead of starCatalogId (string reference)
  * 
  * Key Features:
  * - AI star generation with catalog matching
  * - Fallback to catalog-based selection
- * - SuggestedStar creation with starCatalogId links
+ * - SuggestedStar creation with direct starCatalogRef links
  * - Legacy Star format support for database operations
  * - Uses StarsCatalog as single source of truth
  * 
- * Confidence Rating: High - Clean integration with new architecture
+ * Confidence Rating: High - Enhanced with direct catalog references
  */
 
 export class StarService {
@@ -166,6 +169,7 @@ export class StarService {
 
   /**
    * Get suggested stars for an emotion using AI + catalog matching
+   * UPDATED: Returns SuggestedStar with direct starCatalogRef
    */
   static async getSuggestedStarsForEmotion(emotionId: string): Promise<SuggestedStar[]> {
     try {
@@ -198,6 +202,7 @@ export class StarService {
 
   /**
    * Generate AI-based suggested stars with catalog matching
+   * UPDATED: Creates SuggestedStar with direct starCatalogRef
    */
   private static async generateAISuggestedStars(emotionId: string): Promise<SuggestedStar[]> {
     console.log('StarService: Attempting AI star generation...');
@@ -222,7 +227,7 @@ export class StarService {
       throw new Error('AI generation returned no stars');
     }
 
-    // Convert AI stars to SuggestedStar format with catalog matching
+    // Convert AI stars to SuggestedStar format with direct catalog references
     const suggestedStars: SuggestedStar[] = [];
 
     for (const aiStar of result.stars) {
@@ -239,7 +244,7 @@ export class StarService {
             source: 'ai',
             generated_at: aiStar.generated_at
           },
-          starCatalogId: catalogMatch.hyg.id.toString()
+          starCatalogRef: catalogMatch // CHANGED: Direct reference instead of ID
         };
         
         suggestedStars.push(suggestedStar);
@@ -273,6 +278,7 @@ export class StarService {
 
   /**
    * Get catalog-based suggested stars
+   * UPDATED: Creates SuggestedStar with direct starCatalogRef
    */
   private static getCatalogBasedSuggestedStars(emotionId: string): SuggestedStar[] {
     if (!this.starsCatalog) {
@@ -294,7 +300,7 @@ export class StarService {
         magnitude: catalogStar.hyg.mag,
         spectralClass: catalogStar.hyg.spect
       },
-      starCatalogId: catalogStar.hyg.id.toString()
+      starCatalogRef: catalogStar // CHANGED: Direct reference instead of ID
     }));
   }
 
@@ -364,22 +370,53 @@ export class StarService {
 
   /**
    * Fallback suggested stars when catalog is not available
+   * UPDATED: Creates placeholder SuggestedStar with minimal starCatalogRef
    */
   private static getFallbackSuggestedStars(emotionId: string): SuggestedStar[] {
     console.log('StarService: Using fallback suggested stars');
     
-    // Create basic suggested stars without catalog links
-    return Array.from({ length: 5 }, (_, index) => ({
-      id: `fallback-${emotionId}-${index}`,
-      name: `${emotionId.charAt(0).toUpperCase() + emotionId.slice(1)} Star ${index + 1}`,
-      description: `A beautiful celestial beacon perfect for expressing ${emotionId}`,
-      metadata: {
-        emotion: emotionId,
-        confidence: 0.5,
-        source: 'fallback'
-      },
-      starCatalogId: `fallback-${index}` // Placeholder catalog ID
-    }));
+    // Create basic suggested stars with placeholder catalog references
+    return Array.from({ length: 5 }, (_, index) => {
+      // Create a minimal HygStarData for fallback
+      const fallbackCatalogRef: HygStarData = {
+        hyg: {
+          id: index + 1,
+          ra: Math.random() * 360,
+          dec: (Math.random() - 0.5) * 180,
+          dist: Math.random() * 100 + 10,
+          mag: Math.random() * 6,
+          absmag: Math.random() * 10,
+          x: Math.random() * 20 - 10,
+          y: Math.random() * 20 - 10,
+          z: Math.random() * 20 - 10,
+          rarad: Math.random() * 2 * Math.PI,
+          decrad: (Math.random() - 0.5) * Math.PI,
+          proper: `${emotionId.charAt(0).toUpperCase() + emotionId.slice(1)} Star ${index + 1}`
+        },
+        render: {
+          color: '#F8F8FF',
+          size: 1.0,
+          brightness: 0.8,
+          position: [
+            Math.random() * 20 - 10,
+            Math.random() * 20 - 10,
+            Math.random() * 20 - 10
+          ] as [number, number, number]
+        }
+      };
+
+      return {
+        id: `fallback-${emotionId}-${index}`,
+        name: `${emotionId.charAt(0).toUpperCase() + emotionId.slice(1)} Star ${index + 1}`,
+        description: `A beautiful celestial beacon perfect for expressing ${emotionId}`,
+        metadata: {
+          emotion: emotionId,
+          confidence: 0.5,
+          source: 'fallback'
+        },
+        starCatalogRef: fallbackCatalogRef // CHANGED: Direct reference instead of ID
+      };
+    });
   }
 
   /**
@@ -662,21 +699,22 @@ export class StarService {
 
   /**
    * Legacy method for compatibility - converts SuggestedStar to Star format
+   * UPDATED: Uses starCatalogRef instead of starCatalogId
    */
   static async fetchStarsForEmotion(emotionId: string): Promise<Star[]> {
     try {
       const suggestedStars = await this.getSuggestedStarsForEmotion(emotionId);
       
-      // Convert SuggestedStar to legacy Star format
+      // Convert SuggestedStar to legacy Star format using starCatalogRef
       const legacyStars: Star[] = suggestedStars.map(suggested => ({
         id: suggested.id,
-        scientific_name: suggested.name || 'Unknown Star',
+        scientific_name: suggested.name || suggested.starCatalogRef.hyg.proper || 'Unknown Star',
         poetic_description: suggested.description || 'A beautiful star',
-        coordinates: '00h 00m 00s +00° 00′ 00″', // Placeholder
+        coordinates: `${suggested.starCatalogRef.hyg.ra.toFixed(3)}° ${suggested.starCatalogRef.hyg.dec.toFixed(3)}°`,
         visual_data: {
-          brightness: 0.8,
-          color: '#F8F8FF',
-          size: 1.0
+          brightness: suggested.starCatalogRef.render.brightness,
+          color: suggested.starCatalogRef.render.color,
+          size: suggested.starCatalogRef.render.size
         },
         emotion_id: emotionId,
         source: 'ai'

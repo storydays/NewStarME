@@ -1,3 +1,5 @@
+import { Emotion } from '../types';
+
 export interface Emotion {
   id: string;
   name: string;
@@ -96,7 +98,7 @@ export interface HygData {
   totalStars: number;
 }
 
-// NEW: Enhanced star data structure used throughout the app
+// Enhanced star data structure used throughout the app
 export interface HygStarData {
   hyg: HygRecord;
   render: {
@@ -110,7 +112,7 @@ export interface HygStarData {
   };
 }
 
-// NEW: Volatile AI suggestion with catalog link
+// UPDATED: Volatile AI suggestion with direct catalog reference
 export interface SuggestedStar {
   id: string; // AI identifier
   name?: string;
@@ -120,7 +122,7 @@ export interface SuggestedStar {
     confidence: number;
     [key: string]: any;
   };
-  starCatalogId: string; // Points to corresponding HygStarData
+  starCatalogRef: HygStarData; // CHANGED: Direct reference to HygStarData instead of ID
 }
 
 export interface CatalogStar {

@@ -2,10 +2,13 @@ import React, { createContext, useContext, useState, useCallback, ReactNode } fr
 import { SuggestedStar } from '../types';
 
 /**
- * SuggestedStarsContext - ENHANCED: Comprehensive Debugging Logs with Star Names
+ * SuggestedStarsContext - UPDATED: Enhanced with starCatalogRef Support
  * 
  * Purpose: Manages AI-generated suggested stars with detailed logging
  * to trace state updates and identify propagation issues.
+ * 
+ * UPDATED: All methods now use starCatalogRef.hyg.id for star identification
+ * instead of starCatalogId string references.
  * 
  * ENHANCED LOGGING:
  * - Function entry/exit logging with timestamps
@@ -15,7 +18,7 @@ import { SuggestedStar } from '../types';
  * - Detailed error reporting with stack traces
  * - STAR NAMES: Detailed logging of star names retrieved from AI/catalog
  * 
- * Confidence Rating: High - Comprehensive debugging implementation with star name tracking
+ * Confidence Rating: High - Enhanced with direct catalog reference support
  */
 
 interface SuggestedStarsContextType {
@@ -68,19 +71,19 @@ export function SuggestedStarsProvider({ children }: SuggestedStarsProviderProps
       console.log('SuggestedStarsContext: handleSetSuggestedStars - NEW STAR NAMES being set:', 
         stars.map(s => s.name || 'Unnamed').join(', '));
       console.log('SuggestedStarsContext: handleSetSuggestedStars - NEW STAR CATALOG IDs being set:', 
-        stars.map(s => s.starCatalogId).join(', '));
+        stars.map(s => s.starCatalogRef.hyg.id.toString()).join(', '));
     }
     
     if (suggestedStars.length > 0) {
       console.log('SuggestedStarsContext: handleSetSuggestedStars - PREVIOUS STAR NAMES being replaced:', 
         suggestedStars.map(s => s.name || 'Unnamed').join(', '));
       console.log('SuggestedStarsContext: handleSetSuggestedStars - PREVIOUS STAR CATALOG IDs being replaced:', 
-        suggestedStars.map(s => s.starCatalogId).join(', '));
+        suggestedStars.map(s => s.starCatalogRef.hyg.id.toString()).join(', '));
     }
     
     console.log('SuggestedStarsContext: handleSetSuggestedStars - Input stars details:', stars.map(s => ({ 
       id: s.id, 
-      catalogId: s.starCatalogId, 
+      catalogId: s.starCatalogRef.hyg.id.toString(), 
       name: s.name,
       emotion: s.metadata?.emotion 
     })));
@@ -100,25 +103,27 @@ export function SuggestedStarsProvider({ children }: SuggestedStarsProviderProps
     console.log(`=== SuggestedStarsContext: handleSetSuggestedStars completed at ${Date.now()} ===`);
   }, [suggestedStars.length]);
 
+  // UPDATED: Use starCatalogRef.hyg.id for comparison
   const getSuggestedStarByCatalogId = useCallback((catalogId: string): SuggestedStar | null => {
     console.log('SuggestedStarsContext: getSuggestedStarByCatalogId called with catalogId:', catalogId);
     console.log('SuggestedStarsContext: getSuggestedStarByCatalogId - Current suggestedStars.length:', suggestedStars.length);
     
-    const result = suggestedStars.find(star => star.starCatalogId === catalogId) || null;
+    const result = suggestedStars.find(star => star.starCatalogRef.hyg.id.toString() === catalogId) || null;
     
     console.log('SuggestedStarsContext: getSuggestedStarByCatalogId - Result:', result ? `${result.name} (${result.id})` : 'null');
     return result;
   }, [suggestedStars]);
 
+  // UPDATED: Use starCatalogRef.hyg.id for comparison
   const isStarSuggested = useCallback((catalogId: string): boolean => {
     console.log('SuggestedStarsContext: isStarSuggested called with catalogId:', catalogId);
     console.log('SuggestedStarsContext: isStarSuggested - Current suggestedStars.length:', suggestedStars.length);
     
-    const result = suggestedStars.some(star => star.starCatalogId === catalogId);
+    const result = suggestedStars.some(star => star.starCatalogRef.hyg.id.toString() === catalogId);
     
     console.log('SuggestedStarsContext: isStarSuggested - Result:', result);
     if (result) {
-      const matchedStar = suggestedStars.find(star => star.starCatalogId === catalogId);
+      const matchedStar = suggestedStars.find(star => star.starCatalogRef.hyg.id.toString() === catalogId);
       console.log('SuggestedStarsContext: isStarSuggested - Matched star name:', matchedStar?.name || 'Unnamed');
     }
     return result;
@@ -158,7 +163,7 @@ export function SuggestedStarsProvider({ children }: SuggestedStarsProviderProps
         console.log('SuggestedStarsContext: fetchSuggestionsForEmotion - STAR NAMES retrieved from StarService:', 
           suggestions.map(s => s.name || 'Unnamed').join(', '));
         console.log('SuggestedStarsContext: fetchSuggestionsForEmotion - STAR CATALOG IDs retrieved from StarService:', 
-          suggestions.map(s => s.starCatalogId).join(', '));
+          suggestions.map(s => s.starCatalogRef.hyg.id.toString()).join(', '));
         console.log('SuggestedStarsContext: fetchSuggestionsForEmotion - STAR SOURCES retrieved from StarService:', 
           suggestions.map(s => s.metadata?.source || 'unknown').join(', '));
       } else {
@@ -167,7 +172,7 @@ export function SuggestedStarsProvider({ children }: SuggestedStarsProviderProps
       
       console.log('SuggestedStarsContext: fetchSuggestionsForEmotion - Suggestions details:', suggestions.map(s => ({ 
         id: s.id, 
-        catalogId: s.starCatalogId, 
+        catalogId: s.starCatalogRef.hyg.id.toString(), 
         name: s.name,
         emotion: s.metadata?.emotion,
         source: s.metadata?.source
@@ -226,17 +231,17 @@ export function SuggestedStarsProvider({ children }: SuggestedStarsProviderProps
       console.log('SuggestedStarsContext: State updated - CURRENT STAR NAMES in state:', 
         suggestedStars.map(s => s.name || 'Unnamed').join(', '));
       console.log('SuggestedStarsContext: State updated - CURRENT STAR CATALOG IDs in state:', 
-        suggestedStars.map(s => s.starCatalogId).join(', '));
+        suggestedStars.map(s => s.starCatalogRef.hyg.id.toString()).join(', '));
       console.log('SuggestedStarsContext: State updated - Current suggested stars:', suggestedStars.map(s => ({ 
         id: s.id, 
-        catalogId: s.starCatalogId, 
+        catalogId: s.starCatalogRef.hyg.id.toString(), 
         name: s.name,
         emotion: s.metadata?.emotion,
         source: s.metadata?.source
       })));
       console.log('SuggestedStarsContext: State updated - This should trigger re-renders in consuming components');
       console.log('SuggestedStarsContext: State updated - These stars should now be highlighted in 3D view:', 
-        suggestedStars.map(s => `${s.name} (ID: ${s.starCatalogId})`).join(', '));
+        suggestedStars.map(s => `${s.name} (ID: ${s.starCatalogRef.hyg.id})`).join(', '));
     } else {
       console.log('SuggestedStarsContext: State updated - NO STAR NAMES in state (empty array)');
       console.log('SuggestedStarsContext: State updated - No stars should be highlighted in 3D view');

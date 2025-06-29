@@ -57,6 +57,7 @@ interface AnimationCommand {
 
 /**
  * StarfieldWrapper Component - Enhanced with STAR_SETTINGS
+ * UPDATED: Uses string-based highlightedStarIds for comparison
  */
 function StarfieldWrapper({ 
   starsCatalog, 

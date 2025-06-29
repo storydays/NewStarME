@@ -18,13 +18,15 @@ import { HygStarData } from './types';
  * Purpose: Holds global selectedStar state and orchestrates data flow between components.
  * No longer handles camera control or side effects - focuses only on shared state.
  * 
+ * UPDATED: Uses starCatalogRef.hyg.id for highlightedStarIds derivation
+ * 
  * Features:
  * - Central selectedStar state (HygStarData | null)
- * - Derives highlightedStarIds from SuggestedStarsContext
+ * - Derives highlightedStarIds from SuggestedStarsContext using starCatalogRef
  * - Passes data to StarviewCanvas without triggering camera effects
  * - Clean separation of concerns
  * 
- * Confidence Rating: High - Simplified state management
+ * Confidence Rating: High - Enhanced with direct catalog reference support
  */
 function AppContent() {
   const { catalog, loading: catalogLoading, error: catalogError } = useStarsCatalog();
@@ -55,8 +57,8 @@ function AppContent() {
     StarService.initializeStars().catch(console.error);
   }, []);
 
-  // Derive highlighted star IDs from suggested stars
-  const highlightedStarIds = suggestedStars.map(star => star.starCatalogId);
+  // UPDATED: Derive highlighted star IDs from suggested stars using starCatalogRef
+  const highlightedStarIds = suggestedStars.map(star => star.starCatalogRef.hyg.id.toString());
 
   const handleStarSelect = (star: HygStarData | null, index: number | null) => {
     console.log('App: Star selected:', star?.hyg.proper || star?.hyg.id, 'at index:', index);
