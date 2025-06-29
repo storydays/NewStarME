@@ -37,8 +37,8 @@ export function Dedication() {
 
   if (starLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-cosmic-dark-matter via-cosmic-deep-space to-cosmic-quantum-field relative">
-        <div className="relative z-10 flex items-center justify-center min-h-screen">
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="relative z-10 flex items-center justify-center min-h-screen pointer-events-auto">
           <motion.div
             className="text-center"
             initial={{ opacity: 0 }}
@@ -54,25 +54,25 @@ export function Dedication() {
 
   if (!star || !emotion) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-cosmic-dark-matter to-cosmic-quantum-field flex items-center justify-center">
-        <div className="text-center frosted-glass rounded-2xl p-8">
-          <p className="text-red-400 text-xl mb-4 font-light">Celestial body not found</p>
-          <button 
-            onClick={() => navigate('/')}
-            className="text-cosmic-cherenkov-blue hover:text-cosmic-plasma-glow transition-colors font-light"
-          >
-            ← Return to cosmic emotions
-          </button>
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="relative z-10 flex items-center justify-center min-h-screen pointer-events-auto">
+          <div className="text-center frosted-glass rounded-2xl p-8">
+            <p className="text-red-400 text-xl mb-4 font-light">Celestial body not found</p>
+            <button 
+              onClick={() => navigate('/')}
+              className="text-cosmic-cherenkov-blue hover:text-cosmic-plasma-glow transition-colors font-light"
+            >
+              ← Return to cosmic emotions
+            </button>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-cosmic-dark-matter via-cosmic-deep-space to-cosmic-quantum-field relative">
-      {/* Removed gravitational lensing effect */}
-      
-      <div className="relative z-10 container mx-auto px-6 py-12">
+    <div className="absolute inset-0 pointer-events-none">
+      <div className="relative z-10 container mx-auto px-6 py-12 pointer-events-auto">
         {/* Enhanced Header */}
         <motion.div
           className="mb-16"
