@@ -9,16 +9,17 @@ import { emotions } from '../data/emotions';
 import { HygStarData } from '../types';
 
 /**
- * StarSelection Component - FIXED: Removed star clearing from cleanup
+ * StarSelection Component - FIXED: Prevent Infinite Loop
  * 
- * Purpose: Emotion-based star selection interface that directly controls camera focus.
+ * Purpose: Emotion-based star selection interface with proper suggestion fetching.
  * 
  * FIXES APPLIED:
- * - Removed clearSuggestedStars() call from useEffect cleanup
- * - Stars will now persist when navigating to Dedication or SharedStar pages
- * - Clearing is now handled by Home page when user returns to emotion selection
+ * - Added dependency tracking to prevent unnecessary suggestion fetches
+ * - Only fetch suggestions once per emotion
+ * - Better cleanup and state management
+ * - Removed redundant useEffect dependencies
  * 
- * Confidence Rating: High - Clean separation of clearing responsibility
+ * Confidence Rating: High - Targeted fix for infinite loop
  */
 
 interface StarSelectionProps {
@@ -37,23 +38,33 @@ export function StarSelection({ selectedStar, setSelectedStar, onStarClick }: St
   // Local state for modal
   const [modalStar, setModalStar] = useState<HygStarData | null>(null);
   
-  // Track unmounting state
+  // FIXED: Track which emotion we've fetched suggestions for
+  const lastSuggestionEmotionRef = useRef<string | null>(null);
   const isUnmountingRef = useRef(false);
   
   const emotion = emotions.find(e => e.id === emotionId);
 
-  // Fetch suggestions for emotion
+  // FIXED: Simplified suggestion fetching with proper dependency tracking
   useEffect(() => {
     async function loadSuggestions() {
       // Early returns to prevent unnecessary work
       if (!emotionId || catalogStars.length === 0) return;
       if (isUnmountingRef.current) return;
+      
+      // FIXED: Only fetch if we haven't already fetched for this emotion
+      if (lastSuggestionEmotionRef.current === emotionId) {
+        console.log(`StarSelection: Already fetched suggestions for ${emotionId}, skipping`);
+        return;
+      }
 
       try {
         console.log(`StarSelection: Fetching suggestions for emotion: ${emotionId}`);
         
-        // Fetch suggestions and center view
+        // Fetch suggestions
         await fetchSuggestionsForEmotion(emotionId);
+        
+        // Track that we've fetched for this emotion
+        lastSuggestionEmotionRef.current = emotionId;
         
         // Only center view if component is still mounted
         if (!isUnmountingRef.current) {
@@ -65,11 +76,18 @@ export function StarSelection({ selectedStar, setSelectedStar, onStarClick }: St
     }
 
     loadSuggestions();
-  }, [emotionId, catalogStars.length, fetchSuggestionsForEmotion, centerView]);
+  }, [emotionId, catalogStars.length]); // FIXED: Removed fetchSuggestionsForEmotion and centerView from dependencies
 
-  // FIXED: Simplified cleanup - removed clearSuggestedStars call
+  // FIXED: Reset suggestion tracking when emotion changes
   useEffect(() => {
-    // Cleanup function - only track unmounting state
+    if (emotionId && lastSuggestionEmotionRef.current && lastSuggestionEmotionRef.current !== emotionId) {
+      console.log(`StarSelection: Emotion changed from ${lastSuggestionEmotionRef.current} to ${emotionId}, resetting suggestion tracking`);
+      lastSuggestionEmotionRef.current = null;
+    }
+  }, [emotionId]);
+
+  // Cleanup function - only track unmounting state
+  useEffect(() => {
     return () => {
       console.log('StarSelection: Component unmounting');
       isUnmountingRef.current = true;
@@ -79,7 +97,7 @@ export function StarSelection({ selectedStar, setSelectedStar, onStarClick }: St
         isUnmountingRef.current = false;
       }, 100);
     };
-  }, [emotionId]); // Keep emotionId dependency for proper cleanup timing
+  }, [emotionId]);
 
   if (!emotion) {
     return (
