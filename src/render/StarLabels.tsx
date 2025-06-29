@@ -5,20 +5,20 @@ import * as THREE from 'three';
 import { STAR_SETTINGS } from '../config/starConfig';
 
 /**
- * StarLabels Component - Enhanced with Refined Label Visibility and Positioning
+ * StarLabels Component - Enhanced with Fixed Hovered Label Positioning
  * 
  * Purpose: Renders star name labels with strict filtering for highlighted, selected, 
  * or hovered stars only. Enhanced positioning and consistent styling.
  * 
- * ENHANCED FEATURES:
+ * FIXED FEATURES:
  * - Only shows labels for highlighted, selected, or hovered stars
- * - Closer positioning to stars (reduced offset)
+ * - FIXED: Proper positioning for hovered stars (closer to actual star position)
  * - Consistent white styling for all labels
  * - Bigger labels for highlighted stars
  * - No special styling effects (borders, backgrounds, etc.)
- * - Fixed label positioning based on actual star size (not magnified size)
+ * - Correct label positioning based on actual star size (not magnified size)
  * 
- * Confidence Rating: High - Refined label behavior with strict filtering and proper positioning
+ * Confidence Rating: High - Fixed hovered label positioning issue
  */
 
 interface StarLabelsProps {
@@ -72,7 +72,7 @@ export function StarLabels({
         const starPosition = new THREE.Vector3(...star.position);
         const distanceFromCamera = camera.position.distanceTo(starPosition);
         
-        // Determine star state and corresponding settings
+        // FIXED: Determine star state and use REGULAR settings for hovered-only stars
         let starSettings = STAR_SETTINGS.regular;
         let isSpecialStar = false;
         
@@ -82,29 +82,19 @@ export function StarLabels({
         } else if (star.isHighlighted) {
           starSettings = STAR_SETTINGS.highlighted;
           isSpecialStar = true;
-        } else if (star.id === hoveredStar) {
-          // FIXED: Use regular settings for hovered stars to position label closer
-          starSettings = STAR_SETTINGS.regular;
-          isSpecialStar = false; // Treat as regular for positioning
         }
+        // FIXED: For hovered-only stars (not highlighted or selected), use regular settings
+        // This ensures the label is positioned close to the actual star, not a magnified version
         
         // Calculate actual star size based on magnitude and settings
         const baseMagnitudeSize = Math.max(0.02, Math.min(0.3, 0.25 * (6.0 - star.magnitude) * 0.2));
         
-        // FIXED: For hovered stars, use regular size for positioning, not highlighted size
-        let actualStarSize: number;
-        if (star.id === hoveredStar && !star.isHighlighted && star.id !== selectedStar) {
-          // Hovered only: use regular size for positioning
-          actualStarSize = baseMagnitudeSize * STAR_SETTINGS.regular.sizeMultiplier;
-        } else {
-          // Highlighted or selected: use appropriate settings
-          actualStarSize = baseMagnitudeSize * starSettings.sizeMultiplier;
-        }
-        
+        // FIXED: Always use the appropriate settings for positioning
+        const actualStarSize = baseMagnitudeSize * starSettings.sizeMultiplier;
         const glowRadius = actualStarSize * 2.5; // Glow is 2.5x star size
         
-        // ENHANCED: Closer label positioning - reduced offset
-        const labelOffset = Math.max(0.8, glowRadius * 0.6 + 0.3);
+        // FIXED: Closer label positioning for all stars, especially hovered ones
+        const labelOffset = Math.max(0.6, glowRadius * 0.5 + 0.2); // Reduced from 0.8 and 0.6 + 0.3
         const labelPosition: [number, number, number] = [
           star.position[0], 
           star.position[1] + labelOffset, 
@@ -117,7 +107,7 @@ export function StarLabels({
         
         if (star.isHighlighted) {
           // ENHANCED: Bigger labels for highlighted stars
-          fontSize = Math.max(16, Math.min(22, 350 / distanceFromCamera)); // Increased from 14-20 to 16-22
+          fontSize = Math.max(16, Math.min(22, 350 / distanceFromCamera));
           fontWeight = 600;
           
           console.log(`StarLabels: Highlighted star ${star.name || star.id} - size: ${actualStarSize.toFixed(3)}, offset: ${labelOffset.toFixed(2)}, fontSize: ${fontSize}`);
@@ -128,7 +118,7 @@ export function StarLabels({
           
           console.log(`StarLabels: Selected star ${star.name || star.id} - size: ${actualStarSize.toFixed(3)}, offset: ${labelOffset.toFixed(2)}, fontSize: ${fontSize}`);
         } else {
-          // Hovered stars: Standard size
+          // FIXED: Hovered stars use regular size for positioning and smaller font
           fontSize = Math.max(8, Math.min(16, 200 / distanceFromCamera));
           fontWeight = 300;
           

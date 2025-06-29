@@ -13,19 +13,20 @@ import { StarService } from './services/starService';
 import { HygStarData } from './types';
 
 /**
- * AppContent Component - Enhanced with Centralized Star Suggestion Logic
+ * AppContent Component - Enhanced with Home Navigation State Clearing
  * 
  * Purpose: Central orchestrator that manages star suggestion fetching based on URL changes.
- * UPDATED: Now handles star suggestion triggering from App level instead of StarSelection.
+ * UPDATED: Now clears selectedStar state when navigating to Home page.
  * 
  * Features:
  * - URL-based emotion detection and star suggestion triggering
  * - Centralized data flow management
  * - Loading state propagation to child components
  * - Automatic cleanup when navigating away from emotion routes
+ * - FIXED: Clear selectedStar state when navigating to Home page
  * - Enhanced logging for debugging data flow
  * 
- * Confidence Rating: High - Centralized orchestration with comprehensive logging
+ * Confidence Rating: High - Enhanced with Home navigation state clearing
  */
 function AppContent() {
   const location = useLocation();
@@ -43,12 +44,13 @@ function AppContent() {
   console.log("App: Current location.pathname:", location.pathname);
   console.log("App: suggestedStars.length:", suggestedStars.length);
   console.log("App: suggestionsLoading:", suggestionsLoading);
+  console.log("App: selectedStar:", selectedStar ? selectedStar.hyg.proper || selectedStar.hyg.id : 'null');
 
   // Control settings for the star visualization - LABELS ENABLED
   const [controlSettings] = useState({
     starSize: 0.25,
     glowMultiplier: 2,
-    showLabels: true, // CHANGED: Enabled star labels
+    showLabels: true,
     renderingMode: 'classic' as 'classic' | 'instanced'
   });
 
@@ -64,6 +66,16 @@ function AppContent() {
   useEffect(() => {
     StarService.initializeStars().catch(console.error);
   }, []);
+
+  // FIXED: Clear selectedStar state when navigating to Home page
+  useEffect(() => {
+    if (location.pathname === '/') {
+      if (selectedStar) {
+        console.log('App: Navigated to Home page, clearing selectedStar state');
+        setSelectedStar(null);
+      }
+    }
+  }, [location.pathname, selectedStar]);
 
   // CENTRALIZED STAR SUGGESTION LOGIC: Monitor URL changes and trigger fetches
   useEffect(() => {
