@@ -8,10 +8,11 @@ import { AnimationController } from './AnimationController';
 import { STAR_SETTINGS, MAX_CLASSIC_RENDER_STARS } from '../config/starConfig';
 
 /**
- * StarviewCanvas Component - Enhanced with STAR_SETTINGS Configuration
+ * StarviewCanvas Component - Enhanced with STAR_SETTINGS Configuration and Proximity-Based Selection
  * 
  * Purpose: Pure rendering component that accepts all data via props.
- * UPDATED: Uses STAR_SETTINGS configuration with comprehensive star settings and configurable star count.
+ * UPDATED: Uses STAR_SETTINGS configuration with comprehensive star settings, configurable star count,
+ * and proximity-based star selection for better spatial distribution.
  * 
  * Features:
  * - Render stars from StarsCatalog
@@ -21,8 +22,9 @@ import { STAR_SETTINGS, MAX_CLASSIC_RENDER_STARS } from '../config/starConfig';
  * - Clean separation from business logic
  * - STAR_SETTINGS configuration with size and glow multipliers
  * - Configurable maximum star count for classic rendering
+ * - Proximity-based star selection for uniform spatial distribution
  * 
- * Confidence Rating: High - Enhanced with comprehensive star configuration
+ * Confidence Rating: High - Enhanced with comprehensive star configuration and proximity selection
  */
 
 interface StarviewCanvasProps {
@@ -57,8 +59,9 @@ interface AnimationCommand {
 }
 
 /**
- * StarfieldWrapper Component - Enhanced with STAR_SETTINGS and Configurable Star Count
- * UPDATED: Uses string-based highlightedStarIds for comparison and configurable MAX_CLASSIC_RENDER_STARS
+ * StarfieldWrapper Component - Enhanced with STAR_SETTINGS and Proximity-Based Selection
+ * UPDATED: Uses string-based highlightedStarIds for comparison, configurable MAX_CLASSIC_RENDER_STARS,
+ * and proximity-based star selection for better spatial distribution
  */
 function StarfieldWrapper({ 
   starsCatalog, 
@@ -84,24 +87,25 @@ function StarfieldWrapper({
   onStarClick?: (star: HygStarData) => void;
 }) {
   
-  // Convert StarsCatalog data to Starfield format with STAR_SETTINGS and configurable star count
+  // Convert StarsCatalog data to Starfield format with STAR_SETTINGS and proximity-based selection
   const catalogData = useMemo(() => {
     if (!starsCatalog) {
       console.log('StarfieldWrapper: No catalog available');
       return [];
     }
 
-    console.log(`StarfieldWrapper: Processing StarsCatalog for ${renderingMode} rendering mode with STAR_SETTINGS...`);
+    console.log(`StarfieldWrapper: Processing StarsCatalog for ${renderingMode} rendering mode with STAR_SETTINGS and proximity-based selection...`);
     console.log(`StarfieldWrapper: ${highlightedStarIds.length} stars to highlight`);
     
     // Create set for fast lookup
     const highlightedSet = new Set(highlightedStarIds);
     
-    // Get stars based on rendering mode with configurable star count
+    // Get stars based on rendering mode with proximity-based selection for classic mode
     let starsToProcess: HygStarData[];
     if (renderingMode === 'classic') {
-      starsToProcess = starsCatalog.getStarsByMagnitude(-2, 6.5).slice(0, MAX_CLASSIC_RENDER_STARS);
-      console.log(`StarfieldWrapper: Classic mode - processing ${starsToProcess.length} filtered stars (max: ${MAX_CLASSIC_RENDER_STARS})`);
+      // UPDATED: Use proximity-based selection instead of magnitude-based selection
+      starsToProcess = starsCatalog.getStarsByProximityToOrigin(MAX_CLASSIC_RENDER_STARS);
+      console.log(`StarfieldWrapper: Classic mode - processing ${starsToProcess.length} proximity-selected stars (max: ${MAX_CLASSIC_RENDER_STARS})`);
     } else {
       starsToProcess = starsCatalog.getAllStars();
       console.log(`StarfieldWrapper: Instanced mode - processing ALL ${starsToProcess.length} stars`);
@@ -186,7 +190,7 @@ function StarfieldWrapper({
 }
 
 /**
- * Scene Content Component - Enhanced with STAR_SETTINGS
+ * Scene Content Component - Enhanced with STAR_SETTINGS and Proximity-Based Selection
  */
 function SceneContent({ 
   starsCatalog, 
@@ -351,7 +355,7 @@ function SceneContent({
         onAnimationComplete={handleAnimationComplete}
       />
       
-      {/* Render star field with STAR_SETTINGS */}
+      {/* Render star field with STAR_SETTINGS and proximity-based selection */}
       {starsCatalog && !catalogLoading && (
         <StarfieldWrapper 
           starsCatalog={starsCatalog}
@@ -381,7 +385,7 @@ function SceneContent({
 }
 
 /**
- * Main StarviewCanvas Component - Enhanced with STAR_SETTINGS
+ * Main StarviewCanvas Component - Enhanced with STAR_SETTINGS and Proximity-Based Selection
  */
 export function StarviewCanvas({ 
   starsCatalog, 
@@ -402,7 +406,7 @@ export function StarviewCanvas({
     console.log('StarviewCanvas: Pointer missed event');
   }, []);
 
-  console.log(`StarviewCanvas: Rendering with ${highlightedStarIds.length} highlighted stars in ${renderingMode} mode using STAR_SETTINGS (max classic stars: ${MAX_CLASSIC_RENDER_STARS})`);
+  console.log(`StarviewCanvas: Rendering with ${highlightedStarIds.length} highlighted stars in ${renderingMode} mode using STAR_SETTINGS and proximity-based selection (max classic stars: ${MAX_CLASSIC_RENDER_STARS})`);
 
   return (
     <div className="fixed inset-0 w-full h-full">

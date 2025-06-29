@@ -15,8 +15,9 @@ import { HygRecord, HygStarData } from '../types';
  * - Manages astronomical metadata for 3D visualization
  * - Caches processed data for performance
  * - IMMUTABLE: No updateStarRender, highlightStars, or clearHighlights methods
+ * - UPDATED: Added proximity-based star selection for rendering optimization
  * 
- * Confidence Rating: High - Clean immutable abstraction
+ * Confidence Rating: High - Clean immutable abstraction with proximity selection
  */
 
 export class StarsCatalog {
@@ -129,6 +130,43 @@ export class StarsCatalog {
     return this.getAllStars().filter(star => 
       star.hyg.mag >= minMag && star.hyg.mag <= maxMag
     );
+  }
+
+  /**
+   * NEW: Get stars by proximity to origin (0,0,0)
+   * 
+   * Purpose: Select stars for rendering based on their distance from the center
+   * instead of brightness. This provides a more spatially uniform distribution
+   * of stars around the viewer.
+   * 
+   * @param count Maximum number of stars to return
+   * @returns Array of HygStarData sorted by proximity to origin
+   */
+  getStarsByProximityToOrigin(count: number): HygStarData[] {
+    console.log(`StarsCatalog: Selecting ${count} stars by proximity to origin (0,0,0)`);
+    
+    const allStars = this.getAllStars();
+    
+    // Calculate distance from origin for each star and sort
+    const starsWithDistance = allStars.map(star => {
+      const [x, y, z] = star.render.position;
+      const distanceFromOrigin = Math.sqrt(x * x + y * y + z * z);
+      
+      return {
+        star,
+        distanceFromOrigin
+      };
+    });
+    
+    // Sort by distance (closest first) and take the requested count
+    const sortedStars = starsWithDistance
+      .sort((a, b) => a.distanceFromOrigin - b.distanceFromOrigin)
+      .slice(0, count)
+      .map(item => item.star);
+    
+    console.log(`StarsCatalog: Selected ${sortedStars.length} stars by proximity (closest distance: ${starsWithDistance[0]?.distanceFromOrigin.toFixed(2)}, farthest: ${starsWithDistance[count - 1]?.distanceFromOrigin.toFixed(2)})`);
+    
+    return sortedStars;
   }
 
   /**
