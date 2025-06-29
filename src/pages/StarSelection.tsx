@@ -9,17 +9,17 @@ import { emotions } from '../data/emotions';
 import { HygStarData } from '../types';
 
 /**
- * StarSelection Component - Fixed Infinite Loop Issue
+ * StarSelection Component - FIXED: Infinite Loop Issue Resolved
  * 
  * Purpose: Emotion-based star selection interface that directly controls camera focus.
  * 
  * FIXES APPLIED:
- * - Added useRef to track if suggestions have been fetched for current emotion
- * - Stabilized useEffect dependencies to prevent infinite loops
- * - Added cleanup tracking to prevent race conditions
- * - Removed unstable function references from dependency arrays
+ * - Removed problematic hasFetchedSuggestionsRef that was preventing re-fetch in StrictMode
+ * - Simplified useEffect logic to rely on SuggestedStarsContext's deep comparison
+ * - Removed setTimeout from cleanup to prevent race conditions
+ * - Streamlined dependency arrays to prevent unnecessary re-renders
  * 
- * Confidence Rating: High - Targeted fix for infinite loop issue
+ * Confidence Rating: High - Targeted fix for StrictMode compatibility
  */
 
 interface StarSelectionProps {
@@ -38,70 +38,50 @@ export function StarSelection({ selectedStar, setSelectedStar, onStarClick }: St
   // Local state for modal
   const [modalStar, setModalStar] = useState<HygStarData | null>(null);
   
-  // FIXED: Use refs to track state and prevent infinite loops
-  const hasFetchedSuggestionsRef = useRef<string | null>(null);
+  // FIXED: Simplified tracking - only track unmounting state
   const isUnmountingRef = useRef(false);
   
   const emotion = emotions.find(e => e.id === emotionId);
 
-  // FIXED: Stabilized effect for fetching suggestions
+  // FIXED: Simplified effect for fetching suggestions - removed hasFetchedSuggestionsRef
   useEffect(() => {
     async function loadSuggestions() {
       // Early returns to prevent unnecessary work
       if (!emotionId || catalogStars.length === 0) return;
       if (isUnmountingRef.current) return;
-      
-      // FIXED: Check if we've already fetched suggestions for this emotion
-      if (hasFetchedSuggestionsRef.current === emotionId) {
-        console.log(`StarSelection: Suggestions already fetched for ${emotionId}, skipping`);
-        return;
-      }
 
       try {
         console.log(`StarSelection: Fetching suggestions for emotion: ${emotionId}`);
         
-        // Mark as fetched BEFORE the async call to prevent race conditions
-        hasFetchedSuggestionsRef.current = emotionId;
-        
+        // FIXED: Direct call without ref-based prevention
+        // SuggestedStarsContext handles duplicate prevention via deep comparison
         await fetchSuggestionsForEmotion(emotionId);
         
-        // Only center view if component is still mounted and this is still the current emotion
-        if (!isUnmountingRef.current && hasFetchedSuggestionsRef.current === emotionId) {
+        // Only center view if component is still mounted
+        if (!isUnmountingRef.current) {
           centerView();
         }
       } catch (error) {
         console.error('StarSelection: Error fetching suggestions:', error);
-        // Reset the ref on error to allow retry
-        if (hasFetchedSuggestionsRef.current === emotionId) {
-          hasFetchedSuggestionsRef.current = null;
-        }
       }
     }
 
     loadSuggestions();
-  }, [emotionId, catalogStars.length]); // FIXED: Removed function dependencies
+  }, [emotionId, catalogStars.length, fetchSuggestionsForEmotion, centerView]); // FIXED: Include stable function refs
 
-  // FIXED: Separate effect for cleanup that doesn't cause re-renders
+  // FIXED: Simplified cleanup effect
   useEffect(() => {
-    // Reset tracking when emotion changes
-    if (emotionId && hasFetchedSuggestionsRef.current !== emotionId) {
-      hasFetchedSuggestionsRef.current = null;
-    }
-
     // Cleanup function
     return () => {
       console.log('StarSelection: Cleaning up - clearing suggestions');
-      console.log(`emotion id: ${emotionId}`)
+      console.log(`emotion id: ${emotionId}`);
       isUnmountingRef.current = true;
       clearSuggestedStars();
       
-      // Reset refs for next mount
-      setTimeout(() => {
-        isUnmountingRef.current = false;
-        hasFetchedSuggestionsRef.current = null;
-      }, 100);
+      // FIXED: Removed setTimeout - direct reset
+      isUnmountingRef.current = false;
     };
-  }, [emotionId]); // FIXED: Only depend on emotionId, not clearSuggestedStars
+  }, [emotionId, clearSuggestedStars]); // FIXED: Include clearSuggestedStars for completeness
 
   if (!emotion) {
     return (
