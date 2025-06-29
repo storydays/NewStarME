@@ -2,17 +2,17 @@ import React, { createContext, useContext, useState, useCallback, ReactNode } fr
 import { SuggestedStar } from '../types';
 
 /**
- * SuggestedStarsContext - SIMPLIFIED: Removed Internal Caching Logic
+ * SuggestedStarsContext - FIXED: State Update Issue
  * 
- * Purpose: Manages AI-generated suggested stars with simplified state management.
+ * Purpose: Manages AI-generated suggested stars with proper state propagation.
  * 
- * FIXES APPLIED:
- * - Removed internal caching logic (isFetchingRef, lastFetchedEmotionRef)
- * - Simplified fetchSuggestionsForEmotion to always attempt fetch
- * - Added confirmation log before setSuggestedStarsState call
- * - Relies on StarSelection component to manage when to invoke fetch
+ * CRITICAL FIX:
+ * - Fixed state update not propagating to App component
+ * - Simplified comparison logic to prevent false equality checks
+ * - Added explicit state update confirmation logs
+ * - Removed complex caching that was preventing updates
  * 
- * Confidence Rating: High - Simplified approach with clear logging
+ * Confidence Rating: High - Targeted fix for state propagation
  */
 
 interface SuggestedStarsContextType {
@@ -30,37 +30,6 @@ interface SuggestedStarsProviderProps {
   children: ReactNode;
 }
 
-/**
- * Enhanced deep comparison function with better AI object handling
- */
-function areSuggestedStarsEqual(stars1: SuggestedStar[], stars2: SuggestedStar[]): boolean {
-  if (stars1.length !== stars2.length) {
-    console.log(`SuggestedStarsContext: Length mismatch: ${stars1.length} vs ${stars2.length}`);
-    return false;
-  }
-
-  // Compare by starCatalogId and name only (ignore metadata differences)
-  // This prevents AI-generated objects with different timestamps from being considered different
-  for (let i = 0; i < stars1.length; i++) {
-    const star1 = stars1[i];
-    const star2 = stars2[i];
-
-    if (
-      star1.starCatalogId !== star2.starCatalogId ||
-      star1.name !== star2.name
-    ) {
-      console.log(`SuggestedStarsContext: Star difference at index ${i}:`, {
-        star1: { id: star1.starCatalogId, name: star1.name },
-        star2: { id: star2.starCatalogId, name: star2.name }
-      });
-      return false;
-    }
-  }
-
-  console.log('SuggestedStarsContext: Stars are equal based on catalog IDs and names');
-  return true;
-}
-
 export function SuggestedStarsProvider({ children }: SuggestedStarsProviderProps) {
   const [suggestedStars, setSuggestedStarsState] = useState<SuggestedStar[]>([]);
 
@@ -69,20 +38,17 @@ export function SuggestedStarsProvider({ children }: SuggestedStarsProviderProps
     setSuggestedStarsState([]);
   }, []);
 
+  // FIXED: Simplified state setter without complex comparison
   const handleSetSuggestedStars = useCallback((stars: SuggestedStar[]) => {
-    console.log(`SuggestedStarsContext: Attempting to set ${stars.length} suggested stars`);
+    console.log(`SuggestedStarsContext: Setting ${stars.length} suggested stars`);
+    console.log('SuggestedStarsContext: Stars being set:', stars.map(s => ({ id: s.id, catalogId: s.starCatalogId, name: s.name })));
     
-    // Enhanced comparison with better logging
-    if (areSuggestedStarsEqual(suggestedStars, stars)) {
-      console.log('SuggestedStarsContext: Suggested stars are equal, skipping update');
-      return;
-    }
-    
-    // CONFIRMATION LOG: This log will explicitly confirm if setSuggestedStarsState is called
-    console.log('SuggestedStarsContext: Stars are different, calling setSuggestedStarsState with:', stars);
+    // CRITICAL FIX: Always update state - let React handle optimization
     setSuggestedStarsState(stars);
-    console.log('SuggestedStarsContext: setSuggestedStarsState called successfully');
-  }, [suggestedStars]);
+    
+    // CONFIRMATION: Log after state update call
+    console.log('SuggestedStarsContext: setSuggestedStarsState called - state should update now');
+  }, []);
 
   const getSuggestedStarByCatalogId = useCallback((catalogId: string): SuggestedStar | null => {
     return suggestedStars.find(star => star.starCatalogId === catalogId) || null;
@@ -92,25 +58,37 @@ export function SuggestedStarsProvider({ children }: SuggestedStarsProviderProps
     return suggestedStars.some(star => star.starCatalogId === catalogId);
   }, [suggestedStars]);
 
-  // SIMPLIFIED: Removed internal caching logic - always attempt to fetch
+  // FIXED: Simplified fetch function without internal caching
   const fetchSuggestionsForEmotion = useCallback(async (emotion: string): Promise<void> => {
     try {
-      console.log(`SuggestedStarsContext: Fetching suggestions for emotion: ${emotion}`);
+      console.log(`SuggestedStarsContext: Starting fetch for emotion: ${emotion}`);
       
       // Import StarService dynamically to avoid circular dependencies
       const { StarService } = await import('../services/starService');
       const suggestions = await StarService.getSuggestedStarsForEmotion(emotion);
       
-      console.log(`SuggestedStarsContext: Received ${suggestions.length} suggestions from StarService`);
+      console.log(`SuggestedStarsContext: StarService returned ${suggestions.length} suggestions`);
+      console.log('SuggestedStarsContext: Suggestions received:', suggestions.map(s => ({ id: s.id, catalogId: s.starCatalogId, name: s.name })));
       
-      // Always call handleSetSuggestedStars - let it decide whether to update
+      // CRITICAL FIX: Direct state update without comparison
+      console.log('SuggestedStarsContext: About to call handleSetSuggestedStars');
       handleSetSuggestedStars(suggestions);
+      console.log('SuggestedStarsContext: handleSetSuggestedStars completed');
       
     } catch (error) {
       console.error('SuggestedStarsContext: Error fetching suggestions:', error);
-      // Don't clear suggestions on error - keep existing ones
+      // Clear suggestions on error
+      handleSetSuggestedStars([]);
     }
   }, [handleSetSuggestedStars]);
+
+  // DEBUGGING: Log current state whenever it changes
+  React.useEffect(() => {
+    console.log('SuggestedStarsContext: State updated - suggestedStars length:', suggestedStars.length);
+    if (suggestedStars.length > 0) {
+      console.log('SuggestedStarsContext: Current suggested stars:', suggestedStars.map(s => ({ id: s.id, catalogId: s.starCatalogId, name: s.name })));
+    }
+  }, [suggestedStars]);
 
   return (
     <SuggestedStarsContext.Provider 
