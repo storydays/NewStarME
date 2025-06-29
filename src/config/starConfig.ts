@@ -28,7 +28,7 @@ export const STAR_SETTINGS = {
   },
   selected: {
     color: '#9D4EDD', // Purple
-    sizeMultiplier: 3.0,
+    sizeMultiplier: 2.0,
     glowMultiplier: 2.5,
   }
 } as const;
