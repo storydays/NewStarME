@@ -9,17 +9,18 @@ import { emotions } from '../data/emotions';
 import { HygStarData } from '../types';
 
 /**
- * StarSelection Component - FIXED: Proper State Synchronization
+ * StarSelection Component - Clean Star Selection Interface
  * 
- * Purpose: Emotion-based star selection interface with fixed timing issues.
+ * Purpose: Emotion-based star selection interface with proper state synchronization.
  * 
- * FIXES APPLIED:
- * - Fixed useEffect dependency to wait for actual stars data
- * - Simplified state management to prevent race conditions
- * - Added proper state synchronization between hooks
- * - Removed redundant early returns that were blocking execution
+ * Features:
+ * - Emotion-based star catalog browsing
+ * - 3D visualization integration
+ * - Star detail modal with enhanced UI
+ * - Camera focus control
+ * - Suggested stars context integration
  * 
- * Confidence Rating: High - Targeted fix for state synchronization
+ * Confidence Rating: High - Clean implementation without debug noise
  */
 
 interface StarSelectionProps {
@@ -38,79 +39,42 @@ export function StarSelection({ selectedStar, setSelectedStar, onStarClick }: St
   // Local state for modal
   const [modalStar, setModalStar] = useState<HygStarData | null>(null);
   
-  // FIXED: Track which emotion we've processed to prevent duplicate calls
+  // Track which emotion we've processed to prevent duplicate calls
   const processedEmotionRef = useRef<string | null>(null);
   const isUnmountingRef = useRef(false);
   
   const emotion = emotions.find(e => e.id === emotionId);
 
-  console.log('=== StarSelection: Component render ===');
-  console.log('StarSelection: emotionId:', emotionId);
-  console.log('StarSelection: catalogStars.length:', catalogStars.length);
-  console.log('StarSelection: loading:', loading);
-  console.log('StarSelection: error:', error);
-  console.log('StarSelection: processedEmotionRef.current:', processedEmotionRef.current);
-  console.log('StarSelection: isUnmountingRef.current:', isUnmountingRef.current);
-
-  // FIXED: Simplified suggestion fetching - only depends on catalogStars having data
+  // Simplified suggestion fetching - only depends on catalogStars having data
   useEffect(() => {
-    const effectStartTime = Date.now();
-    
-    console.log(`=== StarSelection: suggestion processing useEffect START ===`);
-    console.log(`StarSelection: useEffect - emotionId:`, emotionId);
-    console.log(`StarSelection: useEffect - catalogStars.length:`, catalogStars.length);
-    console.log(`StarSelection: useEffect - loading:`, loading);
-    console.log(`StarSelection: useEffect - processedEmotionRef.current:`, processedEmotionRef.current);
-
     async function processSuggestions() {
-      // FIXED: Wait for stars to be loaded and available
+      // Wait for stars to be loaded and available
       if (!emotionId || loading || catalogStars.length === 0) {
-        console.log(`StarSelection: processSuggestions - EARLY RETURN: emotionId=${emotionId}, loading=${loading}, catalogStars.length=${catalogStars.length}`);
         return;
       }
 
-      // FIXED: Check if we've already processed this emotion
+      // Check if we've already processed this emotion
       if (processedEmotionRef.current === emotionId) {
-        console.log(`StarSelection: processSuggestions - EARLY RETURN: Already processed ${emotionId}`);
         return;
       }
 
-      // FIXED: Check if component is unmounting
+      // Check if component is unmounting
       if (isUnmountingRef.current) {
-        console.log(`StarSelection: processSuggestions - EARLY RETURN: Component unmounting`);
         return;
       }
 
       try {
-        console.log(`StarSelection: processSuggestions - PROCEEDING: Processing ${catalogStars.length} stars for emotion: ${emotionId}`);
-        
         // Mark this emotion as processed BEFORE the async call
         processedEmotionRef.current = emotionId;
         
-        const fetchStartTime = Date.now();
-        console.log(`StarSelection: processSuggestions - CALLING fetchSuggestionsForEmotion at ${fetchStartTime}`);
-        
         await fetchSuggestionsForEmotion(emotionId);
-        
-        const fetchEndTime = Date.now();
-        console.log(`StarSelection: processSuggestions - fetchSuggestionsForEmotion COMPLETED in ${fetchEndTime - fetchStartTime}ms`);
         
         // Only center view if component is still mounted and this is still the current emotion
         if (!isUnmountingRef.current && processedEmotionRef.current === emotionId) {
-          console.log(`StarSelection: processSuggestions - Calling centerView()`);
           centerView();
-          console.log(`StarSelection: processSuggestions - centerView() completed`);
-        } else {
-          console.log(`StarSelection: processSuggestions - SKIPPED centerView() - component state changed`);
         }
         
-        const functionEndTime = Date.now();
-        console.log(`StarSelection: processSuggestions - COMPLETED successfully in ${functionEndTime - effectStartTime}ms`);
-        
       } catch (error) {
-        const errorTime = Date.now();
-        console.error(`StarSelection: processSuggestions - ERROR at ${errorTime}:`, error);
-        
         // Reset processed emotion on error to allow retry
         if (processedEmotionRef.current === emotionId) {
           processedEmotionRef.current = null;
@@ -118,43 +82,19 @@ export function StarSelection({ selectedStar, setSelectedStar, onStarClick }: St
       }
     }
 
-    console.log(`StarSelection: useEffect - About to call processSuggestions()`);
-    processSuggestions().then(() => {
-      const effectEndTime = Date.now();
-      console.log(`StarSelection: useEffect - processSuggestions() promise resolved in ${effectEndTime - effectStartTime}ms`);
-    }).catch((error) => {
-      const effectErrorTime = Date.now();
-      console.error(`StarSelection: useEffect - processSuggestions() promise rejected in ${effectErrorTime - effectStartTime}ms:`, error);
-    });
+    processSuggestions();
+  }, [emotionId, catalogStars.length, loading, fetchSuggestionsForEmotion, centerView]);
 
-    console.log(`=== StarSelection: suggestion processing useEffect END ===`);
-  }, [emotionId, catalogStars.length, loading, fetchSuggestionsForEmotion, centerView]); // FIXED: Added loading to dependencies
-
-  // FIXED: Reset processing state when emotion changes
+  // Reset processing state when emotion changes
   useEffect(() => {
-    console.log('=== StarSelection: emotion change tracking useEffect START ===');
-    console.log('StarSelection: emotion change - emotionId:', emotionId);
-    console.log('StarSelection: emotion change - processedEmotionRef.current:', processedEmotionRef.current);
-    
     if (emotionId && processedEmotionRef.current && processedEmotionRef.current !== emotionId) {
-      console.log(`StarSelection: EMOTION CHANGED from ${processedEmotionRef.current} to ${emotionId}, resetting processing state`);
       processedEmotionRef.current = null;
-      console.log('StarSelection: emotion change - Reset processedEmotionRef to null');
-    } else {
-      console.log('StarSelection: emotion change - No reset needed');
     }
-    
-    console.log('=== StarSelection: emotion change tracking useEffect END ===');
   }, [emotionId]);
 
-  // FIXED: Cleanup function with proper state management
+  // Cleanup function with proper state management
   useEffect(() => {
-    console.log('=== StarSelection: cleanup useEffect START ===');
-    console.log('StarSelection: cleanup - Setting up cleanup for emotionId:', emotionId);
-    
     return () => {
-      console.log('=== StarSelection: CLEANUP FUNCTION EXECUTING ===');
-      console.log('StarSelection: Component unmounting for emotionId:', emotionId);
       isUnmountingRef.current = true;
       
       // Reset processing state on unmount
@@ -162,16 +102,12 @@ export function StarSelection({ selectedStar, setSelectedStar, onStarClick }: St
       
       // Reset unmounting flag after cleanup
       setTimeout(() => {
-        console.log('StarSelection: Resetting unmounting flag after cleanup');
         isUnmountingRef.current = false;
       }, 100);
-      
-      console.log('=== StarSelection: CLEANUP FUNCTION COMPLETED ===');
     };
   }, [emotionId]);
 
   if (!emotion) {
-    console.log('StarSelection: EARLY RETURN - emotion not found for emotionId:', emotionId);
     return (
       <div className="min-h-screen flex items-center justify-center">
         <p className="text-cosmic-observation text-xl">Emotion not found</p>
@@ -180,40 +116,30 @@ export function StarSelection({ selectedStar, setSelectedStar, onStarClick }: St
   }
 
   const handleBack = () => {
-    console.log('StarSelection: handleBack called');
     navigate('/');
   };
 
   const handleStarSelect = (catalogStar: HygStarData, index: number) => {
-    console.log(`StarSelection: handleStarSelect called with star: ${catalogStar.hyg.proper || catalogStar.hyg.id}, index: ${index}`);
-    
     // Update global selected star state
     setSelectedStar(catalogStar);
-    console.log('StarSelection: setSelectedStar called');
     
     // Show modal
     setModalStar(catalogStar);
-    console.log('StarSelection: setModalStar called');
     
     // Focus camera on selected star using direct camera control
     const catalogId = catalogStar.hyg.id.toString();
-    console.log('StarSelection: About to call focusOnStar with catalogId:', catalogId);
     focusOnStar(catalogId);
-    console.log('StarSelection: focusOnStar called');
   };
 
   const handleCloseModal = () => {
-    console.log('StarSelection: handleCloseModal called');
     setModalStar(null);
   };
 
   const handleDedicate = (catalogStar: HygStarData) => {
-    console.log(`StarSelection: handleDedicate called for star: ${catalogStar.hyg.proper || catalogStar.hyg.id}`);
     navigate(`/dedicate/catalog-${catalogStar.hyg.id}?emotion=${emotionId}`);
   };
 
   if (loading) {
-    console.log('StarSelection: Rendering loading state');
     return (
       <div className="absolute inset-0 pointer-events-none">
         <div className="relative z-10 flex items-center justify-center min-h-screen pointer-events-auto">
@@ -231,7 +157,6 @@ export function StarSelection({ selectedStar, setSelectedStar, onStarClick }: St
   }
 
   if (error) {
-    console.log('StarSelection: Rendering error state:', error);
     return (
       <div className="absolute inset-0 pointer-events-none">
         <div className="relative z-10 flex items-center justify-center min-h-screen pointer-events-auto">
@@ -249,8 +174,6 @@ export function StarSelection({ selectedStar, setSelectedStar, onStarClick }: St
       </div>
     );
   }
-
-  console.log('StarSelection: Rendering main component with catalogStars.length:', catalogStars?.length || 0);
 
   return (
     <div className="absolute inset-0 pointer-events-none">
