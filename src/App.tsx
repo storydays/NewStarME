@@ -44,11 +44,11 @@ function AppContent() {
   console.log("App: suggestedStars.length:", suggestedStars.length);
   console.log("App: suggestionsLoading:", suggestionsLoading);
 
-  // Control settings for the star visualization
+  // Control settings for the star visualization - LABELS ENABLED
   const [controlSettings] = useState({
     starSize: 0.25,
     glowMultiplier: 2,
-    showLabels: false,
+    showLabels: true, // CHANGED: Enabled star labels
     renderingMode: 'classic' as 'classic' | 'instanced'
   });
 
