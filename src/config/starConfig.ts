@@ -23,7 +23,7 @@ export const STAR_SETTINGS = {
   },
   highlighted: { // For suggested stars
     color: '#7FFF94', // Aurora green
-    sizeMultiplier: 2.5,
+    sizeMultiplier: 1.5,
     glowMultiplier: 2.0,
   },
   selected: {
