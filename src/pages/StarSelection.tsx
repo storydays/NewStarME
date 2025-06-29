@@ -175,8 +175,9 @@ export function StarSelection({ selectedStar, setSelectedStar, onStarClick }: St
 
   return (
     <div className="absolute inset-0 pointer-events-none">
-      {/* Header */}
-      <div className="absolute top-6 left-6 z-20 pointer-events-auto">
+      {/* Header with Back Button, Page Title, and Color Indication */}
+      <div className="absolute top-6 left-6 z-20 pointer-events-auto space-y-4">
+        {/* Back Button */}
         <button
           onClick={handleBack}
           className="flex items-center gap-2 text-cosmic-stellar-wind hover:text-cosmic-observation transition-colors group font-light frosted-glass px-4 py-2 rounded-lg"
@@ -184,6 +185,28 @@ export function StarSelection({ selectedStar, setSelectedStar, onStarClick }: St
           <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
           Return to emotions
         </button>
+
+        {/* Page Title */}
+        <motion.h1 
+          className="text-2xl font-light text-cosmic-observation"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+        >
+          Pick your star
+        </motion.h1>
+
+        {/* Color Indication Text */}
+        <motion.div
+          className="frosted-glass px-4 py-2 rounded-lg"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+        >
+          <p className="text-cosmic-stellar-wind text-xs font-light opacity-80">
+            Suggested stars: Aurora green glow. Selected star: Purple glow. Other stars: White/blue glow.
+          </p>
+        </motion.div>
       </div>
 
       {/* Enhanced Right Sidebar */}
@@ -277,21 +300,6 @@ export function StarSelection({ selectedStar, setSelectedStar, onStarClick }: St
                 </motion.div>
               ))}
             </div>
-
-            {/* Footer */}
-            <motion.div
-              className="mt-4 pt-4"
-              style={{
-                borderTop: '1px solid rgba(248, 250, 252, 0.04)'
-              }}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.3 }}
-            >
-              <p className="text-cosmic-stellar-wind text-xs text-center font-light opacity-50">
-                Click any star to view details
-              </p>
-            </motion.div>
           </div>
         </div>
       </div>
