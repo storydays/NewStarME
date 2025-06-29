@@ -175,7 +175,19 @@ export function StarSelection({ selectedStar, setSelectedStar, onStarClick }: St
 
   return (
     <div className="absolute inset-0 pointer-events-none">
-      {/* Header with Back Button, Page Title, and Color Indication */}
+      {/* Page Title - Centered at Top */}
+      <div className="absolute top-6 left-1/2 transform -translate-x-1/2 z-20 pointer-events-auto">
+        <motion.h1 
+          className="text-3xl font-light text-cosmic-observation text-center"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
+        >
+          Pick your star
+        </motion.h1>
+      </div>
+
+      {/* Back Button and Color Indicators - Left Side */}
       <div className="absolute top-6 left-6 z-20 pointer-events-auto space-y-4">
         {/* Back Button */}
         <button
@@ -186,26 +198,52 @@ export function StarSelection({ selectedStar, setSelectedStar, onStarClick }: St
           Return to emotions
         </button>
 
-        {/* Page Title */}
-        <motion.h1 
-          className="text-2xl font-light text-cosmic-observation"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-        >
-          Pick your star
-        </motion.h1>
-
-        {/* Color Indication Text */}
+        {/* Star Color Indicators */}
         <motion.div
-          className="frosted-glass px-4 py-2 rounded-lg"
+          className="frosted-glass px-4 py-3 rounded-lg space-y-2"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
         >
-          <p className="text-cosmic-stellar-wind text-xs font-light opacity-80">
-            Suggested stars: Aurora green glow. Selected star: Purple glow. Other stars: White/blue glow.
+          <p className="text-cosmic-stellar-wind text-xs font-light opacity-80 mb-3">
+            Star colors in 3D view:
           </p>
+          
+          {/* Suggested Stars */}
+          <div className="flex items-center gap-2">
+            <div 
+              className="w-3 h-3 rounded-full"
+              style={{
+                background: 'linear-gradient(135deg, #7FFF94 0%, #39FF14 100%)',
+                boxShadow: '0 0 8px rgba(127, 255, 148, 0.5)'
+              }}
+            />
+            <span className="text-cosmic-light-echo text-xs font-light">Suggested stars</span>
+          </div>
+          
+          {/* Selected Star */}
+          <div className="flex items-center gap-2">
+            <div 
+              className="w-3 h-3 rounded-full"
+              style={{
+                background: 'linear-gradient(135deg, #9D4EDD 0%, #6A0572 100%)',
+                boxShadow: '0 0 8px rgba(157, 78, 221, 0.5)'
+              }}
+            />
+            <span className="text-cosmic-light-echo text-xs font-light">Selected star</span>
+          </div>
+          
+          {/* Other Stars */}
+          <div className="flex items-center gap-2">
+            <div 
+              className="w-3 h-3 rounded-full"
+              style={{
+                background: 'linear-gradient(135deg, #F8F8FF 0%, #B0C4DE 100%)',
+                boxShadow: '0 0 8px rgba(248, 248, 255, 0.3)'
+              }}
+            />
+            <span className="text-cosmic-light-echo text-xs font-light">Other stars</span>
+          </div>
         </motion.div>
       </div>
 
