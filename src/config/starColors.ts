@@ -21,7 +21,7 @@ export const STAR_COLORS = {
   suggested: {
     core: '#7FFF94',      // Aurora green start
     glow: '#39FF14',      // Aurora green end  
-    shadow: 'rgba(127, 255, 148, 0.1)'
+    shadow: 'rgba(127, 255, 148, 0.9)'
   },
   selected: {
     core: '#9D4EDD',      // Purple start
