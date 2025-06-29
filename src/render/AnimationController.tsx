@@ -4,11 +4,11 @@ import { CameraControls } from '@react-three/drei';
 import { ORBIT_SPEED } from '../config/starConfig';
 
 /**
- * AnimationController Component - Enhanced with Dynamic smoothTime Control
+ * AnimationController Component - Fixed Dynamic smoothTime Control
  * 
  * Purpose: Manages camera animations including discrete movements and continuous orbiting.
  * Now uses ORBIT_SPEED from starConfig for consistent orbit speed configuration.
- * FIXED: Dynamically adjusts CameraControls smoothTime to respect duration parameter.
+ * FIXED: Properly manages CameraControls smoothTime to respect duration parameter.
  * 
  * Features:
  * - Discrete animations: focusStar, resetView, moveTo, centerView
@@ -16,9 +16,9 @@ import { ORBIT_SPEED } from '../config/starConfig';
  * - Optimal camera positioning for star groups
  * - Smooth transitions between animation modes
  * - Enhanced error handling and completion callbacks
- * - FIXED: Dynamic smoothTime adjustment for custom animation durations
+ * - FIXED: Proper smoothTime management without losing original value
  * 
- * Confidence Rating: High - Enhanced with dynamic smoothTime control for proper duration handling
+ * Confidence Rating: High - Fixed smoothTime management for proper duration handling
  */
 
 interface AnimationCommand {
@@ -53,7 +53,7 @@ export const AnimationController: React.FC<AnimationControllerProps> = ({
   // Prevent overlapping discrete animations using a ref
   const isAnimatingRef = useRef(false);
   
-  // Store original smoothTime to restore after custom duration animations
+  // FIXED: Store original smoothTime once and reuse it
   const originalSmoothTimeRef = useRef<number | null>(null);
   
   // Orbit state management using refs to avoid re-renders
@@ -66,6 +66,14 @@ export const AnimationController: React.FC<AnimationControllerProps> = ({
     currentAngle: 0,
     lastTime: 0
   });
+
+  // FIXED: Initialize original smoothTime once when controls become available
+  useEffect(() => {
+    if (cameraControlsRef.current && originalSmoothTimeRef.current === null) {
+      originalSmoothTimeRef.current = cameraControlsRef.current.smoothTime;
+      console.log(`AnimationController: Initialized original smoothTime: ${originalSmoothTimeRef.current}`);
+    }
+  }, [cameraControlsRef.current]);
 
   // Handle discrete animations (focusStar, resetView, moveTo, centerView)
   useEffect(() => {
@@ -92,7 +100,7 @@ export const AnimationController: React.FC<AnimationControllerProps> = ({
 
     const executeAnimation = async () => {
       try {
-        // FIXED: Store original smoothTime and set custom duration if provided
+        // FIXED: Store original smoothTime only if not already stored
         if (originalSmoothTimeRef.current === null) {
           originalSmoothTimeRef.current = controls.smoothTime;
           console.log(`AnimationController: Stored original smoothTime: ${originalSmoothTimeRef.current}`);
@@ -207,11 +215,11 @@ export const AnimationController: React.FC<AnimationControllerProps> = ({
       } catch (error) {
         console.error('AnimationController: Discrete animation failed:', error);
       } finally {
-        // FIXED: Always restore original smoothTime after animation completes
+        // FIXED: Restore original smoothTime but don't reset the stored value
         if (originalSmoothTimeRef.current !== null) {
           controls.smoothTime = originalSmoothTimeRef.current;
           console.log(`AnimationController: Restored original smoothTime: ${originalSmoothTimeRef.current}`);
-          originalSmoothTimeRef.current = null;
+          // DON'T reset originalSmoothTimeRef.current to null here - keep it for future use
         }
 
         // Always reset animation state and call completion callback
