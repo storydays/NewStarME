@@ -1,37 +1,31 @@
 /**
- * Star Colors Configuration - Central Color Management
+ * Star Colors Configuration - Simplified Color Management
  * 
  * Purpose: Provides centralized configuration for all star colors used throughout the application.
- * This ensures consistency across components and makes color changes easy to manage.
+ * SIMPLIFIED: Each category now has only a single main color property.
  * 
  * Features:
- * - Centralized color definitions for suggested, selected, and normal stars
- * - Core colors, glow colors, and shadow colors for each star type
- * - Path to star particle image asset
+ * - Single solid color for each star type (suggested, selected, normal)
+ * - No gradients or shadow effects
+ * - Applied directly to star_particle.png image
  * - Easy to modify and maintain
  * 
- * Confidence Rating: High - Clean centralized configuration
+ * Confidence Rating: High - Simplified centralized configuration
  */
 
 // Path to the star particle image asset
 export const STAR_PARTICLE_IMAGE_PATH = '/src/assets/star_particle.png';
 
-// Star color configuration object
+// Simplified star color configuration object - single color per category
 export const STAR_COLORS = {
   suggested: {
-    core: '#7FFF94',      // Aurora green start
-    glow: '#39FF14',      // Aurora green end  
-    shadow: 'rgba(127, 255, 148, 0.9)'
+    main: '#7FFF94'      // Aurora green
   },
   selected: {
-    core: '#9D4EDD',      // Purple start
-    glow: '#6A0572',      // Dark purple end
-    shadow: 'rgba(157, 78, 221, 0.1)'
+    main: '#9D4EDD'      // Purple
   },
   normal: {
-    core: '#F8F8FF',      // Ghost white
-    glow: '#B0C4DE',      // Light steel blue
-    shadow: 'rgba(248, 248, 255, 0.3)'
+    main: '#F8F8FF'      // Ghost white
   }
 } as const;
 
