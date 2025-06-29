@@ -110,8 +110,6 @@ function AppContent() {
     );
   }
 
-  console.log(selectedStar)
-
   return (
     <Router>
       <div className="App cosmic-viewport">
