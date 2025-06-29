@@ -34,7 +34,7 @@ export const STAR_SETTINGS = {
 } as const;
 
 // Camera orbit speed configuration
-export const ORBIT_SPEED = 0.3; // Default orbit speed for camera animations
+export const ORBIT_SPEED = 0.1; // Default orbit speed for camera animations
 
 // Rendering performance configuration
 export const MAX_CLASSIC_RENDER_STARS = 5000; // Maximum stars rendered in classic mode
