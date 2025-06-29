@@ -5,13 +5,13 @@ import { StarsCatalog } from '../data/StarsCatalog';
 import { HygStarData } from '../types';
 import { Starfield } from './Starfield';
 import { AnimationController } from './AnimationController';
+import { STAR_COLORS } from '../config/starColors';
 
 /**
- * StarviewCanvas Component - Stateless 3D Rendering Layer
+ * StarviewCanvas Component - Enhanced with Centralized Color Configuration
  * 
  * Purpose: Pure rendering component that accepts all data via props.
- * No internal state for selection, focusing, or suggestions.
- * No dependency on SuggestedStarsContext.
+ * Enhanced with centralized color management from starColors.ts configuration.
  * 
  * Features:
  * - Render stars from StarsCatalog
@@ -19,8 +19,9 @@ import { AnimationController } from './AnimationController';
  * - Expose camera control via props
  * - Notify parent on star clicks via callbacks
  * - Clean separation from business logic
+ * - Centralized color configuration
  * 
- * Confidence Rating: High - Clean rendering component
+ * Confidence Rating: High - Enhanced with centralized color management
  */
 
 interface StarviewCanvasProps {
@@ -55,7 +56,7 @@ interface AnimationCommand {
 }
 
 /**
- * StarfieldWrapper Component - Data transformation layer
+ * StarfieldWrapper Component - Enhanced with centralized colors
  */
 function StarfieldWrapper({ 
   starsCatalog, 
@@ -81,7 +82,7 @@ function StarfieldWrapper({
   onStarClick?: (star: HygStarData) => void;
 }) {
   
-  // Convert StarsCatalog data to Starfield format with highlighting
+  // Convert StarsCatalog data to Starfield format with centralized colors
   const catalogData = useMemo(() => {
     if (!starsCatalog) {
       console.log('StarfieldWrapper: No catalog available');
@@ -117,7 +118,7 @@ function StarfieldWrapper({
         catalogStar: catalogStar,
         enhancedSize: isHighlighted ? 2.5 : 1.0,
         enhancedGlow: isHighlighted ? 2.0 : 1.0,
-        emotionColor: isHighlighted ? '#7FFF94' : undefined,
+        emotionColor: isHighlighted ? STAR_COLORS.suggested.core : undefined, // Use centralized color
         showLabel: isHighlighted && catalogStar.hyg.proper
       };
     });
@@ -175,7 +176,7 @@ function StarfieldWrapper({
 }
 
 /**
- * Scene Content Component - 3D scene management
+ * Scene Content Component - Enhanced with centralized colors
  */
 function SceneContent({ 
   starsCatalog, 
@@ -340,7 +341,7 @@ function SceneContent({
         onAnimationComplete={handleAnimationComplete}
       />
       
-      {/* Render star field */}
+      {/* Render star field with centralized colors */}
       {starsCatalog && !catalogLoading && (
         <StarfieldWrapper 
           starsCatalog={starsCatalog}
@@ -370,7 +371,7 @@ function SceneContent({
 }
 
 /**
- * Main StarviewCanvas Component - Props-based rendering
+ * Main StarviewCanvas Component - Enhanced with centralized color management
  */
 export function StarviewCanvas({ 
   starsCatalog, 

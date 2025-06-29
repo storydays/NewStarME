@@ -7,12 +7,13 @@ import { useSuggestedStars } from '../context/SuggestedStarsContext';
 import { useStarviewCamera } from '../hooks/useStarviewCamera';
 import { emotions } from '../data/emotions';
 import { HygStarData } from '../types';
+import { STAR_COLORS } from '../config/starColors';
 
 /**
- * StarSelection Component - Clean Star Selection Interface
+ * StarSelection Component - Enhanced with Star Color Configuration
  * 
- * Purpose: Emotion-based star selection interface with proper state synchronization.
- * UPDATED: Removed modalStar state, now uses selectedStar prop from parent App.
+ * Purpose: Emotion-based star selection interface with centralized color management.
+ * UPDATED: Uses STAR_COLORS configuration and star_particle.png for color indicators.
  * 
  * Features:
  * - Emotion-based star catalog browsing
@@ -20,8 +21,10 @@ import { HygStarData } from '../types';
  * - Star detail modal using selectedStar from parent
  * - Camera focus control
  * - Suggested stars context integration
+ * - Centralized color configuration
+ * - Star particle image indicators
  * 
- * Confidence Rating: High - Clean implementation with parent state dependency
+ * Confidence Rating: High - Enhanced with centralized color management
  */
 
 interface StarSelectionProps {
@@ -198,9 +201,9 @@ export function StarSelection({ selectedStar, setSelectedStar, onStarClick }: St
           Return to emotions
         </button>
 
-        {/* Star Color Indicators */}
+        {/* Enhanced Star Color Indicators with star_particle.png */}
         <motion.div
-          className="frosted-glass px-4 py-3 rounded-lg space-y-2"
+          className="frosted-glass px-4 py-3 rounded-lg space-y-3"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
@@ -209,39 +212,45 @@ export function StarSelection({ selectedStar, setSelectedStar, onStarClick }: St
             Star colors in 3D view:
           </p>
           
-          {/* Suggested Stars */}
-          <div className="flex items-center gap-2">
-            <div 
-              className="w-3 h-3 rounded-full"
-              style={{
-                background: 'linear-gradient(135deg, #7FFF94 0%, #39FF14 100%)',
-                boxShadow: '0 0 8px rgba(127, 255, 148, 0.5)'
-              }}
-            />
+          {/* Suggested Stars - Enhanced with star particle image */}
+          <div className="flex items-center gap-3">
+            <div className="w-4 h-4 relative">
+              <div 
+                className="star-icon-tint"
+                style={{
+                  background: `linear-gradient(135deg, ${STAR_COLORS.suggested.core} 0%, ${STAR_COLORS.suggested.glow} 100%)`,
+                  boxShadow: `0 0 8px ${STAR_COLORS.suggested.shadow}`
+                }}
+              />
+            </div>
             <span className="text-cosmic-light-echo text-xs font-light">Suggested stars</span>
           </div>
           
-          {/* Selected Star */}
-          <div className="flex items-center gap-2">
-            <div 
-              className="w-3 h-3 rounded-full"
-              style={{
-                background: 'linear-gradient(135deg, #9D4EDD 0%, #6A0572 100%)',
-                boxShadow: '0 0 8px rgba(157, 78, 221, 0.5)'
-              }}
-            />
+          {/* Selected Star - Enhanced with star particle image */}
+          <div className="flex items-center gap-3">
+            <div className="w-4 h-4 relative">
+              <div 
+                className="star-icon-tint"
+                style={{
+                  background: `linear-gradient(135deg, ${STAR_COLORS.selected.core} 0%, ${STAR_COLORS.selected.glow} 100%)`,
+                  boxShadow: `0 0 8px ${STAR_COLORS.selected.shadow}`
+                }}
+              />
+            </div>
             <span className="text-cosmic-light-echo text-xs font-light">Selected star</span>
           </div>
           
-          {/* Other Stars */}
-          <div className="flex items-center gap-2">
-            <div 
-              className="w-3 h-3 rounded-full"
-              style={{
-                background: 'linear-gradient(135deg, #F8F8FF 0%, #B0C4DE 100%)',
-                boxShadow: '0 0 8px rgba(248, 248, 255, 0.3)'
-              }}
-            />
+          {/* Other Stars - Enhanced with star particle image */}
+          <div className="flex items-center gap-3">
+            <div className="w-4 h-4 relative">
+              <div 
+                className="star-icon-tint"
+                style={{
+                  background: `linear-gradient(135deg, ${STAR_COLORS.normal.core} 0%, ${STAR_COLORS.normal.glow} 100%)`,
+                  boxShadow: `0 0 8px ${STAR_COLORS.normal.shadow}`
+                }}
+              />
+            </div>
             <span className="text-cosmic-light-echo text-xs font-light">Other stars</span>
           </div>
         </motion.div>
@@ -270,8 +279,8 @@ export function StarSelection({ selectedStar, setSelectedStar, onStarClick }: St
                 <div 
                   className="w-8 h-8 rounded-full flex items-center justify-center"
                   style={{
-                    background: 'rgba(127, 255, 148, 0.15)',
-                    border: '1px solid rgba(127, 255, 148, 0.3)'
+                    background: `rgba(127, 255, 148, 0.15)`,
+                    border: `1px solid rgba(127, 255, 148, 0.3)`
                   }}
                 >
                   <Sparkles className="w-4 h-4 text-cosmic-observation" />
@@ -361,8 +370,8 @@ export function StarSelection({ selectedStar, setSelectedStar, onStarClick }: St
               style={{
                 background: 'rgba(248, 250, 252, 0.03)',
                 backdropFilter: 'blur(25px)',
-                borderColor: 'rgba(157, 78, 221, 0.2)',
-                boxShadow: '0 20px 60px rgba(157, 78, 221, 0.15)',
+                borderColor: `${STAR_COLORS.selected.core}33`, // Using selected star color with opacity
+                boxShadow: `0 20px 60px ${STAR_COLORS.selected.shadow}`,
                 marginBottom: '32px'
               }}
               initial={{ y: 100, opacity: 0, scale: 0.95 }}
@@ -436,18 +445,18 @@ export function StarSelection({ selectedStar, setSelectedStar, onStarClick }: St
                     </div>
                   </div>
 
-                  {/* Dedicate Button */}
+                  {/* Dedicate Button - Enhanced with centralized colors */}
                   <div className="flex-shrink-0">
                     <motion.button
                       onClick={() => handleDedicate(selectedStar)}
                       className="text-cosmic-observation font-light py-3 px-6 rounded-xl transition-all duration-300 flex items-center gap-2 text-sm pointer-events-auto"
                       style={{
-                        background: 'linear-gradient(135deg, #9D4EDD 0%, #6A0572 100%)',
-                        boxShadow: '0 0 20px rgba(157, 78, 221, 0.3)'
+                        background: `linear-gradient(135deg, ${STAR_COLORS.selected.core} 0%, ${STAR_COLORS.selected.glow} 100%)`,
+                        boxShadow: `0 0 20px ${STAR_COLORS.selected.shadow}`
                       }}
                       whileHover={{ 
                         scale: 1.02,
-                        boxShadow: '0 0 25px rgba(157, 78, 221, 0.4)'
+                        boxShadow: `0 0 25px ${STAR_COLORS.selected.shadow}`
                       }}
                       whileTap={{ scale: 0.98 }}
                     >
