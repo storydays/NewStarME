@@ -5,13 +5,13 @@ import { StarsCatalog } from '../data/StarsCatalog';
 import { HygStarData } from '../types';
 import { Starfield } from './Starfield';
 import { AnimationController } from './AnimationController';
-import { STAR_SETTINGS } from '../config/starConfig';
+import { STAR_SETTINGS, MAX_CLASSIC_RENDER_STARS } from '../config/starConfig';
 
 /**
  * StarviewCanvas Component - Enhanced with STAR_SETTINGS Configuration
  * 
  * Purpose: Pure rendering component that accepts all data via props.
- * UPDATED: Uses STAR_SETTINGS configuration with comprehensive star settings.
+ * UPDATED: Uses STAR_SETTINGS configuration with comprehensive star settings and configurable star count.
  * 
  * Features:
  * - Render stars from StarsCatalog
@@ -20,6 +20,7 @@ import { STAR_SETTINGS } from '../config/starConfig';
  * - Notify parent on star clicks via callbacks
  * - Clean separation from business logic
  * - STAR_SETTINGS configuration with size and glow multipliers
+ * - Configurable maximum star count for classic rendering
  * 
  * Confidence Rating: High - Enhanced with comprehensive star configuration
  */
@@ -56,8 +57,8 @@ interface AnimationCommand {
 }
 
 /**
- * StarfieldWrapper Component - Enhanced with STAR_SETTINGS
- * UPDATED: Uses string-based highlightedStarIds for comparison
+ * StarfieldWrapper Component - Enhanced with STAR_SETTINGS and Configurable Star Count
+ * UPDATED: Uses string-based highlightedStarIds for comparison and configurable MAX_CLASSIC_RENDER_STARS
  */
 function StarfieldWrapper({ 
   starsCatalog, 
@@ -83,7 +84,7 @@ function StarfieldWrapper({
   onStarClick?: (star: HygStarData) => void;
 }) {
   
-  // Convert StarsCatalog data to Starfield format with STAR_SETTINGS
+  // Convert StarsCatalog data to Starfield format with STAR_SETTINGS and configurable star count
   const catalogData = useMemo(() => {
     if (!starsCatalog) {
       console.log('StarfieldWrapper: No catalog available');
@@ -96,11 +97,11 @@ function StarfieldWrapper({
     // Create set for fast lookup
     const highlightedSet = new Set(highlightedStarIds);
     
-    // Get stars based on rendering mode
+    // Get stars based on rendering mode with configurable star count
     let starsToProcess: HygStarData[];
     if (renderingMode === 'classic') {
-      starsToProcess = starsCatalog.getStarsByMagnitude(-2, 6.5).slice(0, 5000);
-      console.log(`StarfieldWrapper: Classic mode - processing ${starsToProcess.length} filtered stars`);
+      starsToProcess = starsCatalog.getStarsByMagnitude(-2, 6.5).slice(0, MAX_CLASSIC_RENDER_STARS);
+      console.log(`StarfieldWrapper: Classic mode - processing ${starsToProcess.length} filtered stars (max: ${MAX_CLASSIC_RENDER_STARS})`);
     } else {
       starsToProcess = starsCatalog.getAllStars();
       console.log(`StarfieldWrapper: Instanced mode - processing ALL ${starsToProcess.length} stars`);
@@ -401,7 +402,7 @@ export function StarviewCanvas({
     console.log('StarviewCanvas: Pointer missed event');
   }, []);
 
-  console.log(`StarviewCanvas: Rendering with ${highlightedStarIds.length} highlighted stars in ${renderingMode} mode using STAR_SETTINGS`);
+  console.log(`StarviewCanvas: Rendering with ${highlightedStarIds.length} highlighted stars in ${renderingMode} mode using STAR_SETTINGS (max classic stars: ${MAX_CLASSIC_RENDER_STARS})`);
 
   return (
     <div className="fixed inset-0 w-full h-full">
