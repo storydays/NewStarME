@@ -2,17 +2,19 @@
  * Star Configuration - Comprehensive Star Visual Settings
  * 
  * Purpose: Provides centralized configuration for all star visual properties
- * including colors, size multipliers, glow multipliers, orbit speed, and rendering limits.
+ * including colors, size multipliers, glow multipliers, orbit speed, rendering limits,
+ * and animation timing parameters.
  * 
  * Features:
  * - Three star categories: regular, highlighted (for suggested stars), selected
  * - Each category includes color, sizeMultiplier, and glowMultiplier
  * - Parameterized orbit speed for camera animations
+ * - Configurable focus duration for star focusing animations
  * - Maximum star count for classic rendering mode
  * - Easy to modify and maintain
  * - Type-safe configuration with const assertion
  * 
- * Confidence Rating: High - Comprehensive centralized star configuration
+ * Confidence Rating: High - Comprehensive centralized star configuration with animation timing
  */
 
 export const STAR_SETTINGS = {
@@ -33,8 +35,9 @@ export const STAR_SETTINGS = {
   }
 } as const;
 
-// Camera orbit speed configuration
+// Camera animation configuration
 export const ORBIT_SPEED = 0.05; // Default orbit speed for camera animations
+export const FOCUS_DURATION = 1500; // Duration in milliseconds for star focusing animations
 
 // Rendering performance configuration
 export const MAX_CLASSIC_RENDER_STARS = 10000; // Maximum stars rendered in classic mode

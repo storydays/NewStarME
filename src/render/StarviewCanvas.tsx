@@ -5,14 +5,14 @@ import { StarsCatalog } from '../data/StarsCatalog';
 import { HygStarData } from '../types';
 import { Starfield } from './Starfield';
 import { AnimationController } from './AnimationController';
-import { STAR_SETTINGS, MAX_CLASSIC_RENDER_STARS, ORBIT_SPEED } from '../config/starConfig';
+import { STAR_SETTINGS, MAX_CLASSIC_RENDER_STARS, ORBIT_SPEED, FOCUS_DURATION } from '../config/starConfig';
 
 /**
  * StarviewCanvas Component - Enhanced with STAR_SETTINGS Configuration and Proximity-Based Selection
  * 
  * Purpose: Pure rendering component that accepts all data via props.
  * UPDATED: Uses STAR_SETTINGS configuration with comprehensive star settings, configurable star count,
- * proximity-based star selection, and proper ORBIT_SPEED configuration usage.
+ * proximity-based star selection, proper ORBIT_SPEED configuration usage, and configurable FOCUS_DURATION.
  * 
  * Features:
  * - Render stars from StarsCatalog
@@ -24,8 +24,9 @@ import { STAR_SETTINGS, MAX_CLASSIC_RENDER_STARS, ORBIT_SPEED } from '../config/
  * - Configurable maximum star count for classic rendering
  * - Proximity-based star selection for uniform spatial distribution
  * - Proper ORBIT_SPEED configuration usage for camera animations
+ * - Configurable FOCUS_DURATION for star focusing animations
  * 
- * Confidence Rating: High - Enhanced with comprehensive star configuration and proper orbit speed usage
+ * Confidence Rating: High - Enhanced with comprehensive star configuration and configurable animation timing
  */
 
 interface StarviewCanvasProps {
@@ -192,7 +193,7 @@ function StarfieldWrapper({
 
 /**
  * Scene Content Component - Enhanced with STAR_SETTINGS and Proximity-Based Selection
- * UPDATED: Now uses ORBIT_SPEED from config for camera orbit animations
+ * UPDATED: Now uses ORBIT_SPEED and FOCUS_DURATION from config for camera animations
  */
 function SceneContent({ 
   starsCatalog, 
@@ -235,29 +236,29 @@ function SceneContent({
     if (cameraCommand.type === 'focusStar' && cameraCommand.starCatalogId) {
       const catalogStar = starsCatalog.getStarById(parseInt(cameraCommand.starCatalogId));
       if (catalogStar) {
-        console.log('SceneContent: Focusing camera on star:', catalogStar.hyg.proper || catalogStar.hyg.id);
+        console.log(`SceneContent: Focusing camera on star with duration ${FOCUS_DURATION}ms:`, catalogStar.hyg.proper || catalogStar.hyg.id);
         setAnimationCommand({
           type: 'focusStar',
           target: {
             position: catalogStar.render.position
           },
-          duration: 1500
+          duration: FOCUS_DURATION // CHANGED: Now uses FOCUS_DURATION from config
         });
       }
     } else if (cameraCommand.type === 'resetView') {
-      console.log('SceneContent: Resetting camera view');
+      console.log(`SceneContent: Resetting camera view with duration ${FOCUS_DURATION}ms`);
       setAnimationCommand({
         type: 'resetView',
-        duration: 1500
+        duration: FOCUS_DURATION // CHANGED: Now uses FOCUS_DURATION from config
       });
     } else if (cameraCommand.type === 'centerView') {
-      console.log('SceneContent: Centering camera view');
+      console.log(`SceneContent: Centering camera view with duration ${FOCUS_DURATION * 1.33}ms`);
       setAnimationCommand({
         type: 'centerView',
         target: {
           position: [0, 0, 0]
         },
-        duration: 2000
+        duration: Math.round(FOCUS_DURATION * 1.33) // CHANGED: Now uses FOCUS_DURATION from config (slightly longer for center view)
       });
     }
   }, [cameraCommand, starsCatalog]);
@@ -265,14 +266,14 @@ function SceneContent({
   // Auto-center camera when highlighted stars are available
   useEffect(() => {
     if (highlightedStarIds.length > 0 && !selectedStar) {
-      console.log('SceneContent: Auto-centering camera for highlighted stars');
+      console.log(`SceneContent: Auto-centering camera for highlighted stars with duration ${FOCUS_DURATION * 1.33}ms`);
       
       setAnimationCommand({
         type: 'centerView',
         target: {
           position: [0, 0, 0]
         },
-        duration: 2000
+        duration: Math.round(FOCUS_DURATION * 1.33) // CHANGED: Now uses FOCUS_DURATION from config
       });
     } else if (!selectedStar && highlightedStarIds.length === 0) {
       console.log(`SceneContent: No highlighted stars - starting default orbit animation with speed ${ORBIT_SPEED}`);
@@ -290,14 +291,14 @@ function SceneContent({
 
   // Handle star focus animation
   const handleStarFocus = useCallback((star: HygStarData) => {
-    console.log('SceneContent: Focusing camera on star:', star.hyg.proper || star.hyg.id);
+    console.log(`SceneContent: Focusing camera on star with duration ${FOCUS_DURATION}ms:`, star.hyg.proper || star.hyg.id);
     
     setAnimationCommand({
       type: 'focusStar',
       target: {
         position: star.render.position
       },
-      duration: 1500
+      duration: FOCUS_DURATION // CHANGED: Now uses FOCUS_DURATION from config
     });
   }, []);
 
@@ -389,7 +390,7 @@ function SceneContent({
 
 /**
  * Main StarviewCanvas Component - Enhanced with STAR_SETTINGS and Proximity-Based Selection
- * UPDATED: Now properly uses ORBIT_SPEED from config for camera orbit animations
+ * UPDATED: Now properly uses ORBIT_SPEED and FOCUS_DURATION from config for camera animations
  */
 export function StarviewCanvas({ 
   starsCatalog, 
@@ -410,7 +411,7 @@ export function StarviewCanvas({
     console.log('StarviewCanvas: Pointer missed event');
   }, []);
 
-  console.log(`StarviewCanvas: Rendering with ${highlightedStarIds.length} highlighted stars in ${renderingMode} mode using STAR_SETTINGS and proximity-based selection (max classic stars: ${MAX_CLASSIC_RENDER_STARS}, orbit speed: ${ORBIT_SPEED})`);
+  console.log(`StarviewCanvas: Rendering with ${highlightedStarIds.length} highlighted stars in ${renderingMode} mode using STAR_SETTINGS and proximity-based selection (max classic stars: ${MAX_CLASSIC_RENDER_STARS}, orbit speed: ${ORBIT_SPEED}, focus duration: ${FOCUS_DURATION}ms)`);
 
   return (
     <div className="fixed inset-0 w-full h-full">
