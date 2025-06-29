@@ -32,6 +32,8 @@ function AppContent() {
   const [selectedStar, setSelectedStar] = useState<HygStarData | null>(null);
   const [cameraCommand, setCameraCommand] = useState<any>(null);
 
+  console.log(suggestedStars)
+
   // Control settings for the star visualization
   const [controlSettings] = useState({
     starSize: 0.25,
