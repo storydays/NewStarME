@@ -1,22 +1,23 @@
-import React, { useCallback, useRef } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import { Billboard } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { STAR_SETTINGS } from '../config/starConfig';
 
 /**
- * Star Component - Enhanced with STAR_SETTINGS Configuration
+ * Star Component - Enhanced with Hover State Support
  * 
  * Purpose: Main dispatcher component that renders appropriate star type based on highlighting state.
- * UPDATED: Uses STAR_SETTINGS configuration with size and glow multipliers.
+ * ENHANCED: Added hover state management for interactive label display.
  * 
  * Features:
  * - STAR_SETTINGS configuration with size and glow multipliers
  * - Three categories: regular, highlighted (suggested), selected
  * - Enhanced glow effects with configurable multipliers
+ * - Hover state support for interactive labels
  * - React.memo optimization to prevent unnecessary re-renders
  * 
- * Confidence Rating: High - Enhanced with comprehensive star configuration
+ * Confidence Rating: High - Enhanced with hover state support
  */
 
 interface BaseStarProps {
@@ -28,6 +29,7 @@ interface BaseStarProps {
   glowMultiplier: number;
   isSelected: boolean;
   onClick: (event: any) => void;
+  onHover?: (isHovering: boolean) => void; // NEW: Hover callback
 }
 
 interface StarProps extends BaseStarProps {
@@ -40,7 +42,7 @@ interface HighlightedStarProps extends BaseStarProps {
 }
 
 /**
- * RegularStar Component - Enhanced with STAR_SETTINGS
+ * RegularStar Component - Enhanced with hover support
  */
 const RegularStar = React.memo(function RegularStar({
   position,
@@ -50,8 +52,11 @@ const RegularStar = React.memo(function RegularStar({
   starSize,
   glowMultiplier,
   isSelected,
-  onClick
+  onClick,
+  onHover
 }: BaseStarProps) {
+  
+  const [isHovered, setIsHovered] = useState(false);
   
   const calculateOpacity = useCallback((magnitude: number): number => {
     const base = Math.max(0.3, Math.min(1.0, 1.2 - 0.07 * magnitude));
@@ -65,11 +70,34 @@ const RegularStar = React.memo(function RegularStar({
     onClick(event);
   }, [onClick]);
 
+  // NEW: Handle hover events
+  const handlePointerEnter = useCallback(() => {
+    setIsHovered(true);
+    if (onHover) {
+      onHover(true);
+    }
+  }, [onHover]);
+
+  const handlePointerLeave = useCallback(() => {
+    setIsHovered(false);
+    if (onHover) {
+      onHover(false);
+    }
+  }, [onHover]);
+
   const getStarColors = useCallback(() => {
     if (isSelected) {
       return {
         coreColor: new THREE.Color(STAR_SETTINGS.selected.color),
         glowColor: new THREE.Color(STAR_SETTINGS.selected.color).multiplyScalar(glowMultiplier * STAR_SETTINGS.selected.glowMultiplier),
+        glowOpacity: 1.0,
+        coreOpacity: opacity
+      };
+    } else if (isHovered) {
+      // Use highlighted colors for hovered stars
+      return {
+        coreColor: new THREE.Color(STAR_SETTINGS.highlighted.color),
+        glowColor: new THREE.Color(STAR_SETTINGS.highlighted.color).multiplyScalar(glowMultiplier * STAR_SETTINGS.highlighted.glowMultiplier),
         glowOpacity: 1.0,
         coreOpacity: opacity
       };
@@ -81,13 +109,18 @@ const RegularStar = React.memo(function RegularStar({
         coreOpacity: opacity
       };
     }
-  }, [isSelected, opacity, glowMultiplier]);
+  }, [isSelected, isHovered, opacity, glowMultiplier]);
 
   const colors = getStarColors();
 
   return (
     <Billboard position={position}>
-      <mesh onClick={handleClick} visible={false}>
+      <mesh 
+        onClick={handleClick} 
+        onPointerEnter={handlePointerEnter}
+        onPointerLeave={handlePointerLeave}
+        visible={false}
+      >
         <planeGeometry args={[starSize, starSize]} />
         <meshBasicMaterial transparent opacity={0} />
       </mesh>
@@ -104,7 +137,11 @@ const RegularStar = React.memo(function RegularStar({
         />
       </sprite>
       
-      <mesh onClick={handleClick}>
+      <mesh 
+        onClick={handleClick}
+        onPointerEnter={handlePointerEnter}
+        onPointerLeave={handlePointerLeave}
+      >
         <planeGeometry args={[starSize, starSize]} />
         <meshBasicMaterial
           map={starTexture}
@@ -120,7 +157,7 @@ const RegularStar = React.memo(function RegularStar({
 });
 
 /**
- * HighlightedStar Component - Enhanced with STAR_SETTINGS
+ * HighlightedStar Component - Enhanced with hover support
  */
 const HighlightedStar = React.memo(function HighlightedStar({
   position,
@@ -131,11 +168,13 @@ const HighlightedStar = React.memo(function HighlightedStar({
   glowMultiplier,
   isSelected,
   emotionColor,
-  onClick
+  onClick,
+  onHover
 }: HighlightedStarProps) {
   
   const glowMaterialRef = useRef<THREE.SpriteMaterial>(null);
   const coreMaterialRef = useRef<THREE.MeshBasicMaterial>(null);
+  const [isHovered, setIsHovered] = useState(false);
 
   const calculateOpacity = useCallback((magnitude: number): number => {
     const base = Math.max(0.3, Math.min(1.0, 1.2 - 0.07 * magnitude));
@@ -148,6 +187,21 @@ const HighlightedStar = React.memo(function HighlightedStar({
     event.stopPropagation();
     onClick(event);
   }, [onClick]);
+
+  // NEW: Handle hover events
+  const handlePointerEnter = useCallback(() => {
+    setIsHovered(true);
+    if (onHover) {
+      onHover(true);
+    }
+  }, [onHover]);
+
+  const handlePointerLeave = useCallback(() => {
+    setIsHovered(false);
+    if (onHover) {
+      onHover(false);
+    }
+  }, [onHover]);
 
   // Enhanced sizes using STAR_SETTINGS
   const finalSettings = isSelected ? STAR_SETTINGS.selected : STAR_SETTINGS.highlighted;
@@ -162,7 +216,7 @@ const HighlightedStar = React.memo(function HighlightedStar({
         baseCoreOpacity: opacity
       };
     } else {
-      // Highlighted: Use highlighted settings, ignore emotionColor for simplicity
+      // Highlighted: Use highlighted settings
       return {
         coreColor: new THREE.Color(STAR_SETTINGS.highlighted.color),
         glowColor: new THREE.Color(STAR_SETTINGS.highlighted.color).multiplyScalar(enhancedGlowMultiplier),
@@ -200,7 +254,12 @@ const HighlightedStar = React.memo(function HighlightedStar({
 
   return (
     <Billboard position={position}>
-      <mesh onClick={handleClick} visible={false}>
+      <mesh 
+        onClick={handleClick} 
+        onPointerEnter={handlePointerEnter}
+        onPointerLeave={handlePointerLeave}
+        visible={false}
+      >
         <planeGeometry args={[enhancedStarSize, enhancedStarSize]} />
         <meshBasicMaterial transparent opacity={0} visible={false} />
       </mesh>
@@ -237,7 +296,7 @@ const HighlightedStar = React.memo(function HighlightedStar({
 });
 
 /**
- * Main Star Component - Enhanced dispatcher with STAR_SETTINGS
+ * Main Star Component - Enhanced dispatcher with hover support
  */
 export const Star = React.memo(function Star({
   position,
@@ -249,8 +308,9 @@ export const Star = React.memo(function Star({
   isSelected,
   isHighlighted = false,
   emotionColor,
-  onClick
-}: StarProps) {
+  onClick,
+  onHover
+}: StarProps & { onHover?: (isHovering: boolean) => void }) {
   
   if (isHighlighted || isSelected) {
     return (
@@ -264,6 +324,7 @@ export const Star = React.memo(function Star({
         isSelected={isSelected}
         emotionColor={emotionColor}
         onClick={onClick}
+        onHover={onHover}
       />
     );
   } else {
@@ -277,6 +338,7 @@ export const Star = React.memo(function Star({
         glowMultiplier={glowMultiplier}
         isSelected={isSelected}
         onClick={onClick}
+        onHover={onHover}
       />
     );
   }

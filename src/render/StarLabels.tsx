@@ -5,19 +5,19 @@ import * as THREE from 'three';
 import { STAR_SETTINGS } from '../config/starConfig';
 
 /**
- * StarLabels Component - Enhanced with STAR_SETTINGS Configuration
+ * StarLabels Component - Enhanced with Dynamic Positioning and Hover Support
  * 
- * Purpose: Renders star name labels with STAR_SETTINGS color management.
- * Classic mode prioritizes visual quality, instanced mode prioritizes performance.
+ * Purpose: Renders star name labels with dynamic positioning based on star size,
+ * enhanced visibility for highlighted/selected stars, and hover state support.
  * 
- * Features:
- * - Mode-aware filtering and rendering strategies
- * - Classic mode: Enhanced visibility and effects
- * - Instanced mode: Performance-optimized with distance culling
- * - Always-visible labels for highlighted/selected stars
- * - STAR_SETTINGS color configuration
+ * ENHANCED FEATURES:
+ * - Dynamic label positioning based on actual star size (using STAR_SETTINGS)
+ * - Hover state support for interactive label display
+ * - Only shows labels for highlighted, selected, or hovered stars
+ * - Proper offset calculation to avoid glow overlap
+ * - Performance optimized with distance-based filtering
  * 
- * Confidence Rating: High - Enhanced with comprehensive star configuration
+ * Confidence Rating: High - Enhanced positioning with comprehensive star configuration
  */
 
 interface StarLabelsProps {
@@ -31,70 +31,49 @@ interface StarLabelsProps {
     emotionColor?: string;
   }>;
   selectedStar?: string | null;
+  hoveredStar?: string | null; // NEW: Support for hover state
   renderingMode?: 'classic' | 'instanced';
 }
 
 export function StarLabels({ 
   stars, 
   selectedStar, 
+  hoveredStar,
   renderingMode = 'classic'
 }: StarLabelsProps) {
   const { camera } = useThree();
 
-  // Mode-aware label filtering and processing with STAR_SETTINGS
+  // Enhanced label filtering with hover support
   const labeledStars = React.useMemo(() => {
-    if (renderingMode === 'classic') {
-      // Classic mode: Enhanced filtering with priority for highlighted/selected stars
-      const priorityStars: typeof stars = [];
-      const regularStars: typeof stars = [];
-      
-      stars.forEach(star => {
-        if (star.isHighlighted || star.id === selectedStar) {
-          priorityStars.push(star);
-        } else if (star.name && star.name.trim() !== '' && star.magnitude < 4.0) {
-          regularStars.push(star);
-        }
-      });
+    console.log(`StarLabels: Processing ${stars.length} stars for label display`);
+    
+    const priorityStars: typeof stars = [];
+    const regularStars: typeof stars = [];
+    
+    stars.forEach(star => {
+      // Show labels for highlighted, selected, or hovered stars
+      if (star.isHighlighted || star.id === selectedStar || star.id === hoveredStar) {
+        priorityStars.push(star);
+        console.log(`StarLabels: Priority star added: ${star.name || star.id} (highlighted: ${star.isHighlighted}, selected: ${star.id === selectedStar}, hovered: ${star.id === hoveredStar})`);
+      } else if (star.name && star.name.trim() !== '' && star.magnitude < 3.0) {
+        // Only very bright named stars for background context
+        regularStars.push(star);
+      }
+    });
 
-      // Take all priority stars + bright regular stars (limit 50 total)
-      const result = [...priorityStars, ...regularStars.slice(0, Math.max(0, 50 - priorityStars.length))];
-      
-      console.log(`StarLabels: Classic mode - rendering ${result.length} labels (${priorityStars.length} priority, ${result.length - priorityStars.length} regular)`);
-      
-      return result;
-    } else {
-      // Instanced mode: Performance-optimized filtering
-      const priorityStars: typeof stars = [];
-      const regularStars: typeof stars = [];
-      
-      stars.forEach(star => {
-        if (star.isHighlighted || star.id === selectedStar) {
-          priorityStars.push(star);
-        } else if (star.name && star.name.trim() !== '') {
-          regularStars.push(star);
-        }
-      });
+    // In classic mode, show more labels for better UX
+    // In instanced mode, prioritize performance
+    const maxRegularLabels = renderingMode === 'classic' ? 20 : 10;
+    const selectedRegularStars = regularStars
+      .sort((a, b) => a.magnitude - b.magnitude) // Brightest first
+      .slice(0, Math.max(0, maxRegularLabels - priorityStars.length));
 
-      // Calculate distances for regular stars and sort by proximity
-      const regularStarsWithDistance = regularStars.map(star => {
-        const starPosition = new THREE.Vector3(...star.position);
-        const distance = camera.position.distanceTo(starPosition);
-        return { ...star, distance };
-      }).sort((a, b) => a.distance - b.distance);
-
-      // Take priority stars + closest regular stars (limit for performance)
-      const maxRegularLabels = Math.max(0, 500 - priorityStars.length);
-      const selectedRegularStars = regularStarsWithDistance
-        .slice(0, maxRegularLabels)
-        .map(({ distance, ...star }) => star);
-
-      const result = [...priorityStars, ...selectedRegularStars];
-      
-      console.log(`StarLabels: Instanced mode - rendering ${result.length} labels (${priorityStars.length} priority, ${selectedRegularStars.length} regular) from ${stars.length} total stars`);
-      
-      return result;
-    }
-  }, [stars, selectedStar, camera.position, renderingMode]);
+    const result = [...priorityStars, ...selectedRegularStars];
+    
+    console.log(`StarLabels: Rendering ${result.length} labels (${priorityStars.length} priority, ${selectedRegularStars.length} regular)`);
+    
+    return result;
+  }, [stars, selectedStar, hoveredStar, renderingMode]);
 
   return (
     <>
@@ -103,44 +82,59 @@ export function StarLabels({
         const starPosition = new THREE.Vector3(...star.position);
         const distanceFromCamera = camera.position.distanceTo(starPosition);
         
-        // Mode-aware styling and visibility with STAR_SETTINGS
+        // Determine star state and corresponding settings
+        let starSettings = STAR_SETTINGS.regular;
+        let isSpecialStar = false;
+        
+        if (star.id === selectedStar) {
+          starSettings = STAR_SETTINGS.selected;
+          isSpecialStar = true;
+        } else if (star.isHighlighted) {
+          starSettings = STAR_SETTINGS.highlighted;
+          isSpecialStar = true;
+        } else if (star.id === hoveredStar) {
+          // Use highlighted settings for hovered stars
+          starSettings = STAR_SETTINGS.highlighted;
+          isSpecialStar = true;
+        }
+        
+        // Calculate actual star size based on magnitude and settings
+        const baseMagnitudeSize = Math.max(0.02, Math.min(0.3, 0.25 * (6.0 - star.magnitude) * 0.2));
+        const actualStarSize = baseMagnitudeSize * starSettings.sizeMultiplier;
+        const glowRadius = actualStarSize * 2.5; // Glow is 2.5x star size
+        
+        // ENHANCED: Dynamic label positioning based on actual star size
+        // Position label outside the glow effect with proper offset
+        const labelOffset = Math.max(1.2, glowRadius * 0.8 + 0.5); // Minimum 1.2 units, or outside glow + padding
+        const labelPosition: [number, number, number] = [
+          star.position[0], 
+          star.position[1] + labelOffset, 
+          star.position[2]
+        ];
+        
+        // Enhanced styling based on star state
         let opacity: number;
         let fontSize: number;
         let fontWeight: number;
         let color: string;
         let opacityThreshold: number;
         
-        if (star.isHighlighted) {
-          // Highlighted stars: Always visible with enhanced styling using STAR_SETTINGS
+        if (isSpecialStar) {
+          // Special stars: Always visible with enhanced styling
           opacity = 1.0;
           fontSize = Math.max(14, Math.min(20, 300 / distanceFromCamera));
           fontWeight = 600;
-          color = star.emotionColor || STAR_SETTINGS.highlighted.color;
-          opacityThreshold = 0; // Never skip highlighted stars
-        } else if (star.id === selectedStar) {
-          // Selected stars: Enhanced visibility using STAR_SETTINGS
-          opacity = 1.0;
-          fontSize = Math.max(12, Math.min(18, 250 / distanceFromCamera));
-          fontWeight = 500;
-          color = STAR_SETTINGS.selected.color;
-          opacityThreshold = 0; // Never skip selected stars
+          color = star.emotionColor || starSettings.color;
+          opacityThreshold = 0; // Never skip special stars
+          
+          console.log(`StarLabels: Special star ${star.name || star.id} - size: ${actualStarSize.toFixed(3)}, offset: ${labelOffset.toFixed(2)}`);
         } else {
-          // Regular stars: Mode-aware calculations using STAR_SETTINGS
-          if (renderingMode === 'classic') {
-            // Classic mode: Enhanced visibility for better user experience
-            opacity = Math.max(0.3, Math.min(1.0, (30 / distanceFromCamera) * (4.0 - star.magnitude) / 4.0));
-            fontSize = Math.max(8, Math.min(16, 200 / distanceFromCamera));
-            fontWeight = 300;
-            color = STAR_SETTINGS.regular.color;
-            opacityThreshold = 0.3;
-          } else {
-            // Instanced mode: Performance-optimized calculations
-            opacity = Math.max(0.2, Math.min(1.0, (50 / distanceFromCamera)));
-            fontSize = Math.max(8, Math.min(16, 200 / distanceFromCamera));
-            fontWeight = 300;
-            color = STAR_SETTINGS.regular.color;
-            opacityThreshold = 0.15;
-          }
+          // Regular stars: Distance-based visibility
+          opacity = Math.max(0.3, Math.min(1.0, (30 / distanceFromCamera) * (4.0 - star.magnitude) / 4.0));
+          fontSize = Math.max(8, Math.min(16, 200 / distanceFromCamera));
+          fontWeight = 300;
+          color = starSettings.color;
+          opacityThreshold = 0.3;
         }
 
         // Skip labels that would be too faint
@@ -149,7 +143,7 @@ export function StarLabels({
         return (
           <Html
             key={`label-${star.id}`}
-            position={[star.position[0], star.position[1] + 0.8, star.position[2]]}
+            position={labelPosition}
             center
             distanceFactor={8}
             occlude={false}
@@ -160,22 +154,27 @@ export function StarLabels({
                 fontSize: `${fontSize}px`,
                 fontWeight: fontWeight,
                 opacity: opacity,
-                textShadow: star.isHighlighted 
+                textShadow: isSpecialStar 
                   ? `0 0 8px ${color}, 0 0 16px ${color}40`
                   : '0 0 4px rgba(0,0,0,0.8)',
                 pointerEvents: 'none',
                 whiteSpace: 'nowrap',
                 transition: 'all 0.3s ease',
                 fontFamily: 'Inter, system-ui, sans-serif',
-                letterSpacing: star.isHighlighted ? '0.5px' : '0px',
+                letterSpacing: isSpecialStar ? '0.5px' : '0px',
                 textAlign: 'center',
-                padding: star.isHighlighted ? '2px 6px' : '0px',
-                borderRadius: star.isHighlighted ? '4px' : '0px',
-                backgroundColor: star.isHighlighted 
+                padding: isSpecialStar ? '2px 6px' : '0px',
+                borderRadius: isSpecialStar ? '4px' : '0px',
+                backgroundColor: isSpecialStar 
                   ? `${color}20`
                   : 'transparent',
-                border: star.isHighlighted 
+                border: isSpecialStar 
                   ? `1px solid ${color}40`
+                  : 'none',
+                // Enhanced visibility for special stars
+                backdropFilter: isSpecialStar ? 'blur(4px)' : 'none',
+                boxShadow: isSpecialStar 
+                  ? `0 2px 8px rgba(0,0,0,0.3)`
                   : 'none'
               }}
             >
