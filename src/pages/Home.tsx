@@ -1,11 +1,19 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { EmotionWheel } from '../components/EmotionWheel';
+import { useSuggestedStars } from '../context/SuggestedStarsContext';
 import { Emotion } from '../types';
 
 export function Home() {
   const navigate = useNavigate();
+  const { clearSuggestedStars } = useSuggestedStars();
+
+  // FIXED: Clear suggested stars when Home page is displayed
+  useEffect(() => {
+    console.log('Home: Clearing suggested stars on page load');
+    clearSuggestedStars();
+  }, [clearSuggestedStars]);
 
   const handleEmotionSelect = (emotion: Emotion) => {
     navigate(`/stars/${emotion.id}`);
@@ -13,9 +21,7 @@ export function Home() {
 
   return (
     <div className="min-h-screen relative overflow-hidden">
-      {/* Removed gravitational lensing effect overlay */}
-      
-      {/* Main content with physics-based layout - CHANGED: Using flex-col with custom spacing */}
+      {/* Main content with physics-based layout */}
       <div className="relative z-10 flex flex-col min-h-screen px-6 py-8">
         
         {/* Header with cosmic typography - TOP SECTION */}
