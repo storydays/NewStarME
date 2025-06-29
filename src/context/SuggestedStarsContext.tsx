@@ -2,17 +2,19 @@ import React, { createContext, useContext, useState, useCallback, ReactNode } fr
 import { SuggestedStar } from '../types';
 
 /**
- * SuggestedStarsContext - FIXED: State Update Issue
+ * SuggestedStarsContext - ENHANCED: Comprehensive Debugging Logs
  * 
- * Purpose: Manages AI-generated suggested stars with proper state propagation.
+ * Purpose: Manages AI-generated suggested stars with detailed logging
+ * to trace state updates and identify propagation issues.
  * 
- * CRITICAL FIX:
- * - Fixed state update not propagating to App component
- * - Simplified comparison logic to prevent false equality checks
- * - Added explicit state update confirmation logs
- * - Removed complex caching that was preventing updates
+ * ENHANCED LOGGING:
+ * - Function entry/exit logging with timestamps
+ * - State change monitoring with before/after values
+ * - Promise resolution/rejection tracking
+ * - Context provider lifecycle logging
+ * - Detailed error reporting with stack traces
  * 
- * Confidence Rating: High - Targeted fix for state propagation
+ * Confidence Rating: High - Comprehensive debugging implementation
  */
 
 interface SuggestedStarsContextType {
@@ -31,64 +33,177 @@ interface SuggestedStarsProviderProps {
 }
 
 export function SuggestedStarsProvider({ children }: SuggestedStarsProviderProps) {
+  console.log('=== SuggestedStarsProvider: Component initializing ===');
+  
   const [suggestedStars, setSuggestedStarsState] = useState<SuggestedStar[]>([]);
 
-  const clearSuggestedStars = useCallback(() => {
-    console.log('SuggestedStarsContext: Clearing suggested stars');
-    setSuggestedStarsState([]);
-  }, []);
+  console.log('SuggestedStarsProvider: Initial state set, suggestedStars.length:', suggestedStars.length);
 
-  // FIXED: Simplified state setter without complex comparison
-  const handleSetSuggestedStars = useCallback((stars: SuggestedStar[]) => {
-    console.log(`SuggestedStarsContext: Setting ${stars.length} suggested stars`);
-    console.log('SuggestedStarsContext: Stars being set:', stars.map(s => ({ id: s.id, catalogId: s.starCatalogId, name: s.name })));
+  const clearSuggestedStars = useCallback(() => {
+    const timestamp = Date.now();
+    console.log(`=== SuggestedStarsContext: clearSuggestedStars called at ${timestamp} ===`);
+    console.log('SuggestedStarsContext: clearSuggestedStars - Current state length:', suggestedStars.length);
     
-    // CRITICAL FIX: Always update state - let React handle optimization
+    setSuggestedStarsState([]);
+    
+    console.log('SuggestedStarsContext: clearSuggestedStars - setSuggestedStarsState([]) called');
+    console.log(`=== SuggestedStarsContext: clearSuggestedStars completed at ${Date.now()} ===`);
+  }, [suggestedStars.length]);
+
+  // ENHANCED: Comprehensive state setter with detailed logging
+  const handleSetSuggestedStars = useCallback((stars: SuggestedStar[]) => {
+    const timestamp = Date.now();
+    console.log(`=== SuggestedStarsContext: handleSetSuggestedStars called at ${timestamp} ===`);
+    console.log('SuggestedStarsContext: handleSetSuggestedStars - Input stars.length:', stars.length);
+    console.log('SuggestedStarsContext: handleSetSuggestedStars - Current state length:', suggestedStars.length);
+    console.log('SuggestedStarsContext: handleSetSuggestedStars - Input stars details:', stars.map(s => ({ 
+      id: s.id, 
+      catalogId: s.starCatalogId, 
+      name: s.name,
+      emotion: s.metadata?.emotion 
+    })));
+    
+    // CRITICAL: Log the exact moment we call setState
+    console.log('SuggestedStarsContext: handleSetSuggestedStars - ABOUT TO CALL setSuggestedStarsState');
+    console.log('SuggestedStarsContext: handleSetSuggestedStars - setState will be called with:', {
+      newLength: stars.length,
+      currentLength: suggestedStars.length,
+      timestamp: timestamp
+    });
+    
     setSuggestedStarsState(stars);
     
-    // CONFIRMATION: Log after state update call
-    console.log('SuggestedStarsContext: setSuggestedStarsState called - state should update now');
-  }, []);
+    console.log('SuggestedStarsContext: handleSetSuggestedStars - setSuggestedStarsState CALLED');
+    console.log('SuggestedStarsContext: handleSetSuggestedStars - React should now schedule a re-render');
+    console.log(`=== SuggestedStarsContext: handleSetSuggestedStars completed at ${Date.now()} ===`);
+  }, [suggestedStars.length]);
 
   const getSuggestedStarByCatalogId = useCallback((catalogId: string): SuggestedStar | null => {
-    return suggestedStars.find(star => star.starCatalogId === catalogId) || null;
+    console.log('SuggestedStarsContext: getSuggestedStarByCatalogId called with catalogId:', catalogId);
+    console.log('SuggestedStarsContext: getSuggestedStarByCatalogId - Current suggestedStars.length:', suggestedStars.length);
+    
+    const result = suggestedStars.find(star => star.starCatalogId === catalogId) || null;
+    
+    console.log('SuggestedStarsContext: getSuggestedStarByCatalogId - Result:', result ? result.id : 'null');
+    return result;
   }, [suggestedStars]);
 
   const isStarSuggested = useCallback((catalogId: string): boolean => {
-    return suggestedStars.some(star => star.starCatalogId === catalogId);
+    console.log('SuggestedStarsContext: isStarSuggested called with catalogId:', catalogId);
+    console.log('SuggestedStarsContext: isStarSuggested - Current suggestedStars.length:', suggestedStars.length);
+    
+    const result = suggestedStars.some(star => star.starCatalogId === catalogId);
+    
+    console.log('SuggestedStarsContext: isStarSuggested - Result:', result);
+    return result;
   }, [suggestedStars]);
 
-  // FIXED: Simplified fetch function without internal caching
+  // ENHANCED: Comprehensive fetch function with detailed logging
   const fetchSuggestionsForEmotion = useCallback(async (emotion: string): Promise<void> => {
+    const functionStartTime = Date.now();
+    console.log(`=== SuggestedStarsContext: fetchSuggestionsForEmotion START at ${functionStartTime} ===`);
+    console.log('SuggestedStarsContext: fetchSuggestionsForEmotion - Input emotion:', emotion);
+    console.log('SuggestedStarsContext: fetchSuggestionsForEmotion - Current state length:', suggestedStars.length);
+
     try {
-      console.log(`SuggestedStarsContext: Starting fetch for emotion: ${emotion}`);
+      console.log('SuggestedStarsContext: fetchSuggestionsForEmotion - Entering try block');
       
-      // Import StarService dynamically to avoid circular dependencies
+      // ENHANCED: Dynamic import with detailed logging
+      console.log('SuggestedStarsContext: fetchSuggestionsForEmotion - About to import StarService');
+      const importStartTime = Date.now();
+      
       const { StarService } = await import('../services/starService');
+      
+      const importEndTime = Date.now();
+      console.log(`SuggestedStarsContext: fetchSuggestionsForEmotion - StarService imported in ${importEndTime - importStartTime}ms`);
+      
+      // ENHANCED: Service call with detailed logging
+      console.log('SuggestedStarsContext: fetchSuggestionsForEmotion - About to call StarService.getSuggestedStarsForEmotion');
+      const serviceCallStartTime = Date.now();
+      
       const suggestions = await StarService.getSuggestedStarsForEmotion(emotion);
       
-      console.log(`SuggestedStarsContext: StarService returned ${suggestions.length} suggestions`);
-      console.log('SuggestedStarsContext: Suggestions received:', suggestions.map(s => ({ id: s.id, catalogId: s.starCatalogId, name: s.name })));
+      const serviceCallEndTime = Date.now();
+      console.log(`SuggestedStarsContext: fetchSuggestionsForEmotion - StarService call completed in ${serviceCallEndTime - serviceCallStartTime}ms`);
+      console.log('SuggestedStarsContext: fetchSuggestionsForEmotion - StarService returned suggestions.length:', suggestions.length);
+      console.log('SuggestedStarsContext: fetchSuggestionsForEmotion - Suggestions details:', suggestions.map(s => ({ 
+        id: s.id, 
+        catalogId: s.starCatalogId, 
+        name: s.name,
+        emotion: s.metadata?.emotion 
+      })));
       
-      // CRITICAL FIX: Direct state update without comparison
-      console.log('SuggestedStarsContext: About to call handleSetSuggestedStars');
+      // CRITICAL: State update with comprehensive logging
+      console.log('SuggestedStarsContext: fetchSuggestionsForEmotion - About to call handleSetSuggestedStars');
+      console.log('SuggestedStarsContext: fetchSuggestionsForEmotion - Current state before update:', {
+        currentLength: suggestedStars.length,
+        newLength: suggestions.length,
+        timestamp: Date.now()
+      });
+      
+      const stateUpdateStartTime = Date.now();
       handleSetSuggestedStars(suggestions);
-      console.log('SuggestedStarsContext: handleSetSuggestedStars completed');
+      const stateUpdateEndTime = Date.now();
+      
+      console.log(`SuggestedStarsContext: fetchSuggestionsForEmotion - handleSetSuggestedStars completed in ${stateUpdateEndTime - stateUpdateStartTime}ms`);
+      console.log('SuggestedStarsContext: fetchSuggestionsForEmotion - State update should now be propagating to components');
+      
+      const functionEndTime = Date.now();
+      console.log(`=== SuggestedStarsContext: fetchSuggestionsForEmotion SUCCESS in ${functionEndTime - functionStartTime}ms ===`);
       
     } catch (error) {
-      console.error('SuggestedStarsContext: Error fetching suggestions:', error);
-      // Clear suggestions on error
+      const errorTime = Date.now();
+      console.error(`=== SuggestedStarsContext: fetchSuggestionsForEmotion ERROR at ${errorTime} ===`);
+      console.error('SuggestedStarsContext: fetchSuggestionsForEmotion - Error details:', {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : 'No stack trace',
+        type: typeof error,
+        emotion: emotion,
+        timestamp: errorTime
+      });
+      
+      // Clear suggestions on error with logging
+      console.log('SuggestedStarsContext: fetchSuggestionsForEmotion - Clearing suggestions due to error');
       handleSetSuggestedStars([]);
+      console.log('SuggestedStarsContext: fetchSuggestionsForEmotion - Error handling completed');
+      
+      // Re-throw the error for upstream handling
+      throw error;
     }
-  }, [handleSetSuggestedStars]);
+  }, [handleSetSuggestedStars, suggestedStars.length]);
 
-  // DEBUGGING: Log current state whenever it changes
+  // ENHANCED: State change monitoring with detailed logging
   React.useEffect(() => {
-    console.log('SuggestedStarsContext: State updated - suggestedStars length:', suggestedStars.length);
+    const timestamp = Date.now();
+    console.log(`=== SuggestedStarsContext: State change detected at ${timestamp} ===`);
+    console.log('SuggestedStarsContext: State updated - suggestedStars.length:', suggestedStars.length);
+    
     if (suggestedStars.length > 0) {
-      console.log('SuggestedStarsContext: Current suggested stars:', suggestedStars.map(s => ({ id: s.id, catalogId: s.starCatalogId, name: s.name })));
+      console.log('SuggestedStarsContext: State updated - Current suggested stars:', suggestedStars.map(s => ({ 
+        id: s.id, 
+        catalogId: s.starCatalogId, 
+        name: s.name,
+        emotion: s.metadata?.emotion 
+      })));
+      console.log('SuggestedStarsContext: State updated - This should trigger re-renders in consuming components');
+    } else {
+      console.log('SuggestedStarsContext: State updated - No suggested stars (empty array)');
     }
+    
+    console.log(`=== SuggestedStarsContext: State change processing completed at ${Date.now()} ===`);
   }, [suggestedStars]);
+
+  // ENHANCED: Provider lifecycle logging
+  React.useEffect(() => {
+    console.log('=== SuggestedStarsProvider: Provider mounted ===');
+    
+    return () => {
+      console.log('=== SuggestedStarsProvider: Provider unmounting ===');
+    };
+  }, []);
+
+  console.log('SuggestedStarsProvider: About to render Provider with context value');
+  console.log('SuggestedStarsProvider: Context value suggestedStars.length:', suggestedStars.length);
 
   return (
     <SuggestedStarsContext.Provider 
@@ -107,9 +222,14 @@ export function SuggestedStarsProvider({ children }: SuggestedStarsProviderProps
 }
 
 export function useSuggestedStars() {
+  console.log('useSuggestedStars: Hook called');
+  
   const context = useContext(SuggestedStarsContext);
   if (context === undefined) {
+    console.error('useSuggestedStars: Hook called outside of SuggestedStarsProvider');
     throw new Error('useSuggestedStars must be used within a SuggestedStarsProvider');
   }
+  
+  console.log('useSuggestedStars: Returning context with suggestedStars.length:', context.suggestedStars.length);
   return context;
 }
