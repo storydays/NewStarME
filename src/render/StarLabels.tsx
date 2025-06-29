@@ -16,8 +16,9 @@ import { STAR_SETTINGS } from '../config/starConfig';
  * - Consistent white styling for all labels
  * - Bigger labels for highlighted stars
  * - No special styling effects (borders, backgrounds, etc.)
+ * - Fixed label positioning based on actual star size (not magnified size)
  * 
- * Confidence Rating: High - Refined label behavior with strict filtering
+ * Confidence Rating: High - Refined label behavior with strict filtering and proper positioning
  */
 
 interface StarLabelsProps {
@@ -82,18 +83,28 @@ export function StarLabels({
           starSettings = STAR_SETTINGS.highlighted;
           isSpecialStar = true;
         } else if (star.id === hoveredStar) {
-          // Use highlighted settings for hovered stars
-          starSettings = STAR_SETTINGS.highlighted;
-          isSpecialStar = true;
+          // FIXED: Use regular settings for hovered stars to position label closer
+          starSettings = STAR_SETTINGS.regular;
+          isSpecialStar = false; // Treat as regular for positioning
         }
         
         // Calculate actual star size based on magnitude and settings
         const baseMagnitudeSize = Math.max(0.02, Math.min(0.3, 0.25 * (6.0 - star.magnitude) * 0.2));
-        const actualStarSize = baseMagnitudeSize * starSettings.sizeMultiplier;
+        
+        // FIXED: For hovered stars, use regular size for positioning, not highlighted size
+        let actualStarSize: number;
+        if (star.id === hoveredStar && !star.isHighlighted && star.id !== selectedStar) {
+          // Hovered only: use regular size for positioning
+          actualStarSize = baseMagnitudeSize * STAR_SETTINGS.regular.sizeMultiplier;
+        } else {
+          // Highlighted or selected: use appropriate settings
+          actualStarSize = baseMagnitudeSize * starSettings.sizeMultiplier;
+        }
+        
         const glowRadius = actualStarSize * 2.5; // Glow is 2.5x star size
         
         // ENHANCED: Closer label positioning - reduced offset
-        const labelOffset = Math.max(0.8, glowRadius * 0.6 + 0.3); // CHANGED: Reduced from 1.2 and 0.8+0.5 to 0.8 and 0.6+0.3
+        const labelOffset = Math.max(0.8, glowRadius * 0.6 + 0.3);
         const labelPosition: [number, number, number] = [
           star.position[0], 
           star.position[1] + labelOffset, 
@@ -104,16 +115,24 @@ export function StarLabels({
         let fontSize: number;
         let fontWeight: number;
         
-        if (isSpecialStar) {
-          // Special stars: Bigger labels
+        if (star.isHighlighted) {
+          // ENHANCED: Bigger labels for highlighted stars
+          fontSize = Math.max(16, Math.min(22, 350 / distanceFromCamera)); // Increased from 14-20 to 16-22
+          fontWeight = 600;
+          
+          console.log(`StarLabels: Highlighted star ${star.name || star.id} - size: ${actualStarSize.toFixed(3)}, offset: ${labelOffset.toFixed(2)}, fontSize: ${fontSize}`);
+        } else if (star.id === selectedStar) {
+          // Selected stars: Enhanced size
           fontSize = Math.max(14, Math.min(20, 300 / distanceFromCamera));
           fontWeight = 600;
           
-          console.log(`StarLabels: Special star ${star.name || star.id} - size: ${actualStarSize.toFixed(3)}, offset: ${labelOffset.toFixed(2)}`);
+          console.log(`StarLabels: Selected star ${star.name || star.id} - size: ${actualStarSize.toFixed(3)}, offset: ${labelOffset.toFixed(2)}, fontSize: ${fontSize}`);
         } else {
-          // Regular stars: Standard size
+          // Hovered stars: Standard size
           fontSize = Math.max(8, Math.min(16, 200 / distanceFromCamera));
           fontWeight = 300;
+          
+          console.log(`StarLabels: Hovered star ${star.name || star.id} - size: ${actualStarSize.toFixed(3)}, offset: ${labelOffset.toFixed(2)}, fontSize: ${fontSize}`);
         }
 
         return (
@@ -126,23 +145,23 @@ export function StarLabels({
           >
             <div 
               style={{
-                color: '#F8FAFC', // CHANGED: Always white for all labels
+                color: '#F8FAFC', // Always white for all labels
                 fontSize: `${fontSize}px`,
                 fontWeight: fontWeight,
                 opacity: 1.0, // Always fully visible for filtered stars
-                textShadow: '0 0 4px rgba(0,0,0,0.8)', // CHANGED: Consistent shadow for all
+                textShadow: '0 0 4px rgba(0,0,0,0.8)', // Consistent shadow for all
                 pointerEvents: 'none',
                 whiteSpace: 'nowrap',
                 transition: 'all 0.3s ease',
                 fontFamily: 'Inter, system-ui, sans-serif',
-                letterSpacing: '0px', // CHANGED: No special letter spacing
+                letterSpacing: '0px', // No special letter spacing
                 textAlign: 'center',
-                padding: '0px', // CHANGED: No padding
-                borderRadius: '0px', // CHANGED: No border radius
-                backgroundColor: 'transparent', // CHANGED: No background
-                border: 'none', // CHANGED: No border
-                backdropFilter: 'none', // CHANGED: No backdrop filter
-                boxShadow: 'none' // CHANGED: No box shadow
+                padding: '0px', // No padding
+                borderRadius: '0px', // No border radius
+                backgroundColor: 'transparent', // No background
+                border: 'none', // No border
+                backdropFilter: 'none', // No backdrop filter
+                boxShadow: 'none' // No box shadow
               }}
             >
               {star.name}
