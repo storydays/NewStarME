@@ -2,22 +2,21 @@ import React, { useCallback, useRef } from 'react';
 import { Billboard } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
-import { STAR_COLORS } from '../config/starColors';
+import { STAR_SETTINGS } from '../config/starConfig';
 
 /**
- * Star Component - Enhanced with Simplified Color Configuration
+ * Star Component - Enhanced with STAR_SETTINGS Configuration
  * 
  * Purpose: Main dispatcher component that renders appropriate star type based on highlighting state.
- * UPDATED: Uses simplified STAR_COLORS configuration with direct color values.
+ * UPDATED: Uses STAR_SETTINGS configuration with size and glow multipliers.
  * 
  * Features:
- * - Simplified color configuration from STAR_COLORS
- * - Aurora green for suggested stars with bigger size
- * - Purple for selected stars with bigger size
- * - Enhanced glow effects for better visibility
+ * - STAR_SETTINGS configuration with size and glow multipliers
+ * - Three categories: regular, highlighted (suggested), selected
+ * - Enhanced glow effects with configurable multipliers
  * - React.memo optimization to prevent unnecessary re-renders
  * 
- * Confidence Rating: High - Enhanced with simplified color management
+ * Confidence Rating: High - Enhanced with comprehensive star configuration
  */
 
 interface BaseStarProps {
@@ -34,16 +33,14 @@ interface BaseStarProps {
 interface StarProps extends BaseStarProps {
   isHighlighted?: boolean;
   emotionColor?: string;
-  isSuggested?: boolean;
 }
 
 interface HighlightedStarProps extends BaseStarProps {
   emotionColor?: string;
-  isSuggested?: boolean;
 }
 
 /**
- * RegularStar Component - Enhanced with simplified colors
+ * RegularStar Component - Enhanced with STAR_SETTINGS
  */
 const RegularStar = React.memo(function RegularStar({
   position,
@@ -68,25 +65,23 @@ const RegularStar = React.memo(function RegularStar({
     onClick(event);
   }, [onClick]);
 
-  const normalGlowMultiplier = glowMultiplier * 2.0;
-
   const getStarColors = useCallback(() => {
     if (isSelected) {
       return {
-        coreColor: new THREE.Color(STAR_COLORS.selected),
-        glowColor: new THREE.Color(STAR_COLORS.selected).multiplyScalar(normalGlowMultiplier),
+        coreColor: new THREE.Color(STAR_SETTINGS.selected.color),
+        glowColor: new THREE.Color(STAR_SETTINGS.selected.color).multiplyScalar(glowMultiplier * STAR_SETTINGS.selected.glowMultiplier),
         glowOpacity: 1.0,
         coreOpacity: opacity
       };
     } else {
       return {
-        coreColor: new THREE.Color(STAR_COLORS.normal),
-        glowColor: new THREE.Color(STAR_COLORS.normal).multiplyScalar(normalGlowMultiplier),
+        coreColor: new THREE.Color(STAR_SETTINGS.regular.color),
+        glowColor: new THREE.Color(STAR_SETTINGS.regular.color).multiplyScalar(glowMultiplier * STAR_SETTINGS.regular.glowMultiplier),
         glowOpacity: 1.0,
         coreOpacity: opacity
       };
     }
-  }, [isSelected, opacity, normalGlowMultiplier]);
+  }, [isSelected, opacity, glowMultiplier]);
 
   const colors = getStarColors();
 
@@ -125,7 +120,7 @@ const RegularStar = React.memo(function RegularStar({
 });
 
 /**
- * HighlightedStar Component - Enhanced with simplified colors
+ * HighlightedStar Component - Enhanced with STAR_SETTINGS
  */
 const HighlightedStar = React.memo(function HighlightedStar({
   position,
@@ -136,7 +131,6 @@ const HighlightedStar = React.memo(function HighlightedStar({
   glowMultiplier,
   isSelected,
   emotionColor,
-  isSuggested = false,
   onClick
 }: HighlightedStarProps) {
   
@@ -155,64 +149,46 @@ const HighlightedStar = React.memo(function HighlightedStar({
     onClick(event);
   }, [onClick]);
 
-  // Enhanced sizes for both suggested and selected stars
-  const sizeMultiplier = isSuggested ? 2.5 : (isSelected ? 3.0 : 4.0);
-  const enhancedStarSize = starSize * sizeMultiplier;
-  const enhancedGlowMultiplier = glowMultiplier * (isSuggested ? 2.0 : (isSelected ? 2.5 : 4.0));
+  // Enhanced sizes using STAR_SETTINGS
+  const finalSettings = isSelected ? STAR_SETTINGS.selected : STAR_SETTINGS.highlighted;
+  const enhancedStarSize = starSize * finalSettings.sizeMultiplier;
+  const enhancedGlowMultiplier = glowMultiplier * finalSettings.glowMultiplier;
 
   const getStarColors = useCallback(() => {
     if (isSelected) {
-      // Selected: Purple from simplified config
       return {
-        coreColor: new THREE.Color(STAR_COLORS.selected),
-        glowColor: new THREE.Color(STAR_COLORS.selected).multiplyScalar(enhancedGlowMultiplier),
+        coreColor: new THREE.Color(STAR_SETTINGS.selected.color),
+        glowColor: new THREE.Color(STAR_SETTINGS.selected.color).multiplyScalar(enhancedGlowMultiplier),
         baseCoreOpacity: opacity
       };
-    } else if (isSuggested) {
-      // Suggested: Aurora green from simplified config
-      return {
-        coreColor: new THREE.Color(STAR_COLORS.suggested),
-        glowColor: new THREE.Color(STAR_COLORS.suggested).multiplyScalar(enhancedGlowMultiplier),
-        baseCoreOpacity: Math.max(opacity, 0.9)
-      };
     } else {
-      // Regular highlighted: Emotion-based color or fallback to suggested
-      const emotionColorObj = emotionColor ? new THREE.Color(emotionColor) : new THREE.Color(STAR_COLORS.suggested);
-      
+      // Highlighted: Use highlighted settings, ignore emotionColor for simplicity
       return {
-        coreColor: emotionColorObj,
-        glowColor: emotionColorObj.clone().multiplyScalar(enhancedGlowMultiplier),
+        coreColor: new THREE.Color(STAR_SETTINGS.highlighted.color),
+        glowColor: new THREE.Color(STAR_SETTINGS.highlighted.color).multiplyScalar(enhancedGlowMultiplier),
         baseCoreOpacity: Math.max(opacity, 0.9)
       };
     }
-  }, [isSelected, isSuggested, emotionColor, opacity, enhancedGlowMultiplier]);
+  }, [isSelected, opacity, enhancedGlowMultiplier]);
 
   const colors = getStarColors();
 
-  // Enhanced pulsing animation with different effects for selected vs suggested
+  // Enhanced pulsing animation with different effects for selected vs highlighted
   useFrame((state) => {
     if (glowMaterialRef.current && coreMaterialRef.current) {
       const time = state.clock.elapsedTime;
       
       if (isSelected) {
-        // Selected stars: Slower, more dramatic pulsing with purple tones
+        // Selected stars: Slower, more dramatic pulsing
         const pulseSpeed = 1.8;
         const pulseIntensity = 0.5;
         const pulseMultiplier = 1.0 + Math.sin(time * pulseSpeed) * pulseIntensity;
         
         glowMaterialRef.current.color = colors.glowColor.clone().multiplyScalar(pulseMultiplier);
         coreMaterialRef.current.opacity = colors.baseCoreOpacity * (1.0 + Math.sin(time * pulseSpeed) * 0.15);
-      } else if (isSuggested) {
-        // Suggested stars: Gentle aurora-like pulsing
-        const pulseSpeed = 1.2;
-        const pulseIntensity = 0.3;
-        const pulseMultiplier = 1.0 + Math.sin(time * pulseSpeed) * pulseIntensity;
-        
-        glowMaterialRef.current.color = colors.glowColor.clone().multiplyScalar(pulseMultiplier);
-        coreMaterialRef.current.opacity = colors.baseCoreOpacity * (1.0 + Math.sin(time * pulseSpeed) * 0.1);
       } else {
-        // Regular highlighted: Standard pulsing
-        const pulseSpeed = 2.0;
+        // Highlighted stars: Gentle pulsing
+        const pulseSpeed = 1.2;
         const pulseIntensity = 0.3;
         const pulseMultiplier = 1.0 + Math.sin(time * pulseSpeed) * pulseIntensity;
         
@@ -229,7 +205,7 @@ const HighlightedStar = React.memo(function HighlightedStar({
         <meshBasicMaterial transparent opacity={0} visible={false} />
       </mesh>
 
-      {/* Enhanced glow sprite with simplified colors */}
+      {/* Enhanced glow sprite with STAR_SETTINGS colors */}
       <sprite scale={[enhancedStarSize * 2.5, enhancedStarSize * 2.5, enhancedStarSize * 2.5]}>
         <spriteMaterial
           ref={glowMaterialRef}
@@ -243,7 +219,7 @@ const HighlightedStar = React.memo(function HighlightedStar({
         />
       </sprite>
 
-      {/* Star sprite with simplified colors */}
+      {/* Star sprite with STAR_SETTINGS colors */}
       <sprite scale={[starSize*2.5, starSize*2.5, starSize*2.5]}>
         <spriteMaterial
           ref={coreMaterialRef}
@@ -261,7 +237,7 @@ const HighlightedStar = React.memo(function HighlightedStar({
 });
 
 /**
- * Main Star Component - Enhanced dispatcher with simplified color management
+ * Main Star Component - Enhanced dispatcher with STAR_SETTINGS
  */
 export const Star = React.memo(function Star({
   position,
@@ -273,7 +249,6 @@ export const Star = React.memo(function Star({
   isSelected,
   isHighlighted = false,
   emotionColor,
-  isSuggested = false,
   onClick
 }: StarProps) {
   
@@ -288,7 +263,6 @@ export const Star = React.memo(function Star({
         glowMultiplier={glowMultiplier}
         isSelected={isSelected}
         emotionColor={emotionColor}
-        isSuggested={isSuggested}
         onClick={onClick}
       />
     );
@@ -318,7 +292,6 @@ export const Star = React.memo(function Star({
     prevProps.isSelected === nextProps.isSelected &&
     prevProps.isHighlighted === nextProps.isHighlighted &&
     prevProps.emotionColor === nextProps.emotionColor &&
-    prevProps.isSuggested === nextProps.isSuggested &&
     prevProps.starTexture === nextProps.starTexture &&
     prevProps.glowTexture === nextProps.glowTexture
   );

@@ -5,13 +5,13 @@ import { StarsCatalog } from '../data/StarsCatalog';
 import { HygStarData } from '../types';
 import { Starfield } from './Starfield';
 import { AnimationController } from './AnimationController';
-import { STAR_COLORS } from '../config/starColors';
+import { STAR_SETTINGS } from '../config/starConfig';
 
 /**
- * StarviewCanvas Component - Enhanced with Simplified Color Configuration
+ * StarviewCanvas Component - Enhanced with STAR_SETTINGS Configuration
  * 
  * Purpose: Pure rendering component that accepts all data via props.
- * UPDATED: Uses simplified STAR_COLORS configuration with direct color values.
+ * UPDATED: Uses STAR_SETTINGS configuration with comprehensive star settings.
  * 
  * Features:
  * - Render stars from StarsCatalog
@@ -19,9 +19,9 @@ import { STAR_COLORS } from '../config/starColors';
  * - Expose camera control via props
  * - Notify parent on star clicks via callbacks
  * - Clean separation from business logic
- * - Simplified color configuration
+ * - STAR_SETTINGS configuration with size and glow multipliers
  * 
- * Confidence Rating: High - Enhanced with simplified color management
+ * Confidence Rating: High - Enhanced with comprehensive star configuration
  */
 
 interface StarviewCanvasProps {
@@ -56,7 +56,7 @@ interface AnimationCommand {
 }
 
 /**
- * StarfieldWrapper Component - Enhanced with simplified colors
+ * StarfieldWrapper Component - Enhanced with STAR_SETTINGS
  */
 function StarfieldWrapper({ 
   starsCatalog, 
@@ -82,14 +82,14 @@ function StarfieldWrapper({
   onStarClick?: (star: HygStarData) => void;
 }) {
   
-  // Convert StarsCatalog data to Starfield format with simplified colors
+  // Convert StarsCatalog data to Starfield format with STAR_SETTINGS
   const catalogData = useMemo(() => {
     if (!starsCatalog) {
       console.log('StarfieldWrapper: No catalog available');
       return [];
     }
 
-    console.log(`StarfieldWrapper: Processing StarsCatalog for ${renderingMode} rendering mode...`);
+    console.log(`StarfieldWrapper: Processing StarsCatalog for ${renderingMode} rendering mode with STAR_SETTINGS...`);
     console.log(`StarfieldWrapper: ${highlightedStarIds.length} stars to highlight`);
     
     // Create set for fast lookup
@@ -109,6 +109,14 @@ function StarfieldWrapper({
       const catalogId = catalogStar.hyg.id.toString();
       const isHighlighted = highlightedSet.has(catalogId);
       
+      // Determine settings based on star state using STAR_SETTINGS
+      let finalSettings = STAR_SETTINGS.regular;
+      if (selectedStar && selectedStar.hyg.id.toString() === catalogId) {
+        finalSettings = STAR_SETTINGS.selected;
+      } else if (isHighlighted) {
+        finalSettings = STAR_SETTINGS.highlighted;
+      }
+      
       return {
         id: catalogId,
         position: catalogStar.render.position,
@@ -116,13 +124,13 @@ function StarfieldWrapper({
         name: catalogStar.hyg.proper || undefined,
         isHighlighted,
         catalogStar: catalogStar,
-        enhancedSize: isHighlighted ? 2.5 : 1.0,
-        enhancedGlow: isHighlighted ? 2.0 : 1.0,
-        emotionColor: isHighlighted ? STAR_COLORS.suggested : undefined, // Use simplified color
+        enhancedSize: finalSettings.sizeMultiplier,
+        enhancedGlow: finalSettings.glowMultiplier,
+        emotionColor: finalSettings.color,
         showLabel: isHighlighted && catalogStar.hyg.proper
       };
     });
-  }, [starsCatalog, highlightedStarIds, renderingMode]);
+  }, [starsCatalog, highlightedStarIds, selectedStar, renderingMode]);
 
   // Handle star selection from Starfield
   const handleStarSelect = useCallback((starId: string) => {
@@ -176,7 +184,7 @@ function StarfieldWrapper({
 }
 
 /**
- * Scene Content Component - Enhanced with simplified colors
+ * Scene Content Component - Enhanced with STAR_SETTINGS
  */
 function SceneContent({ 
   starsCatalog, 
@@ -341,7 +349,7 @@ function SceneContent({
         onAnimationComplete={handleAnimationComplete}
       />
       
-      {/* Render star field with simplified colors */}
+      {/* Render star field with STAR_SETTINGS */}
       {starsCatalog && !catalogLoading && (
         <StarfieldWrapper 
           starsCatalog={starsCatalog}
@@ -371,7 +379,7 @@ function SceneContent({
 }
 
 /**
- * Main StarviewCanvas Component - Enhanced with simplified color management
+ * Main StarviewCanvas Component - Enhanced with STAR_SETTINGS
  */
 export function StarviewCanvas({ 
   starsCatalog, 
@@ -392,7 +400,7 @@ export function StarviewCanvas({
     console.log('StarviewCanvas: Pointer missed event');
   }, []);
 
-  console.log(`StarviewCanvas: Rendering with ${highlightedStarIds.length} highlighted stars in ${renderingMode} mode`);
+  console.log(`StarviewCanvas: Rendering with ${highlightedStarIds.length} highlighted stars in ${renderingMode} mode using STAR_SETTINGS`);
 
   return (
     <div className="fixed inset-0 w-full h-full">

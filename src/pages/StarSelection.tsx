@@ -7,13 +7,13 @@ import { useSuggestedStars } from '../context/SuggestedStarsContext';
 import { useStarviewCamera } from '../hooks/useStarviewCamera';
 import { emotions } from '../data/emotions';
 import { HygStarData } from '../types';
-import { STAR_COLORS } from '../config/starColors';
+import { STAR_SETTINGS } from '../config/starConfig';
 
 /**
- * StarSelection Component - Enhanced with Simplified Star Color Configuration
+ * StarSelection Component - Enhanced with STAR_SETTINGS Configuration
  * 
- * Purpose: Emotion-based star selection interface with simplified color management.
- * UPDATED: Uses simplified STAR_COLORS configuration with direct color values.
+ * Purpose: Emotion-based star selection interface with STAR_SETTINGS color management.
+ * UPDATED: Uses STAR_SETTINGS configuration with comprehensive star settings.
  * 
  * Features:
  * - Emotion-based star catalog browsing
@@ -21,10 +21,10 @@ import { STAR_COLORS } from '../config/starColors';
  * - Star detail modal using selectedStar from parent
  * - Camera focus control
  * - Suggested stars context integration
- * - Simplified color configuration with solid colors only
- * - Star particle image indicators without gradients or shadows
+ * - STAR_SETTINGS configuration with size and glow multipliers
+ * - Star particle image indicators with STAR_SETTINGS colors
  * 
- * Confidence Rating: High - Enhanced with simplified color management
+ * Confidence Rating: High - Enhanced with comprehensive star configuration
  */
 
 interface StarSelectionProps {
@@ -201,7 +201,7 @@ export function StarSelection({ selectedStar, setSelectedStar, onStarClick }: St
           Return to emotions
         </button>
 
-        {/* Simplified Star Color Indicators with star_particle.png */}
+        {/* STAR_SETTINGS Color Indicators with star_particle.png */}
         <motion.div
           className="frosted-glass px-4 py-3 rounded-lg space-y-3"
           initial={{ opacity: 0, y: 20 }}
@@ -212,39 +212,39 @@ export function StarSelection({ selectedStar, setSelectedStar, onStarClick }: St
             Star colors in 3D view:
           </p>
           
-          {/* Suggested Stars - Simplified with solid color */}
+          {/* Highlighted Stars - Using STAR_SETTINGS */}
           <div className="flex items-center gap-3">
             <div className="w-4 h-4 relative">
               <div 
                 className="star-icon-tint"
                 style={{
-                  backgroundColor: STAR_COLORS.suggested
+                  backgroundColor: STAR_SETTINGS.highlighted.color
                 }}
               />
             </div>
-            <span className="text-cosmic-light-echo text-xs font-light">Suggested stars</span>
+            <span className="text-cosmic-light-echo text-xs font-light">Highlighted stars</span>
           </div>
           
-          {/* Selected Star - Simplified with solid color */}
+          {/* Selected Star - Using STAR_SETTINGS */}
           <div className="flex items-center gap-3">
             <div className="w-4 h-4 relative">
               <div 
                 className="star-icon-tint"
                 style={{
-                  backgroundColor: STAR_COLORS.selected
+                  backgroundColor: STAR_SETTINGS.selected.color
                 }}
               />
             </div>
             <span className="text-cosmic-light-echo text-xs font-light">Selected star</span>
           </div>
           
-          {/* Other Stars - Simplified with solid color */}
+          {/* Other Stars - Using STAR_SETTINGS */}
           <div className="flex items-center gap-3">
             <div className="w-4 h-4 relative">
               <div 
                 className="star-icon-tint"
                 style={{
-                  backgroundColor: STAR_COLORS.normal
+                  backgroundColor: STAR_SETTINGS.regular.color
                 }}
               />
             </div>
@@ -367,8 +367,8 @@ export function StarSelection({ selectedStar, setSelectedStar, onStarClick }: St
               style={{
                 background: 'rgba(248, 250, 252, 0.03)',
                 backdropFilter: 'blur(25px)',
-                borderColor: `${STAR_COLORS.selected}33`, // Using simplified selected star color with opacity
-                boxShadow: `0 20px 60px rgba(157, 78, 221, 0.3)`, // Simplified shadow
+                borderColor: `${STAR_SETTINGS.selected.color}33`,
+                boxShadow: `0 20px 60px rgba(157, 78, 221, 0.3)`,
                 marginBottom: '32px'
               }}
               initial={{ y: 100, opacity: 0, scale: 0.95 }}
@@ -442,13 +442,13 @@ export function StarSelection({ selectedStar, setSelectedStar, onStarClick }: St
                     </div>
                   </div>
 
-                  {/* Dedicate Button - Simplified with solid color */}
+                  {/* Dedicate Button - Using STAR_SETTINGS */}
                   <div className="flex-shrink-0">
                     <motion.button
                       onClick={() => handleDedicate(selectedStar)}
                       className="text-cosmic-observation font-light py-3 px-6 rounded-xl transition-all duration-300 flex items-center gap-2 text-sm pointer-events-auto"
                       style={{
-                        backgroundColor: STAR_COLORS.selected,
+                        backgroundColor: STAR_SETTINGS.selected.color,
                         boxShadow: `0 0 20px rgba(157, 78, 221, 0.3)`
                       }}
                       whileHover={{ 

@@ -4,21 +4,21 @@ import { TextureLoader } from 'three';
 import { Star } from './Star';
 import { StarLabels } from './StarLabels';
 import { InstancedRegularStars } from './InstancedRegularStars';
+import { STAR_SETTINGS } from '../config/starConfig';
 
 /**
- * Starfield Component - Enhanced with highlightedStarIds Prop
+ * Starfield Component - Enhanced with STAR_SETTINGS Configuration
  * 
- * Purpose: Renders stars with highlighting based on props, not context.
+ * Purpose: Renders stars with highlighting based on props using STAR_SETTINGS.
  * Receives highlightedStarIds as prop to determine which stars to emphasize.
  * 
  * Features:
- * - Props-based highlighting (no context dependency)
- * - Enhanced aurora gradients for highlighted stars
+ * - STAR_SETTINGS-based highlighting with size and glow multipliers
  * - Enhanced click detection for star selection
  * - Configurable rendering modes (classic/instanced)
  * - Performance optimized rendering
  * 
- * Confidence Rating: High - Clean props-based rendering
+ * Confidence Rating: High - Enhanced with comprehensive star configuration
  */
 
 interface StarfieldProps {
@@ -77,14 +77,14 @@ export function Starfield({
     }
   }, [onStarSelect, onStarClick, renderingMode]);
 
-  // Mode-aware star categorization
+  // Mode-aware star categorization with STAR_SETTINGS
   const { regularStars, specialStars, labelStars } = useMemo(() => {
     if (!starTexture || !glowTexture) {
       console.log('Starfield: Textures not loaded yet');
       return { regularStars: [], specialStars: [], labelStars: [] };
     }
 
-    console.log(`Starfield: Processing ${catalog.length} stars for ${renderingMode} rendering mode`);
+    console.log(`Starfield: Processing ${catalog.length} stars for ${renderingMode} rendering mode with STAR_SETTINGS`);
     
     if (renderingMode === 'classic') {
       // Classic mode: All stars rendered individually
@@ -125,35 +125,24 @@ export function Starfield({
     }
   }, [catalog, selectedStar, starTexture, glowTexture, renderingMode]);
 
-  // Render individual stars
+  // Render individual stars with STAR_SETTINGS
   const starSprites = useMemo(() => {
     const starsToRender = renderingMode === 'classic' ? catalog : specialStars;
     
     return starsToRender.map((star) => {
-      // Calculate enhanced properties
+      // Calculate enhanced properties using STAR_SETTINGS
       const baseMagnitudeSize = Math.max(0.02, Math.min(0.3, starSize * (6.0 - star.magnitude) * 0.2));
       
-      // Enhanced sizes for highlighted and selected stars
-      let enhancedSize = star.enhancedSize || 1.0;
-      if (star.isHighlighted) {
-        enhancedSize = 2.5; // Bigger for highlighted stars
-      }
+      // Determine final settings based on star state
+      let finalSettings = STAR_SETTINGS.regular;
       if (star.id === selectedStar) {
-        enhancedSize = 3.0; // Even bigger for selected stars
+        finalSettings = STAR_SETTINGS.selected;
+      } else if (star.isHighlighted) {
+        finalSettings = STAR_SETTINGS.highlighted;
       }
       
-      const actualStarSize = baseMagnitudeSize * enhancedSize;
-      
-      // Enhanced glow
-      let enhancedGlow = star.enhancedGlow || 1.0;
-      if (star.isHighlighted) {
-        enhancedGlow = 2.0;
-      }
-      if (star.id === selectedStar) {
-        enhancedGlow = 2.5;
-      }
-      
-      const actualGlowMultiplier = glowMultiplier * enhancedGlow;
+      const actualStarSize = baseMagnitudeSize * finalSettings.sizeMultiplier;
+      const actualGlowMultiplier = glowMultiplier * finalSettings.glowMultiplier;
 
       return (
         <Star
@@ -167,7 +156,6 @@ export function Starfield({
           isSelected={star.id === selectedStar}
           isHighlighted={star.isHighlighted || false}
           emotionColor={star.emotionColor}
-          isSuggested={star.isHighlighted || false}
           onClick={() => handleStarClick(star.id)}
         />
       );
@@ -210,7 +198,7 @@ export function Starfield({
         </>
       )}
       
-      {/* Render labels with mode-aware configuration */}
+      {/* Render labels with STAR_SETTINGS configuration */}
       {showLabels && (
         <StarLabels
           stars={labelData.map(star => ({
