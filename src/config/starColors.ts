@@ -19,8 +19,8 @@ export const STAR_PARTICLE_IMAGE_PATH = '/src/assets/star_particle.png';
 // Star color configuration object
 export const STAR_COLORS = {
   suggested: {
-    core: '#FFFF94',      // Aurora green start
-    glow: '#39FF14',      // Aurora green end  
+    core: '#FF0000',      // Aurora green start
+    glow: '#FF0000',      // Aurora green end  
     shadow: 'rgba(127, 255, 148, 0.5)'
   },
   selected: {
