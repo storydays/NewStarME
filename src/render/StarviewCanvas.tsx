@@ -5,14 +5,14 @@ import { StarsCatalog } from '../data/StarsCatalog';
 import { HygStarData } from '../types';
 import { Starfield } from './Starfield';
 import { AnimationController } from './AnimationController';
-import { STAR_SETTINGS, MAX_CLASSIC_RENDER_STARS } from '../config/starConfig';
+import { STAR_SETTINGS, MAX_CLASSIC_RENDER_STARS, ORBIT_SPEED } from '../config/starConfig';
 
 /**
  * StarviewCanvas Component - Enhanced with STAR_SETTINGS Configuration and Proximity-Based Selection
  * 
  * Purpose: Pure rendering component that accepts all data via props.
  * UPDATED: Uses STAR_SETTINGS configuration with comprehensive star settings, configurable star count,
- * and proximity-based star selection for better spatial distribution.
+ * proximity-based star selection, and proper ORBIT_SPEED configuration usage.
  * 
  * Features:
  * - Render stars from StarsCatalog
@@ -23,8 +23,9 @@ import { STAR_SETTINGS, MAX_CLASSIC_RENDER_STARS } from '../config/starConfig';
  * - STAR_SETTINGS configuration with size and glow multipliers
  * - Configurable maximum star count for classic rendering
  * - Proximity-based star selection for uniform spatial distribution
+ * - Proper ORBIT_SPEED configuration usage for camera animations
  * 
- * Confidence Rating: High - Enhanced with comprehensive star configuration and proximity selection
+ * Confidence Rating: High - Enhanced with comprehensive star configuration and proper orbit speed usage
  */
 
 interface StarviewCanvasProps {
@@ -191,6 +192,7 @@ function StarfieldWrapper({
 
 /**
  * Scene Content Component - Enhanced with STAR_SETTINGS and Proximity-Based Selection
+ * UPDATED: Now uses ORBIT_SPEED from config for camera orbit animations
  */
 function SceneContent({ 
   starsCatalog, 
@@ -273,13 +275,14 @@ function SceneContent({
         duration: 2000
       });
     } else if (!selectedStar && highlightedStarIds.length === 0) {
-      console.log('SceneContent: No highlighted stars - starting default orbit animation');
+      console.log(`SceneContent: No highlighted stars - starting default orbit animation with speed ${ORBIT_SPEED}`);
       
+      // FIXED: Use ORBIT_SPEED from config instead of hardcoded value
       setAnimationCommand({
         type: 'orbit',
         center: [0, 0, 0],
         radius: 8,
-        speed: 0.3,
+        speed: ORBIT_SPEED, // CHANGED: Now uses ORBIT_SPEED from config
         elevation: 0.2
       });
     }
@@ -386,6 +389,7 @@ function SceneContent({
 
 /**
  * Main StarviewCanvas Component - Enhanced with STAR_SETTINGS and Proximity-Based Selection
+ * UPDATED: Now properly uses ORBIT_SPEED from config for camera orbit animations
  */
 export function StarviewCanvas({ 
   starsCatalog, 
@@ -406,7 +410,7 @@ export function StarviewCanvas({
     console.log('StarviewCanvas: Pointer missed event');
   }, []);
 
-  console.log(`StarviewCanvas: Rendering with ${highlightedStarIds.length} highlighted stars in ${renderingMode} mode using STAR_SETTINGS and proximity-based selection (max classic stars: ${MAX_CLASSIC_RENDER_STARS})`);
+  console.log(`StarviewCanvas: Rendering with ${highlightedStarIds.length} highlighted stars in ${renderingMode} mode using STAR_SETTINGS and proximity-based selection (max classic stars: ${MAX_CLASSIC_RENDER_STARS}, orbit speed: ${ORBIT_SPEED})`);
 
   return (
     <div className="fixed inset-0 w-full h-full">
