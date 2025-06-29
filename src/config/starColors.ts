@@ -26,7 +26,7 @@ export const STAR_COLORS = {
   selected: {
     core: '#9D4EDD',      // Purple start
     glow: '#6A0572',      // Dark purple end
-    shadow: 'rgba(157, 78, 221, 0.5)'
+    shadow: 'rgba(157, 78, 221, 0.9)'
   },
   normal: {
     core: '#F8F8FF',      // Ghost white
