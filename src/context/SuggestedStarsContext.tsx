@@ -1,18 +1,18 @@
-import React, { createContext, useContext, useState, useCallback, ReactNode, useRef } from 'react';
+import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
 import { SuggestedStar } from '../types';
 
 /**
- * SuggestedStarsContext - FIXED: Infinite Loop Prevention
+ * SuggestedStarsContext - SIMPLIFIED: Removed Internal Caching Logic
  * 
- * Purpose: Manages AI-generated suggested stars with proper caching and comparison.
+ * Purpose: Manages AI-generated suggested stars with simplified state management.
  * 
  * FIXES APPLIED:
- * - Enhanced deep comparison that handles AI-generated objects properly
- * - Emotion-based caching to prevent refetching same emotion
- * - Ref-based tracking to prevent unnecessary API calls
- * - Better logging for debugging infinite loops
+ * - Removed internal caching logic (isFetchingRef, lastFetchedEmotionRef)
+ * - Simplified fetchSuggestionsForEmotion to always attempt fetch
+ * - Added confirmation log before setSuggestedStarsState call
+ * - Relies on StarSelection component to manage when to invoke fetch
  * 
- * Confidence Rating: High - Targeted fix for infinite loop issue
+ * Confidence Rating: High - Simplified approach with clear logging
  */
 
 interface SuggestedStarsContextType {
@@ -31,7 +31,7 @@ interface SuggestedStarsProviderProps {
 }
 
 /**
- * ENHANCED: Deep comparison function with better AI object handling
+ * Enhanced deep comparison function with better AI object handling
  */
 function areSuggestedStarsEqual(stars1: SuggestedStar[], stars2: SuggestedStar[]): boolean {
   if (stars1.length !== stars2.length) {
@@ -39,7 +39,7 @@ function areSuggestedStarsEqual(stars1: SuggestedStar[], stars2: SuggestedStar[]
     return false;
   }
 
-  // ENHANCED: Compare by starCatalogId and name only (ignore metadata differences)
+  // Compare by starCatalogId and name only (ignore metadata differences)
   // This prevents AI-generated objects with different timestamps from being considered different
   for (let i = 0; i < stars1.length; i++) {
     const star1 = stars1[i];
@@ -63,28 +63,25 @@ function areSuggestedStarsEqual(stars1: SuggestedStar[], stars2: SuggestedStar[]
 
 export function SuggestedStarsProvider({ children }: SuggestedStarsProviderProps) {
   const [suggestedStars, setSuggestedStarsState] = useState<SuggestedStar[]>([]);
-  
-  // FIXED: Add emotion-based caching to prevent refetching
-  const lastFetchedEmotionRef = useRef<string | null>(null);
-  const isFetchingRef = useRef<boolean>(false);
 
   const clearSuggestedStars = useCallback(() => {
     console.log('SuggestedStarsContext: Clearing suggested stars');
     setSuggestedStarsState([]);
-    lastFetchedEmotionRef.current = null;
   }, []);
 
   const handleSetSuggestedStars = useCallback((stars: SuggestedStar[]) => {
     console.log(`SuggestedStarsContext: Attempting to set ${stars.length} suggested stars`);
     
-    // ENHANCED: Deep comparison with better logging
+    // Enhanced comparison with better logging
     if (areSuggestedStarsEqual(suggestedStars, stars)) {
       console.log('SuggestedStarsContext: Suggested stars are equal, skipping update');
       return;
     }
     
-    console.log('SuggestedStarsContext: Suggested stars are different, updating state');
+    // CONFIRMATION LOG: This log will explicitly confirm if setSuggestedStarsState is called
+    console.log('SuggestedStarsContext: Stars are different, calling setSuggestedStarsState with:', stars);
     setSuggestedStarsState(stars);
+    console.log('SuggestedStarsContext: setSuggestedStarsState called successfully');
   }, [suggestedStars]);
 
   const getSuggestedStarByCatalogId = useCallback((catalogId: string): SuggestedStar | null => {
@@ -95,44 +92,25 @@ export function SuggestedStarsProvider({ children }: SuggestedStarsProviderProps
     return suggestedStars.some(star => star.starCatalogId === catalogId);
   }, [suggestedStars]);
 
+  // SIMPLIFIED: Removed internal caching logic - always attempt to fetch
   const fetchSuggestionsForEmotion = useCallback(async (emotion: string): Promise<void> => {
-    // FIXED: Prevent multiple simultaneous fetches for same emotion
-    if (isFetchingRef.current) {
-      console.log('SuggestedStarsContext: Already fetching, skipping duplicate request');
-      return;
-    }
-
-    // FIXED: Check if we already have suggestions for this emotion
-    if (lastFetchedEmotionRef.current === emotion && suggestedStars.length > 0) {
-      console.log(`SuggestedStarsContext: Already have suggestions for ${emotion}, skipping fetch`);
-      return;
-    }
-
     try {
       console.log(`SuggestedStarsContext: Fetching suggestions for emotion: ${emotion}`);
-      isFetchingRef.current = true;
       
       // Import StarService dynamically to avoid circular dependencies
       const { StarService } = await import('../services/starService');
       const suggestions = await StarService.getSuggestedStarsForEmotion(emotion);
       
-      console.log(`SuggestedStarsContext: Received ${suggestions.length} suggestions`);
+      console.log(`SuggestedStarsContext: Received ${suggestions.length} suggestions from StarService`);
       
-      // FIXED: Only update if we don't already have suggestions for this emotion
-      if (lastFetchedEmotionRef.current !== emotion) {
-        handleSetSuggestedStars(suggestions);
-        lastFetchedEmotionRef.current = emotion;
-      } else {
-        console.log('SuggestedStarsContext: Emotion changed during fetch, discarding results');
-      }
+      // Always call handleSetSuggestedStars - let it decide whether to update
+      handleSetSuggestedStars(suggestions);
       
     } catch (error) {
       console.error('SuggestedStarsContext: Error fetching suggestions:', error);
       // Don't clear suggestions on error - keep existing ones
-    } finally {
-      isFetchingRef.current = false;
     }
-  }, [handleSetSuggestedStars, suggestedStars.length]);
+  }, [handleSetSuggestedStars]);
 
   return (
     <SuggestedStarsContext.Provider 
