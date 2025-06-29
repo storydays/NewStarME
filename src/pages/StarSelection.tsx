@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, X, Star as StarIcon, MapPin, Heart, Sparkles, ChevronRight } from 'lucide-react';
@@ -12,15 +12,16 @@ import { HygStarData } from '../types';
  * StarSelection Component - Clean Star Selection Interface
  * 
  * Purpose: Emotion-based star selection interface with proper state synchronization.
+ * UPDATED: Removed modalStar state, now uses selectedStar prop from parent App.
  * 
  * Features:
  * - Emotion-based star catalog browsing
  * - 3D visualization integration
- * - Star detail modal with enhanced UI
+ * - Star detail modal using selectedStar from parent
  * - Camera focus control
  * - Suggested stars context integration
  * 
- * Confidence Rating: High - Clean implementation without debug noise
+ * Confidence Rating: High - Clean implementation with parent state dependency
  */
 
 interface StarSelectionProps {
@@ -35,9 +36,6 @@ export function StarSelection({ selectedStar, setSelectedStar, onStarClick }: St
   const { stars: catalogStars, loading, error } = useStarsForEmotion(emotionId, 5);
   const { fetchSuggestionsForEmotion } = useSuggestedStars();
   const { focusOnStar, centerView } = useStarviewCamera();
-  
-  // Local state for modal
-  const [modalStar, setModalStar] = useState<HygStarData | null>(null);
   
   // Track which emotion we've processed to prevent duplicate calls
   const processedEmotionRef = useRef<string | null>(null);
@@ -120,11 +118,10 @@ export function StarSelection({ selectedStar, setSelectedStar, onStarClick }: St
   };
 
   const handleStarSelect = (catalogStar: HygStarData, index: number) => {
-    // Update global selected star state
-    setSelectedStar(catalogStar);
+    console.log('StarSelection: Star selected for modal display:', catalogStar.hyg.proper || catalogStar.hyg.id);
     
-    // Show modal
-    setModalStar(catalogStar);
+    // Update global selected star state (this will show the modal)
+    setSelectedStar(catalogStar);
     
     // Focus camera on selected star using direct camera control
     const catalogId = catalogStar.hyg.id.toString();
@@ -132,7 +129,8 @@ export function StarSelection({ selectedStar, setSelectedStar, onStarClick }: St
   };
 
   const handleCloseModal = () => {
-    setModalStar(null);
+    console.log('StarSelection: Closing modal by clearing selectedStar');
+    setSelectedStar(null);
   };
 
   const handleDedicate = (catalogStar: HygStarData) => {
@@ -298,9 +296,9 @@ export function StarSelection({ selectedStar, setSelectedStar, onStarClick }: St
         </div>
       </div>
 
-      {/* Star Detail Modal */}
+      {/* Star Detail Modal - NOW USES selectedStar FROM PARENT */}
       <AnimatePresence>
-        {modalStar && (
+        {selectedStar && (
           <motion.div
             className="fixed inset-0 z-40 flex items-end justify-center pointer-events-none"
             initial={{ opacity: 0 }}
@@ -347,17 +345,17 @@ export function StarSelection({ selectedStar, setSelectedStar, onStarClick }: St
                       <motion.div
                         className="relative rounded-full flex items-center justify-center"
                         style={{ 
-                          background: `linear-gradient(135deg, ${modalStar.render.color} 0%, ${modalStar.render.color}80 100%)`,
-                          width: modalStar.render.size * 64,
-                          height: modalStar.render.size * 64,
-                          boxShadow: `0 0 30px ${modalStar.render.color}40, 0 0 60px ${modalStar.render.color}20`
+                          background: `linear-gradient(135deg, ${selectedStar.render.color} 0%, ${selectedStar.render.color}80 100%)`,
+                          width: selectedStar.render.size * 64,
+                          height: selectedStar.render.size * 64,
+                          boxShadow: `0 0 30px ${selectedStar.render.color}40, 0 0 60px ${selectedStar.render.color}20`
                         }}
                         animate={{ 
                           scale: [1, 1.05, 1],
                           boxShadow: [
-                            `0 0 30px ${modalStar.render.color}40, 0 0 60px ${modalStar.render.color}20`,
-                            `0 0 40px ${modalStar.render.color}60, 0 0 80px ${modalStar.render.color}30`,
-                            `0 0 30px ${modalStar.render.color}40, 0 0 60px ${modalStar.render.color}20`
+                            `0 0 30px ${selectedStar.render.color}40, 0 0 60px ${selectedStar.render.color}20`,
+                            `0 0 40px ${selectedStar.render.color}60, 0 0 80px ${selectedStar.render.color}30`,
+                            `0 0 30px ${selectedStar.render.color}40, 0 0 60px ${selectedStar.render.color}20`
                           ]
                         }}
                         transition={{ 
@@ -374,28 +372,28 @@ export function StarSelection({ selectedStar, setSelectedStar, onStarClick }: St
                   {/* Star Information */}
                   <div className="flex-1 min-w-0">
                     <h2 className="text-xl font-light text-cosmic-observation mb-1 truncate">
-                      {modalStar.hyg.proper || `HYG ${modalStar.hyg.id}`}
+                      {selectedStar.hyg.proper || `HYG ${selectedStar.hyg.id}`}
                     </h2>
                     
                     <div className="flex items-center gap-2 text-cosmic-stellar-wind text-xs mb-2">
                       <MapPin className="w-3 h-3" />
                       <span className="font-mono">
-                        RA: {modalStar.hyg.ra.toFixed(3)}°, Dec: {modalStar.hyg.dec.toFixed(3)}°
+                        RA: {selectedStar.hyg.ra.toFixed(3)}°, Dec: {selectedStar.hyg.dec.toFixed(3)}°
                       </span>
                     </div>
 
                     <div className="text-cosmic-light-echo text-sm leading-relaxed font-light space-y-1">
-                      <p>Magnitude: {modalStar.hyg.mag.toFixed(2)}</p>
-                      <p>Distance: {modalStar.hyg.dist.toFixed(1)} parsecs</p>
-                      {modalStar.hyg.spect && <p>Spectral Class: {modalStar.hyg.spect}</p>}
-                      {modalStar.hyg.con && <p>Constellation: {modalStar.hyg.con}</p>}
+                      <p>Magnitude: {selectedStar.hyg.mag.toFixed(2)}</p>
+                      <p>Distance: {selectedStar.hyg.dist.toFixed(1)} parsecs</p>
+                      {selectedStar.hyg.spect && <p>Spectral Class: {selectedStar.hyg.spect}</p>}
+                      {selectedStar.hyg.con && <p>Constellation: {selectedStar.hyg.con}</p>}
                     </div>
                   </div>
 
                   {/* Dedicate Button */}
                   <div className="flex-shrink-0">
                     <motion.button
-                      onClick={() => handleDedicate(modalStar)}
+                      onClick={() => handleDedicate(selectedStar)}
                       className="text-cosmic-observation font-light py-3 px-6 rounded-xl transition-all duration-300 flex items-center gap-2 text-sm pointer-events-auto"
                       style={{
                         background: 'linear-gradient(135deg, #9D4EDD 0%, #6A0572 100%)',
