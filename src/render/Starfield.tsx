@@ -7,19 +7,19 @@ import { InstancedRegularStars } from './InstancedRegularStars';
 import { STAR_SETTINGS } from '../config/starConfig';
 
 /**
- * Starfield Component - Enhanced with Hover State Management
+ * Starfield Component - Enhanced with Hover State Management (Labels Only)
  * 
  * Purpose: Renders stars with highlighting and hover state support.
- * ENHANCED: Added hover state tracking for interactive label display.
+ * UPDATED: Hover state only affects label display, not star appearance.
  * 
  * Features:
  * - STAR_SETTINGS-based highlighting with size and glow multipliers
- * - Hover state management for interactive labels
+ * - Hover state management for interactive labels only
  * - Enhanced click detection for star selection
  * - Configurable rendering modes (classic/instanced)
  * - Performance optimized rendering
  * 
- * Confidence Rating: High - Enhanced with hover state support
+ * Confidence Rating: High - Hover only affects labels, not star visuals
  */
 
 interface StarfieldProps {
@@ -115,7 +115,8 @@ export function Starfield({
       
       catalog.forEach((star) => {
         // Special rendering for highlighted, selected, or hovered stars
-        if (star.isHighlighted || star.id === selectedStar || star.id === hoveredStar) {
+        // UPDATED: isHighlighted is based on the star's actual highlight status, not hover
+        if (star.isHighlighted || star.id === selectedStar) {
           special.push(star);
           labels.push(star);
         } else {
@@ -135,7 +136,7 @@ export function Starfield({
         labelStars: labels
       };
     }
-  }, [catalog, selectedStar, hoveredStar, starTexture, glowTexture, renderingMode]);
+  }, [catalog, selectedStar, starTexture, glowTexture, renderingMode]); // REMOVED: hoveredStar dependency
 
   // Render individual stars with STAR_SETTINGS and hover support
   const starSprites = useMemo(() => {
@@ -151,10 +152,8 @@ export function Starfield({
         finalSettings = STAR_SETTINGS.selected;
       } else if (star.isHighlighted) {
         finalSettings = STAR_SETTINGS.highlighted;
-      } else if (star.id === hoveredStar) {
-        // Use highlighted settings for hovered stars
-        finalSettings = STAR_SETTINGS.highlighted;
       }
+      // REMOVED: hoveredStar condition for visual changes
       
       const actualStarSize = baseMagnitudeSize * finalSettings.sizeMultiplier;
       const actualGlowMultiplier = glowMultiplier * finalSettings.glowMultiplier;
@@ -169,14 +168,14 @@ export function Starfield({
           starSize={actualStarSize}
           glowMultiplier={actualGlowMultiplier}
           isSelected={star.id === selectedStar}
-          isHighlighted={star.isHighlighted || star.id === hoveredStar}
+          isHighlighted={star.isHighlighted} // CHANGED: Only based on actual highlight status
           emotionColor={star.emotionColor}
           onClick={() => handleStarClick(star.id)}
           onHover={(isHovering) => handleStarHover(isHovering ? star.id : null)}
         />
       );
     });
-  }, [renderingMode, catalog, specialStars, selectedStar, hoveredStar, starTexture, glowTexture, starSize, glowMultiplier, handleStarClick, handleStarHover]);
+  }, [renderingMode, catalog, specialStars, selectedStar, starTexture, glowTexture, starSize, glowMultiplier, handleStarClick, handleStarHover]); // REMOVED: hoveredStar dependency
 
   // Prepare label data based on rendering mode
   const labelData = useMemo(() => {

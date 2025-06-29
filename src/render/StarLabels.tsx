@@ -5,19 +5,19 @@ import * as THREE from 'three';
 import { STAR_SETTINGS } from '../config/starConfig';
 
 /**
- * StarLabels Component - Enhanced with Dynamic Positioning and Hover Support
+ * StarLabels Component - Enhanced with Refined Label Visibility and Positioning
  * 
- * Purpose: Renders star name labels with dynamic positioning based on star size,
- * enhanced visibility for highlighted/selected stars, and hover state support.
+ * Purpose: Renders star name labels with strict filtering for highlighted, selected, 
+ * or hovered stars only. Enhanced positioning and consistent styling.
  * 
  * ENHANCED FEATURES:
- * - Dynamic label positioning based on actual star size (using STAR_SETTINGS)
- * - Hover state support for interactive label display
  * - Only shows labels for highlighted, selected, or hovered stars
- * - Proper offset calculation to avoid glow overlap
- * - Performance optimized with distance-based filtering
+ * - Closer positioning to stars (reduced offset)
+ * - Consistent white styling for all labels
+ * - Bigger labels for highlighted stars
+ * - No special styling effects (borders, backgrounds, etc.)
  * 
- * Confidence Rating: High - Enhanced positioning with comprehensive star configuration
+ * Confidence Rating: High - Refined label behavior with strict filtering
  */
 
 interface StarLabelsProps {
@@ -31,7 +31,7 @@ interface StarLabelsProps {
     emotionColor?: string;
   }>;
   selectedStar?: string | null;
-  hoveredStar?: string | null; // NEW: Support for hover state
+  hoveredStar?: string | null;
   renderingMode?: 'classic' | 'instanced';
 }
 
@@ -43,37 +43,26 @@ export function StarLabels({
 }: StarLabelsProps) {
   const { camera } = useThree();
 
-  // Enhanced label filtering with hover support
+  // Enhanced label filtering - ONLY highlighted, selected, or hovered stars
   const labeledStars = React.useMemo(() => {
     console.log(`StarLabels: Processing ${stars.length} stars for label display`);
     
-    const priorityStars: typeof stars = [];
-    const regularStars: typeof stars = [];
-    
-    stars.forEach(star => {
-      // Show labels for highlighted, selected, or hovered stars
-      if (star.isHighlighted || star.id === selectedStar || star.id === hoveredStar) {
-        priorityStars.push(star);
-        console.log(`StarLabels: Priority star added: ${star.name || star.id} (highlighted: ${star.isHighlighted}, selected: ${star.id === selectedStar}, hovered: ${star.id === hoveredStar})`);
-      } else if (star.name && star.name.trim() !== '' && star.magnitude < 3.0) {
-        // Only very bright named stars for background context
-        regularStars.push(star);
+    const filteredStars = stars.filter(star => {
+      // STRICT FILTERING: Only show labels for highlighted, selected, or hovered stars
+      const shouldShow = star.isHighlighted || star.id === selectedStar || star.id === hoveredStar;
+      
+      if (shouldShow && star.name) {
+        console.log(`StarLabels: Label will show for star: ${star.name} (highlighted: ${star.isHighlighted}, selected: ${star.id === selectedStar}, hovered: ${star.id === hoveredStar})`);
+        return true;
       }
+      
+      return false;
     });
 
-    // In classic mode, show more labels for better UX
-    // In instanced mode, prioritize performance
-    const maxRegularLabels = renderingMode === 'classic' ? 20 : 10;
-    const selectedRegularStars = regularStars
-      .sort((a, b) => a.magnitude - b.magnitude) // Brightest first
-      .slice(0, Math.max(0, maxRegularLabels - priorityStars.length));
-
-    const result = [...priorityStars, ...selectedRegularStars];
+    console.log(`StarLabels: Rendering ${filteredStars.length} labels after strict filtering`);
     
-    console.log(`StarLabels: Rendering ${result.length} labels (${priorityStars.length} priority, ${selectedRegularStars.length} regular)`);
-    
-    return result;
-  }, [stars, selectedStar, hoveredStar, renderingMode]);
+    return filteredStars;
+  }, [stars, selectedStar, hoveredStar]);
 
   return (
     <>
@@ -103,9 +92,8 @@ export function StarLabels({
         const actualStarSize = baseMagnitudeSize * starSettings.sizeMultiplier;
         const glowRadius = actualStarSize * 2.5; // Glow is 2.5x star size
         
-        // ENHANCED: Dynamic label positioning based on actual star size
-        // Position label outside the glow effect with proper offset
-        const labelOffset = Math.max(1.2, glowRadius * 0.8 + 0.5); // Minimum 1.2 units, or outside glow + padding
+        // ENHANCED: Closer label positioning - reduced offset
+        const labelOffset = Math.max(0.8, glowRadius * 0.6 + 0.3); // CHANGED: Reduced from 1.2 and 0.8+0.5 to 0.8 and 0.6+0.3
         const labelPosition: [number, number, number] = [
           star.position[0], 
           star.position[1] + labelOffset, 
@@ -113,32 +101,20 @@ export function StarLabels({
         ];
         
         // Enhanced styling based on star state
-        let opacity: number;
         let fontSize: number;
         let fontWeight: number;
-        let color: string;
-        let opacityThreshold: number;
         
         if (isSpecialStar) {
-          // Special stars: Always visible with enhanced styling
-          opacity = 1.0;
+          // Special stars: Bigger labels
           fontSize = Math.max(14, Math.min(20, 300 / distanceFromCamera));
           fontWeight = 600;
-          color = star.emotionColor || starSettings.color;
-          opacityThreshold = 0; // Never skip special stars
           
           console.log(`StarLabels: Special star ${star.name || star.id} - size: ${actualStarSize.toFixed(3)}, offset: ${labelOffset.toFixed(2)}`);
         } else {
-          // Regular stars: Distance-based visibility
-          opacity = Math.max(0.3, Math.min(1.0, (30 / distanceFromCamera) * (4.0 - star.magnitude) / 4.0));
+          // Regular stars: Standard size
           fontSize = Math.max(8, Math.min(16, 200 / distanceFromCamera));
           fontWeight = 300;
-          color = starSettings.color;
-          opacityThreshold = 0.3;
         }
-
-        // Skip labels that would be too faint
-        if (opacity < opacityThreshold) return null;
 
         return (
           <Html
@@ -150,32 +126,23 @@ export function StarLabels({
           >
             <div 
               style={{
-                color: color,
+                color: '#F8FAFC', // CHANGED: Always white for all labels
                 fontSize: `${fontSize}px`,
                 fontWeight: fontWeight,
-                opacity: opacity,
-                textShadow: isSpecialStar 
-                  ? `0 0 8px ${color}, 0 0 16px ${color}40`
-                  : '0 0 4px rgba(0,0,0,0.8)',
+                opacity: 1.0, // Always fully visible for filtered stars
+                textShadow: '0 0 4px rgba(0,0,0,0.8)', // CHANGED: Consistent shadow for all
                 pointerEvents: 'none',
                 whiteSpace: 'nowrap',
                 transition: 'all 0.3s ease',
                 fontFamily: 'Inter, system-ui, sans-serif',
-                letterSpacing: isSpecialStar ? '0.5px' : '0px',
+                letterSpacing: '0px', // CHANGED: No special letter spacing
                 textAlign: 'center',
-                padding: isSpecialStar ? '2px 6px' : '0px',
-                borderRadius: isSpecialStar ? '4px' : '0px',
-                backgroundColor: isSpecialStar 
-                  ? `${color}20`
-                  : 'transparent',
-                border: isSpecialStar 
-                  ? `1px solid ${color}40`
-                  : 'none',
-                // Enhanced visibility for special stars
-                backdropFilter: isSpecialStar ? 'blur(4px)' : 'none',
-                boxShadow: isSpecialStar 
-                  ? `0 2px 8px rgba(0,0,0,0.3)`
-                  : 'none'
+                padding: '0px', // CHANGED: No padding
+                borderRadius: '0px', // CHANGED: No border radius
+                backgroundColor: 'transparent', // CHANGED: No background
+                border: 'none', // CHANGED: No border
+                backdropFilter: 'none', // CHANGED: No backdrop filter
+                boxShadow: 'none' // CHANGED: No box shadow
               }}
             >
               {star.name}
