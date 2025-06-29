@@ -4,104 +4,68 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, X, Star as StarIcon, MapPin, Heart, Sparkles, ChevronRight } from 'lucide-react';
 import { useStarsForEmotion } from '../hooks/useStarsCatalog';
 import { useSuggestedStars } from '../context/SuggestedStarsContext';
-import { StarService } from '../services/starService';
+import { useStarviewCamera } from '../hooks/useStarviewCamera';
 import { emotions } from '../data/emotions';
-import { HygStarData, SuggestedStar } from '../types';
+import { HygStarData } from '../types';
 
 /**
- * StarSelection Component - Enhanced with Refined Architecture
+ * StarSelection Component - Enhanced with Direct Camera Control
  * 
- * Purpose: Displays emotion-specific star selection using the refined architecture.
- * Integrates SuggestedStars from AI with StarsCatalog data seamlessly.
+ * Purpose: Emotion-based star selection interface that directly controls camera focus.
+ * Uses useStarviewCamera hook to trigger camera animations from UI interactions.
  * 
  * Features:
- * - Uses useStarsForEmotion hook for catalog-based selection
- * - Generates SuggestedStar objects with catalog links
+ * - Receives selectedStar and setSelectedStar as props from App
+ * - Uses useStarviewCamera().focusOnStar(starCatalogId) for camera control
+ * - Manages SuggestedStars via context
  * - Modal display for star details
- * - Camera focus integration for 3D visualization
+ * - Direct user interaction loop: suggestion click → selection → focus
  * 
- * Confidence Rating: High - Clean integration with refined architecture
+ * Confidence Rating: High - Clean UI-driven camera control
  */
-export function StarSelection() {
+
+interface StarSelectionProps {
+  selectedStar: HygStarData | null;
+  setSelectedStar: (star: HygStarData | null) => void;
+  onStarClick: (star: HygStarData) => void;
+}
+
+export function StarSelection({ selectedStar, setSelectedStar, onStarClick }: StarSelectionProps) {
   const { emotionId } = useParams<{ emotionId: string }>();
   const navigate = useNavigate();
   const { stars: catalogStars, loading, error } = useStarsForEmotion(emotionId, 5);
-  const { 
-    setSuggestedStars, 
-    clearSuggestedStars, 
-    selectedStar, 
-    setSelectedStar,
-    triggerStarFocus 
-  } = useSuggestedStars();
+  const { fetchSuggestionsForEmotion, clearSuggestedStars } = useSuggestedStars();
+  const { focusOnStar, centerView } = useStarviewCamera();
   
   // Local state for modal
   const [modalStar, setModalStar] = useState<HygStarData | null>(null);
-  const [suggestedStarsData, setSuggestedStarsData] = useState<SuggestedStar[]>([]);
   
   const emotion = emotions.find(e => e.id === emotionId);
 
-  // Generate SuggestedStar objects when catalog stars are loaded
+  // Fetch suggestions when catalog stars are loaded
   useEffect(() => {
-    async function generateSuggestedStars() {
+    async function loadSuggestions() {
       if (!emotionId || catalogStars.length === 0) return;
 
       try {
-        console.log(`StarSelection: Generating suggested stars for emotion: ${emotionId}`);
+        console.log(`StarSelection: Fetching suggestions for emotion: ${emotionId}`);
+        await fetchSuggestionsForEmotion(emotionId);
         
-        // Try to get AI-generated suggestions first
-        const aiSuggestedStars = await StarService.getSuggestedStarsForEmotion(emotionId);
-        
-        if (aiSuggestedStars.length > 0) {
-          console.log(`StarSelection: Using ${aiSuggestedStars.length} AI-generated suggested stars`);
-          setSuggestedStarsData(aiSuggestedStars);
-          setSuggestedStars(aiSuggestedStars);
-        } else {
-          // Fallback to catalog-based suggestions
-          console.log('StarSelection: Falling back to catalog-based suggestions');
-          const catalogSuggestions: SuggestedStar[] = catalogStars.map((catalogStar, index) => ({
-            id: `catalog-${catalogStar.hyg.id}`,
-            name: catalogStar.hyg.proper || `HYG ${catalogStar.hyg.id}`,
-            description: `A magnificent ${emotionId} star shining in the cosmic depths`,
-            metadata: {
-              emotion: emotionId,
-              confidence: 0.8,
-              source: 'catalog'
-            },
-            starCatalogId: catalogStar.hyg.id.toString()
-          }));
-          
-          setSuggestedStarsData(catalogSuggestions);
-          setSuggestedStars(catalogSuggestions);
-        }
+        // Center camera view for optimal star group viewing
+        centerView();
       } catch (error) {
-        console.error('Error generating suggested stars:', error);
-        
-        // Create basic fallback suggestions
-        const fallbackSuggestions: SuggestedStar[] = catalogStars.map((catalogStar, index) => ({
-          id: `fallback-${catalogStar.hyg.id}`,
-          name: catalogStar.hyg.proper || `Star ${index + 1}`,
-          description: `A beautiful star perfect for ${emotionId}`,
-          metadata: {
-            emotion: emotionId,
-            confidence: 0.5,
-            source: 'fallback'
-          },
-          starCatalogId: catalogStar.hyg.id.toString()
-        }));
-        
-        setSuggestedStarsData(fallbackSuggestions);
-        setSuggestedStars(fallbackSuggestions);
+        console.error('StarSelection: Error fetching suggestions:', error);
       }
     }
 
-    generateSuggestedStars();
+    loadSuggestions();
     
-    // Clear suggested stars when leaving this page
+    // Clear suggestions when leaving this page
     return () => {
-      console.log('StarSelection: Clearing suggested stars on unmount');
+      console.log('StarSelection: Clearing suggestions on unmount');
       clearSuggestedStars();
     };
-  }, [emotionId, catalogStars]);
+  }, [emotionId, catalogStars.length, fetchSuggestionsForEmotion, clearSuggestedStars, centerView]);
 
   if (!emotion) {
     return (
@@ -117,9 +81,16 @@ export function StarSelection() {
 
   const handleStarSelect = (catalogStar: HygStarData, index: number) => {
     console.log(`StarSelection: Star selected: ${catalogStar.hyg.proper || catalogStar.hyg.id}`);
+    
+    // Update global selected star state
     setSelectedStar(catalogStar);
+    
+    // Show modal
     setModalStar(catalogStar);
-    triggerStarFocus(catalogStar, index);
+    
+    // Focus camera on selected star using direct camera control
+    const catalogId = catalogStar.hyg.id.toString();
+    focusOnStar(catalogId);
   };
 
   const handleCloseModal = () => {
@@ -129,8 +100,6 @@ export function StarSelection() {
 
   const handleDedicate = (catalogStar: HygStarData) => {
     console.log(`StarSelection: Navigating to dedication for star: ${catalogStar.hyg.proper || catalogStar.hyg.id}`);
-    // For now, use a placeholder star ID - this would need to be enhanced
-    // to create a proper Star record or use the catalog ID
     navigate(`/dedicate/catalog-${catalogStar.hyg.id}?emotion=${emotionId}`);
   };
 

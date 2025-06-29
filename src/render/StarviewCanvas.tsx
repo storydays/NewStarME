@@ -2,37 +2,40 @@ import React, { useMemo, useCallback, useRef, useState, useEffect } from 'react'
 import { Canvas } from '@react-three/fiber';
 import { CameraControls } from '@react-three/drei';
 import { StarsCatalog } from '../data/StarsCatalog';
-import { HygStarData, SuggestedStar } from '../types';
+import { HygStarData } from '../types';
 import { Starfield } from './Starfield';
 import { AnimationController } from './AnimationController';
-import { useSuggestedStars } from '../context/SuggestedStarsContext';
 
 /**
- * StarviewCanvas Component - Enhanced with Refined Architecture
+ * StarviewCanvas Component - Stateless 3D Rendering Layer
  * 
- * Purpose: 3D visualization canvas that integrates with the refined star architecture.
- * Uses StarsCatalog as the single source of truth and SuggestedStars for highlighting.
+ * Purpose: Pure rendering component that accepts all data via props.
+ * No internal state for selection, focusing, or suggestions.
+ * No dependency on SuggestedStarsContext.
  * 
  * Features:
- * - StarsCatalog integration for all star data
- * - SuggestedStars context for highlighting and selection
- * - Enhanced rendering modes (classic/instanced)
- * - Camera focus and animation control
- * - Clean separation of concerns
+ * - Render stars from StarsCatalog
+ * - Accept highlightedStarIds prop for visual emphasis
+ * - Expose camera control via props
+ * - Notify parent on star clicks via callbacks
+ * - Clean separation from business logic
  * 
- * Confidence Rating: High - Clean integration with refined architecture
+ * Confidence Rating: High - Clean rendering component
  */
 
 interface StarviewCanvasProps {
   starsCatalog: StarsCatalog | null;
   catalogLoading: boolean;
   selectedStar?: HygStarData | null;
+  highlightedStarIds: string[];
   onStarSelect?: (star: HygStarData | null, index: number | null) => void;
+  onStarClick?: (star: HygStarData) => void;
   starSize?: number;
   glowMultiplier?: number;
   showLabels?: boolean;
   renderingMode?: 'classic' | 'instanced';
-  onStarClick?: (star: HygStarData) => void;
+  cameraCommand?: any;
+  onCameraCommandComplete?: () => void;
 }
 
 interface AnimationCommand {
@@ -52,11 +55,12 @@ interface AnimationCommand {
 }
 
 /**
- * StarfieldWrapper Component - Enhanced with SuggestedStars integration
+ * StarfieldWrapper Component - Data transformation layer
  */
 function StarfieldWrapper({ 
   starsCatalog, 
   selectedStar, 
+  highlightedStarIds,
   onStarSelect, 
   onStarFocus,
   starSize = 0.1, 
@@ -67,6 +71,7 @@ function StarfieldWrapper({
 }: { 
   starsCatalog: StarsCatalog;
   selectedStar?: HygStarData | null;
+  highlightedStarIds: string[];
   onStarSelect?: (star: HygStarData | null, index: number | null) => void;
   onStarFocus?: (star: HygStarData) => void;
   starSize?: number;
@@ -76,9 +81,7 @@ function StarfieldWrapper({
   onStarClick?: (star: HygStarData) => void;
 }) {
   
-  const { suggestedStars, isStarSuggested } = useSuggestedStars();
-  
-  // Convert StarsCatalog data to Starfield format with SuggestedStars highlighting
+  // Convert StarsCatalog data to Starfield format with highlighting
   const catalogData = useMemo(() => {
     if (!starsCatalog) {
       console.log('StarfieldWrapper: No catalog available');
@@ -86,7 +89,10 @@ function StarfieldWrapper({
     }
 
     console.log(`StarfieldWrapper: Processing StarsCatalog for ${renderingMode} rendering mode...`);
-    console.log(`StarfieldWrapper: ${suggestedStars.length} suggested stars for highlighting`);
+    console.log(`StarfieldWrapper: ${highlightedStarIds.length} stars to highlight`);
+    
+    // Create set for fast lookup
+    const highlightedSet = new Set(highlightedStarIds);
     
     // Get stars based on rendering mode
     let starsToProcess: HygStarData[];
@@ -100,23 +106,22 @@ function StarfieldWrapper({
 
     return starsToProcess.map((catalogStar) => {
       const catalogId = catalogStar.hyg.id.toString();
-      const isSuggested = isStarSuggested(catalogId);
+      const isHighlighted = highlightedSet.has(catalogId);
       
       return {
         id: catalogId,
         position: catalogStar.render.position,
         magnitude: catalogStar.hyg.mag,
         name: catalogStar.hyg.proper || undefined,
-        isHighlighted: isSuggested,
-        catalogStar: catalogStar, // Include full catalog data
-        // Enhanced highlighting properties
-        enhancedSize: isSuggested ? 2.5 : 1.0,
-        enhancedGlow: isSuggested ? 2.0 : 1.0,
-        emotionColor: isSuggested ? '#7FFF94' : undefined, // Aurora green for suggested
-        showLabel: isSuggested && catalogStar.hyg.proper
+        isHighlighted,
+        catalogStar: catalogStar,
+        enhancedSize: isHighlighted ? 2.5 : 1.0,
+        enhancedGlow: isHighlighted ? 2.0 : 1.0,
+        emotionColor: isHighlighted ? '#7FFF94' : undefined,
+        showLabel: isHighlighted && catalogStar.hyg.proper
       };
     });
-  }, [starsCatalog, suggestedStars, isStarSuggested, renderingMode]);
+  }, [starsCatalog, highlightedStarIds, renderingMode]);
 
   // Handle star selection from Starfield
   const handleStarSelect = useCallback((starId: string) => {
@@ -170,23 +175,27 @@ function StarfieldWrapper({
 }
 
 /**
- * Scene Content Component - Enhanced with refined architecture
+ * Scene Content Component - 3D scene management
  */
 function SceneContent({ 
   starsCatalog, 
   catalogLoading, 
   selectedStar, 
+  highlightedStarIds,
   onStarSelect, 
   starSize, 
   glowMultiplier, 
   showLabels,
   onPointerMissed,
   renderingMode = 'classic',
-  onStarClick
+  onStarClick,
+  cameraCommand,
+  onCameraCommandComplete
 }: {
   starsCatalog: StarsCatalog | null;
   catalogLoading: boolean;
   selectedStar?: HygStarData | null;
+  highlightedStarIds: string[];
   onStarSelect?: (star: HygStarData | null, index: number | null) => void;
   starSize?: number;
   glowMultiplier?: number;
@@ -194,15 +203,52 @@ function SceneContent({
   onPointerMissed: () => void;
   renderingMode?: 'classic' | 'instanced';
   onStarClick?: (star: HygStarData) => void;
+  cameraCommand?: any;
+  onCameraCommandComplete?: () => void;
 }) {
   const cameraControlsRef = useRef<CameraControls>(null);
   const [animationCommand, setAnimationCommand] = useState<AnimationCommand | null>(null);
-  const { suggestedStars, focusedStarIndex } = useSuggestedStars();
 
-  // Auto-center camera when suggested stars are available
+  // Handle camera commands from useStarviewCamera
   useEffect(() => {
-    if (suggestedStars.length > 0 && !selectedStar && focusedStarIndex === null) {
-      console.log('SceneContent: Auto-centering camera for suggested stars');
+    if (!cameraCommand || !starsCatalog) return;
+
+    console.log('SceneContent: Processing camera command:', cameraCommand);
+
+    if (cameraCommand.type === 'focusStar' && cameraCommand.starCatalogId) {
+      const catalogStar = starsCatalog.getStarById(parseInt(cameraCommand.starCatalogId));
+      if (catalogStar) {
+        console.log('SceneContent: Focusing camera on star:', catalogStar.hyg.proper || catalogStar.hyg.id);
+        setAnimationCommand({
+          type: 'focusStar',
+          target: {
+            position: catalogStar.render.position
+          },
+          duration: 1500
+        });
+      }
+    } else if (cameraCommand.type === 'resetView') {
+      console.log('SceneContent: Resetting camera view');
+      setAnimationCommand({
+        type: 'resetView',
+        duration: 1500
+      });
+    } else if (cameraCommand.type === 'centerView') {
+      console.log('SceneContent: Centering camera view');
+      setAnimationCommand({
+        type: 'centerView',
+        target: {
+          position: [0, 0, 0]
+        },
+        duration: 2000
+      });
+    }
+  }, [cameraCommand, starsCatalog]);
+
+  // Auto-center camera when highlighted stars are available
+  useEffect(() => {
+    if (highlightedStarIds.length > 0 && !selectedStar) {
+      console.log('SceneContent: Auto-centering camera for highlighted stars');
       
       setAnimationCommand({
         type: 'centerView',
@@ -211,8 +257,8 @@ function SceneContent({
         },
         duration: 2000
       });
-    } else if (!selectedStar && focusedStarIndex === null && suggestedStars.length === 0) {
-      console.log('SceneContent: No suggested stars - starting default orbit animation');
+    } else if (!selectedStar && highlightedStarIds.length === 0) {
+      console.log('SceneContent: No highlighted stars - starting default orbit animation');
       
       setAnimationCommand({
         type: 'orbit',
@@ -222,7 +268,7 @@ function SceneContent({
         elevation: 0.2
       });
     }
-  }, [selectedStar, focusedStarIndex, suggestedStars.length]);
+  }, [selectedStar, highlightedStarIds.length]);
 
   // Handle star focus animation
   const handleStarFocus = useCallback((star: HygStarData) => {
@@ -241,7 +287,10 @@ function SceneContent({
   const handleAnimationComplete = useCallback(() => {
     console.log('SceneContent: Animation completed');
     setAnimationCommand(null);
-  }, []);
+    if (onCameraCommandComplete) {
+      onCameraCommandComplete();
+    }
+  }, [onCameraCommandComplete]);
 
   // Handle pointer miss
   const handlePointerMissedInternal = useCallback(() => {
@@ -296,6 +345,7 @@ function SceneContent({
         <StarfieldWrapper 
           starsCatalog={starsCatalog}
           selectedStar={selectedStar}
+          highlightedStarIds={highlightedStarIds}
           onStarSelect={onStarSelect}
           onStarFocus={handleStarFocus}
           starSize={starSize}
@@ -320,25 +370,28 @@ function SceneContent({
 }
 
 /**
- * Main StarviewCanvas Component - Enhanced with refined architecture
+ * Main StarviewCanvas Component - Props-based rendering
  */
 export function StarviewCanvas({ 
   starsCatalog, 
   catalogLoading, 
   selectedStar, 
+  highlightedStarIds,
   onStarSelect, 
+  onStarClick,
   starSize = 0.1, 
   glowMultiplier = 1.0, 
   showLabels = false,
   renderingMode = 'classic',
-  onStarClick
+  cameraCommand,
+  onCameraCommandComplete
 }: StarviewCanvasProps) {
   
   const handlePointerMissed = useCallback(() => {
     console.log('StarviewCanvas: Pointer missed event');
   }, []);
 
-  console.log(`StarviewCanvas: Initializing with ${renderingMode} rendering mode and refined architecture`);
+  console.log(`StarviewCanvas: Rendering with ${highlightedStarIds.length} highlighted stars in ${renderingMode} mode`);
 
   return (
     <div className="fixed inset-0 w-full h-full">
@@ -370,6 +423,7 @@ export function StarviewCanvas({
           starsCatalog={starsCatalog}
           catalogLoading={catalogLoading}
           selectedStar={selectedStar}
+          highlightedStarIds={highlightedStarIds}
           onStarSelect={onStarSelect}
           starSize={starSize}
           glowMultiplier={glowMultiplier}
@@ -377,6 +431,8 @@ export function StarviewCanvas({
           onPointerMissed={handlePointerMissed}
           renderingMode={renderingMode}
           onStarClick={onStarClick}
+          cameraCommand={cameraCommand}
+          onCameraCommandComplete={onCameraCommandComplete}
         />
       </Canvas>
     </div>

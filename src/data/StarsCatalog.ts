@@ -2,19 +2,21 @@ import { HygStarsCatalog } from './HygStarsCatalog';
 import { HygRecord, HygStarData } from '../types';
 
 /**
- * StarsCatalog Class - Central Star Data Management
+ * StarsCatalog Class - Immutable Star Data Source
  * 
- * Purpose: Provides a unified interface for accessing star data throughout the application.
+ * Purpose: Provides a unified, immutable interface for accessing star data.
  * This is the single source of truth for all star-related operations.
+ * Removed rendering logic to maintain immutability principle.
  * 
  * Features:
  * - Wraps HygStarsCatalog with application-specific enhancements
  * - Converts raw HYG data to enriched HygStarData format
  * - Provides filtering and search capabilities
- * - Manages rendering metadata for 3D visualization
+ * - Manages astronomical metadata for 3D visualization
  * - Caches processed data for performance
+ * - IMMUTABLE: No updateStarRender, highlightStars, or clearHighlights methods
  * 
- * Confidence Rating: High - Clean abstraction over HYG catalog
+ * Confidence Rating: High - Clean immutable abstraction
  */
 
 export class StarsCatalog {
@@ -64,6 +66,7 @@ export class StarsCatalog {
 
   /**
    * Convert HygRecord to enriched HygStarData format
+   * IMMUTABLE: Does not set isHighlighted or emotionColor in render object
    */
   private enrichHygRecord(hygRecord: HygRecord): HygStarData {
     // Convert spherical coordinates to Cartesian for 3D positioning
@@ -99,9 +102,8 @@ export class StarsCatalog {
         color,
         size,
         brightness,
-        position: [x, y, z],
-        isHighlighted: false,
-        emotionColor: undefined
+        position: [x, y, z]
+        // REMOVED: isHighlighted and emotionColor - these are applied externally
       }
     };
   }
@@ -170,47 +172,6 @@ export class StarsCatalog {
       return properName.includes(queryLower) || 
              catalogName.includes(queryLower) || 
              bayerName.includes(queryLower);
-    });
-  }
-
-  /**
-   * Update rendering properties for a star
-   */
-  updateStarRender(id: number, renderUpdates: Partial<HygStarData['render']>): boolean {
-    const star = this.processedStars.get(id);
-    if (!star) return false;
-
-    star.render = { ...star.render, ...renderUpdates };
-    return true;
-  }
-
-  /**
-   * Highlight multiple stars with emotion-based coloring
-   */
-  highlightStars(starIds: number[], emotionColor?: string): void {
-    console.log(`StarsCatalog: Highlighting ${starIds.length} stars with emotion color: ${emotionColor}`);
-    
-    // First, clear all existing highlights
-    this.clearHighlights();
-    
-    // Then highlight the specified stars
-    starIds.forEach(id => {
-      this.updateStarRender(id, {
-        isHighlighted: true,
-        emotionColor: emotionColor
-      });
-    });
-  }
-
-  /**
-   * Clear all star highlights
-   */
-  clearHighlights(): void {
-    console.log('StarsCatalog: Clearing all star highlights');
-    
-    this.processedStars.forEach(star => {
-      star.render.isHighlighted = false;
-      star.render.emotionColor = undefined;
     });
   }
 

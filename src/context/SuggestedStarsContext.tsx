@@ -1,39 +1,28 @@
 import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
-import { HygStarData, SuggestedStar } from '../types';
+import { SuggestedStar } from '../types';
 
 /**
- * SuggestedStarsContext - Enhanced with HygStarData Integration
+ * SuggestedStarsContext - Refined for AI Suggestion Management Only
  * 
- * Purpose: Manages suggested stars from AI and their mapping to the central StarsCatalog.
- * Provides global state for highlighted stars and camera focus control.
+ * Purpose: Strictly manages the list of AI-generated suggested stars.
+ * No rendering logic or interaction with StarviewCanvas directly.
  * 
- * Key Features:
- * - Manages SuggestedStar objects with starCatalogId links
- * - Provides selectedStar state (always HygStarData from catalog)
- * - Camera focus control for 3D visualization
- * - Deep comparison to prevent infinite loops
+ * Features:
+ * - Store current SuggestedStar[] (from AI)
+ * - Provide fetchSuggestionsForEmotion method
+ * - Each SuggestedStar includes starCatalogId field to reference HygStarData
+ * - Utility functions for suggestion lookup
  * 
- * Confidence Rating: High - Clean integration with new architecture
+ * Confidence Rating: High - Clean separation of concerns
  */
 
 interface SuggestedStarsContextType {
-  // Suggested stars from AI (volatile)
   suggestedStars: SuggestedStar[];
   setSuggestedStars: (stars: SuggestedStar[]) => void;
   clearSuggestedStars: () => void;
-  
-  // Selected star from catalog (immutable source)
-  selectedStar: HygStarData | null;
-  setSelectedStar: (star: HygStarData | null) => void;
-  
-  // Camera focus control
-  focusedStarIndex: number | null;
-  setFocusedStarIndex: (index: number | null) => void;
-  triggerStarFocus: (star: HygStarData, index: number) => void;
-  
-  // Utility functions
   getSuggestedStarByCatalogId: (catalogId: string) => SuggestedStar | null;
   isStarSuggested: (catalogId: string) => boolean;
+  fetchSuggestionsForEmotion: (emotion: string) => Promise<void>;
 }
 
 const SuggestedStarsContext = createContext<SuggestedStarsContextType | undefined>(undefined);
@@ -69,13 +58,10 @@ function areSuggestedStarsEqual(stars1: SuggestedStar[], stars2: SuggestedStar[]
 
 export function SuggestedStarsProvider({ children }: SuggestedStarsProviderProps) {
   const [suggestedStars, setSuggestedStarsState] = useState<SuggestedStar[]>([]);
-  const [selectedStar, setSelectedStar] = useState<HygStarData | null>(null);
-  const [focusedStarIndex, setFocusedStarIndex] = useState<number | null>(null);
 
   const clearSuggestedStars = useCallback(() => {
     console.log('SuggestedStarsContext: Clearing suggested stars');
     setSuggestedStarsState([]);
-    setFocusedStarIndex(null);
   }, []);
 
   const handleSetSuggestedStars = useCallback((stars: SuggestedStar[]) => {
@@ -91,12 +77,6 @@ export function SuggestedStarsProvider({ children }: SuggestedStarsProviderProps
     setSuggestedStarsState(stars);
   }, [suggestedStars]);
 
-  const triggerStarFocus = useCallback((star: HygStarData, index: number) => {
-    console.log(`SuggestedStarsContext: Triggering focus on star ${star.hyg.proper || star.hyg.id} at index ${index}`);
-    setSelectedStar(star);
-    setFocusedStarIndex(index);
-  }, []);
-
   const getSuggestedStarByCatalogId = useCallback((catalogId: string): SuggestedStar | null => {
     return suggestedStars.find(star => star.starCatalogId === catalogId) || null;
   }, [suggestedStars]);
@@ -105,19 +85,32 @@ export function SuggestedStarsProvider({ children }: SuggestedStarsProviderProps
     return suggestedStars.some(star => star.starCatalogId === catalogId);
   }, [suggestedStars]);
 
+  const fetchSuggestionsForEmotion = useCallback(async (emotion: string): Promise<void> => {
+    try {
+      console.log(`SuggestedStarsContext: Fetching suggestions for emotion: ${emotion}`);
+      
+      // Import StarService dynamically to avoid circular dependencies
+      const { StarService } = await import('../services/starService');
+      const suggestions = await StarService.getSuggestedStarsForEmotion(emotion);
+      
+      console.log(`SuggestedStarsContext: Received ${suggestions.length} suggestions`);
+      handleSetSuggestedStars(suggestions);
+    } catch (error) {
+      console.error('SuggestedStarsContext: Error fetching suggestions:', error);
+      // Clear suggestions on error
+      clearSuggestedStars();
+    }
+  }, [handleSetSuggestedStars, clearSuggestedStars]);
+
   return (
     <SuggestedStarsContext.Provider 
       value={{ 
         suggestedStars, 
         setSuggestedStars: handleSetSuggestedStars, 
         clearSuggestedStars,
-        selectedStar,
-        setSelectedStar,
-        focusedStarIndex,
-        setFocusedStarIndex,
-        triggerStarFocus,
         getSuggestedStarByCatalogId,
-        isStarSuggested
+        isStarSuggested,
+        fetchSuggestionsForEmotion
       }}
     >
       {children}

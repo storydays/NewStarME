@@ -2,31 +2,35 @@ import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { StarviewCanvas } from './render/StarviewCanvas';
+import { StarviewCameraProvider } from './hooks/useStarviewCamera';
 import { Home } from './pages/Home';
 import { StarSelection } from './pages/StarSelection';
 import { Dedication } from './pages/Dedication';
 import { SharedStar } from './pages/SharedStar';
-import { SuggestedStarsProvider } from './context/SuggestedStarsContext';
+import { SuggestedStarsProvider, useSuggestedStars } from './context/SuggestedStarsContext';
 import { useStarsCatalog } from './hooks/useStarsCatalog';
 import { StarService } from './services/starService';
+import { HygStarData } from './types';
 
 /**
- * AppContent Component - Enhanced with Refined Star Architecture
+ * AppContent Component - Central State Management
  * 
- * Purpose: Main application component that integrates the refined star data architecture.
- * Uses the central StarsCatalog as the single source of truth for all star operations.
+ * Purpose: Holds global selectedStar state and orchestrates data flow between components.
+ * No longer handles camera control or side effects - focuses only on shared state.
  * 
  * Features:
- * - Central StarsCatalog integration
- * - SuggestedStars context for AI-generated suggestions
- * - Clean separation between catalog data and suggested data
- * - Enhanced 3D visualization with proper data flow
+ * - Central selectedStar state (HygStarData | null)
+ * - Derives highlightedStarIds from SuggestedStarsContext
+ * - Passes data to StarviewCanvas without triggering camera effects
+ * - Clean separation of concerns
  * 
- * Confidence Rating: High - Clean integration of refined architecture
+ * Confidence Rating: High - Simplified state management
  */
 function AppContent() {
   const { catalog, loading: catalogLoading, error: catalogError } = useStarsCatalog();
-  const [selectedStar, setSelectedStar] = useState<any>(null);
+  const { suggestedStars } = useSuggestedStars();
+  const [selectedStar, setSelectedStar] = useState<HygStarData | null>(null);
+  const [cameraCommand, setCameraCommand] = useState<any>(null);
 
   // Control settings for the star visualization
   const [controlSettings] = useState({
@@ -49,14 +53,22 @@ function AppContent() {
     StarService.initializeStars().catch(console.error);
   }, []);
 
-  const handleStarSelect = (star: any, index: number | null) => {
-    console.log('App: Star selected:', star?.proper || star?.id, 'at index:', index);
+  // Derive highlighted star IDs from suggested stars
+  const highlightedStarIds = suggestedStars.map(star => star.starCatalogId);
+
+  const handleStarSelect = (star: HygStarData | null, index: number | null) => {
+    console.log('App: Star selected:', star?.hyg.proper || star?.hyg.id, 'at index:', index);
     setSelectedStar(star);
   };
 
-  const handleStarClick = (star: any) => {
-    console.log('App: Star clicked for modal display:', star?.scientific_name);
+  const handleStarClick = (star: HygStarData) => {
+    console.log('App: Star clicked for modal display:', star.hyg.proper || star.hyg.id);
     // This will be handled by individual page components
+  };
+
+  const handleCameraCommand = (command: any) => {
+    console.log('App: Received camera command:', command);
+    setCameraCommand(command);
   };
 
   if (catalogLoading) {
@@ -99,31 +111,45 @@ function AppContent() {
   return (
     <Router>
       <div className="App cosmic-viewport">
-        {/* Global 3D background canvas with StarsCatalog integration */}
-        <StarviewCanvas
-          starsCatalog={catalog}
-          catalogLoading={catalogLoading}
-          selectedStar={selectedStar}
-          onStarSelect={handleStarSelect}
-          starSize={controlSettings.starSize}
-          glowMultiplier={controlSettings.glowMultiplier}
-          showLabels={controlSettings.showLabels}
-          renderingMode={controlSettings.renderingMode}
-          onStarClick={handleStarClick}
-        />
-        
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-        >
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/stars/:emotionId" element={<StarSelection />} />
-            <Route path="/dedicate/:starId" element={<Dedication />} />
-            <Route path="/star/:dedicationId" element={<SharedStar />} />
-          </Routes>
-        </motion.div>
+        <StarviewCameraProvider onCommand={handleCameraCommand}>
+          {/* Global 3D background canvas with props-based data flow */}
+          <StarviewCanvas
+            starsCatalog={catalog}
+            catalogLoading={catalogLoading}
+            selectedStar={selectedStar}
+            highlightedStarIds={highlightedStarIds}
+            onStarSelect={handleStarSelect}
+            onStarClick={handleStarClick}
+            starSize={controlSettings.starSize}
+            glowMultiplier={controlSettings.glowMultiplier}
+            showLabels={controlSettings.showLabels}
+            renderingMode={controlSettings.renderingMode}
+            cameraCommand={cameraCommand}
+            onCameraCommandComplete={() => setCameraCommand(null)}
+          />
+          
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+          >
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route 
+                path="/stars/:emotionId" 
+                element={
+                  <StarSelection 
+                    selectedStar={selectedStar}
+                    setSelectedStar={setSelectedStar}
+                    onStarClick={handleStarClick}
+                  />
+                } 
+              />
+              <Route path="/dedicate/:starId" element={<Dedication />} />
+              <Route path="/star/:dedicationId" element={<SharedStar />} />
+            </Routes>
+          </motion.div>
+        </StarviewCameraProvider>
       </div>
     </Router>
   );

@@ -3,7 +3,7 @@ import { Star, HygStarData, SuggestedStar } from '../types';
 import { StarsCatalog } from '../data/StarsCatalog';
 
 /**
- * StarService - Enhanced with Refined Architecture Integration
+ * StarService - AI Integration and Data Transformation Layer
  * 
  * Purpose: Handles star data operations with clean separation between:
  * - HygStarData (immutable catalog source)
@@ -15,6 +15,7 @@ import { StarsCatalog } from '../data/StarsCatalog';
  * - Fallback to catalog-based selection
  * - SuggestedStar creation with starCatalogId links
  * - Legacy Star format support for database operations
+ * - Uses StarsCatalog as single source of truth
  * 
  * Confidence Rating: High - Clean integration with new architecture
  */
@@ -312,15 +313,14 @@ export class StarService {
       { name: 'Altair', ra: 19.846, dec: 8.868, mag: 0.77, spect: 'A7V' },
       { name: 'Deneb', ra: 20.690, dec: 45.280, mag: 1.25, spect: 'A2Ia' },
       { name: 'Arcturus', ra: 14.261, dec: 19.182, mag: -0.05, spect: 'K1.5III' },
-      { name: 'Capella', ra: 5.278, dec: 45.998, mag: 0.08, spect: 'G5III' },
-      // ... (additional fallback stars)
+      { name: 'Capella', ra: 5.278, dec: 45.998, mag: 0.08, spect: 'G5III' }
     ];
 
     const staticStars: any[] = [];
 
     emotions.forEach((emotionId, emotionIndex) => {
-      const startIndex = emotionIndex * 5;
-      const emotionStars = fallbackStarData.slice(startIndex, startIndex + 5);
+      const startIndex = emotionIndex % fallbackStarData.length;
+      const emotionStars = fallbackStarData.slice(startIndex, startIndex + 1);
 
       emotionStars.forEach(starData => {
         const star = this.createFallbackStar(starData, emotionId);
@@ -417,6 +417,7 @@ export class StarService {
    */
   static async getStarById(starId: string): Promise<Star | null> {
     try {
+      // Try database first
       const { data, error } = await supabase
         .from('stars')
         .select('*')
@@ -425,6 +426,29 @@ export class StarService {
 
       if (!error && data) {
         return data;
+      }
+
+      // Try catalog lookup if it's a catalog ID
+      if (starId.startsWith('catalog-') && this.starsCatalog) {
+        const catalogId = parseInt(starId.replace('catalog-', ''));
+        const catalogStar = this.starsCatalog.getStarById(catalogId);
+        
+        if (catalogStar) {
+          // Convert to legacy Star format
+          return {
+            id: starId,
+            scientific_name: catalogStar.hyg.proper || `HYG ${catalogStar.hyg.id}`,
+            poetic_description: 'A magnificent star from the cosmic catalog',
+            coordinates: `${catalogStar.hyg.ra.toFixed(3)}° ${catalogStar.hyg.dec.toFixed(3)}°`,
+            visual_data: {
+              brightness: catalogStar.render.brightness,
+              color: catalogStar.render.color,
+              size: catalogStar.render.size
+            },
+            emotion_id: 'unknown',
+            source: 'catalog'
+          };
+        }
       }
 
       return null;
