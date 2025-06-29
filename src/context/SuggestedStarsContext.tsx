@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useCallback, ReactNode } fr
 import { SuggestedStar } from '../types';
 
 /**
- * SuggestedStarsContext - ENHANCED: Comprehensive Debugging Logs
+ * SuggestedStarsContext - ENHANCED: Comprehensive Debugging Logs with Star Names
  * 
  * Purpose: Manages AI-generated suggested stars with detailed logging
  * to trace state updates and identify propagation issues.
@@ -13,8 +13,9 @@ import { SuggestedStar } from '../types';
  * - Promise resolution/rejection tracking
  * - Context provider lifecycle logging
  * - Detailed error reporting with stack traces
+ * - STAR NAMES: Detailed logging of star names retrieved from AI/catalog
  * 
- * Confidence Rating: High - Comprehensive debugging implementation
+ * Confidence Rating: High - Comprehensive debugging implementation with star name tracking
  */
 
 interface SuggestedStarsContextType {
@@ -44,18 +45,39 @@ export function SuggestedStarsProvider({ children }: SuggestedStarsProviderProps
     console.log(`=== SuggestedStarsContext: clearSuggestedStars called at ${timestamp} ===`);
     console.log('SuggestedStarsContext: clearSuggestedStars - Current state length:', suggestedStars.length);
     
+    if (suggestedStars.length > 0) {
+      console.log('SuggestedStarsContext: clearSuggestedStars - Clearing these star names:', 
+        suggestedStars.map(s => s.name || 'Unnamed').join(', '));
+    }
+    
     setSuggestedStarsState([]);
     
     console.log('SuggestedStarsContext: clearSuggestedStars - setSuggestedStarsState([]) called');
     console.log(`=== SuggestedStarsContext: clearSuggestedStars completed at ${Date.now()} ===`);
   }, [suggestedStars.length]);
 
-  // ENHANCED: Comprehensive state setter with detailed logging
+  // ENHANCED: Comprehensive state setter with detailed logging including star names
   const handleSetSuggestedStars = useCallback((stars: SuggestedStar[]) => {
     const timestamp = Date.now();
     console.log(`=== SuggestedStarsContext: handleSetSuggestedStars called at ${timestamp} ===`);
     console.log('SuggestedStarsContext: handleSetSuggestedStars - Input stars.length:', stars.length);
     console.log('SuggestedStarsContext: handleSetSuggestedStars - Current state length:', suggestedStars.length);
+    
+    // ENHANCED: Log star names for debugging
+    if (stars.length > 0) {
+      console.log('SuggestedStarsContext: handleSetSuggestedStars - NEW STAR NAMES being set:', 
+        stars.map(s => s.name || 'Unnamed').join(', '));
+      console.log('SuggestedStarsContext: handleSetSuggestedStars - NEW STAR CATALOG IDs being set:', 
+        stars.map(s => s.starCatalogId).join(', '));
+    }
+    
+    if (suggestedStars.length > 0) {
+      console.log('SuggestedStarsContext: handleSetSuggestedStars - PREVIOUS STAR NAMES being replaced:', 
+        suggestedStars.map(s => s.name || 'Unnamed').join(', '));
+      console.log('SuggestedStarsContext: handleSetSuggestedStars - PREVIOUS STAR CATALOG IDs being replaced:', 
+        suggestedStars.map(s => s.starCatalogId).join(', '));
+    }
+    
     console.log('SuggestedStarsContext: handleSetSuggestedStars - Input stars details:', stars.map(s => ({ 
       id: s.id, 
       catalogId: s.starCatalogId, 
@@ -84,7 +106,7 @@ export function SuggestedStarsProvider({ children }: SuggestedStarsProviderProps
     
     const result = suggestedStars.find(star => star.starCatalogId === catalogId) || null;
     
-    console.log('SuggestedStarsContext: getSuggestedStarByCatalogId - Result:', result ? result.id : 'null');
+    console.log('SuggestedStarsContext: getSuggestedStarByCatalogId - Result:', result ? `${result.name} (${result.id})` : 'null');
     return result;
   }, [suggestedStars]);
 
@@ -95,10 +117,14 @@ export function SuggestedStarsProvider({ children }: SuggestedStarsProviderProps
     const result = suggestedStars.some(star => star.starCatalogId === catalogId);
     
     console.log('SuggestedStarsContext: isStarSuggested - Result:', result);
+    if (result) {
+      const matchedStar = suggestedStars.find(star => star.starCatalogId === catalogId);
+      console.log('SuggestedStarsContext: isStarSuggested - Matched star name:', matchedStar?.name || 'Unnamed');
+    }
     return result;
   }, [suggestedStars]);
 
-  // ENHANCED: Comprehensive fetch function with detailed logging
+  // ENHANCED: Comprehensive fetch function with detailed logging including star names
   const fetchSuggestionsForEmotion = useCallback(async (emotion: string): Promise<void> => {
     const functionStartTime = Date.now();
     console.log(`=== SuggestedStarsContext: fetchSuggestionsForEmotion START at ${functionStartTime} ===`);
@@ -126,18 +152,34 @@ export function SuggestedStarsProvider({ children }: SuggestedStarsProviderProps
       const serviceCallEndTime = Date.now();
       console.log(`SuggestedStarsContext: fetchSuggestionsForEmotion - StarService call completed in ${serviceCallEndTime - serviceCallStartTime}ms`);
       console.log('SuggestedStarsContext: fetchSuggestionsForEmotion - StarService returned suggestions.length:', suggestions.length);
+      
+      // ENHANCED: Log star names retrieved from StarService
+      if (suggestions.length > 0) {
+        console.log('SuggestedStarsContext: fetchSuggestionsForEmotion - STAR NAMES retrieved from StarService:', 
+          suggestions.map(s => s.name || 'Unnamed').join(', '));
+        console.log('SuggestedStarsContext: fetchSuggestionsForEmotion - STAR CATALOG IDs retrieved from StarService:', 
+          suggestions.map(s => s.starCatalogId).join(', '));
+        console.log('SuggestedStarsContext: fetchSuggestionsForEmotion - STAR SOURCES retrieved from StarService:', 
+          suggestions.map(s => s.metadata?.source || 'unknown').join(', '));
+      } else {
+        console.warn('SuggestedStarsContext: fetchSuggestionsForEmotion - NO STAR NAMES retrieved from StarService!');
+      }
+      
       console.log('SuggestedStarsContext: fetchSuggestionsForEmotion - Suggestions details:', suggestions.map(s => ({ 
         id: s.id, 
         catalogId: s.starCatalogId, 
         name: s.name,
-        emotion: s.metadata?.emotion 
+        emotion: s.metadata?.emotion,
+        source: s.metadata?.source
       })));
       
-      // CRITICAL: State update with comprehensive logging
+      // CRITICAL: State update with comprehensive logging including star names
       console.log('SuggestedStarsContext: fetchSuggestionsForEmotion - About to call handleSetSuggestedStars');
       console.log('SuggestedStarsContext: fetchSuggestionsForEmotion - Current state before update:', {
         currentLength: suggestedStars.length,
+        currentStarNames: suggestedStars.map(s => s.name || 'Unnamed').join(', '),
         newLength: suggestions.length,
+        newStarNames: suggestions.map(s => s.name || 'Unnamed').join(', '),
         timestamp: Date.now()
       });
       
@@ -147,6 +189,8 @@ export function SuggestedStarsProvider({ children }: SuggestedStarsProviderProps
       
       console.log(`SuggestedStarsContext: fetchSuggestionsForEmotion - handleSetSuggestedStars completed in ${stateUpdateEndTime - stateUpdateStartTime}ms`);
       console.log('SuggestedStarsContext: fetchSuggestionsForEmotion - State update should now be propagating to components');
+      console.log('SuggestedStarsContext: fetchSuggestionsForEmotion - FINAL STAR NAMES that should appear in UI:', 
+        suggestions.map(s => s.name || 'Unnamed').join(', '));
       
       const functionEndTime = Date.now();
       console.log(`=== SuggestedStarsContext: fetchSuggestionsForEmotion SUCCESS in ${functionEndTime - functionStartTime}ms ===`);
@@ -172,22 +216,30 @@ export function SuggestedStarsProvider({ children }: SuggestedStarsProviderProps
     }
   }, [handleSetSuggestedStars, suggestedStars.length]);
 
-  // ENHANCED: State change monitoring with detailed logging
+  // ENHANCED: State change monitoring with detailed logging including star names
   React.useEffect(() => {
     const timestamp = Date.now();
     console.log(`=== SuggestedStarsContext: State change detected at ${timestamp} ===`);
     console.log('SuggestedStarsContext: State updated - suggestedStars.length:', suggestedStars.length);
     
     if (suggestedStars.length > 0) {
+      console.log('SuggestedStarsContext: State updated - CURRENT STAR NAMES in state:', 
+        suggestedStars.map(s => s.name || 'Unnamed').join(', '));
+      console.log('SuggestedStarsContext: State updated - CURRENT STAR CATALOG IDs in state:', 
+        suggestedStars.map(s => s.starCatalogId).join(', '));
       console.log('SuggestedStarsContext: State updated - Current suggested stars:', suggestedStars.map(s => ({ 
         id: s.id, 
         catalogId: s.starCatalogId, 
         name: s.name,
-        emotion: s.metadata?.emotion 
+        emotion: s.metadata?.emotion,
+        source: s.metadata?.source
       })));
       console.log('SuggestedStarsContext: State updated - This should trigger re-renders in consuming components');
+      console.log('SuggestedStarsContext: State updated - These stars should now be highlighted in 3D view:', 
+        suggestedStars.map(s => `${s.name} (ID: ${s.starCatalogId})`).join(', '));
     } else {
-      console.log('SuggestedStarsContext: State updated - No suggested stars (empty array)');
+      console.log('SuggestedStarsContext: State updated - NO STAR NAMES in state (empty array)');
+      console.log('SuggestedStarsContext: State updated - No stars should be highlighted in 3D view');
     }
     
     console.log(`=== SuggestedStarsContext: State change processing completed at ${Date.now()} ===`);
@@ -204,6 +256,10 @@ export function SuggestedStarsProvider({ children }: SuggestedStarsProviderProps
 
   console.log('SuggestedStarsProvider: About to render Provider with context value');
   console.log('SuggestedStarsProvider: Context value suggestedStars.length:', suggestedStars.length);
+  if (suggestedStars.length > 0) {
+    console.log('SuggestedStarsProvider: Context value STAR NAMES:', 
+      suggestedStars.map(s => s.name || 'Unnamed').join(', '));
+  }
 
   return (
     <SuggestedStarsContext.Provider 
@@ -231,5 +287,9 @@ export function useSuggestedStars() {
   }
   
   console.log('useSuggestedStars: Returning context with suggestedStars.length:', context.suggestedStars.length);
+  if (context.suggestedStars.length > 0) {
+    console.log('useSuggestedStars: Returning context with STAR NAMES:', 
+      context.suggestedStars.map(s => s.name || 'Unnamed').join(', '));
+  }
   return context;
 }
