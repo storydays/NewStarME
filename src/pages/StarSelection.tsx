@@ -91,6 +91,7 @@ export function StarSelection({ selectedStar, setSelectedStar, onStarClick }: St
     // Cleanup function
     return () => {
       console.log('StarSelection: Cleaning up - clearing suggestions');
+      console.log(`emotion id: ${emotionId}`)
       isUnmountingRef.current = true;
       clearSuggestedStars();
       
