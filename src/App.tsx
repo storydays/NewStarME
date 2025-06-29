@@ -32,7 +32,7 @@ function AppContent() {
   const [selectedStar, setSelectedStar] = useState<HygStarData | null>(null);
   const [cameraCommand, setCameraCommand] = useState<any>(null);
 
-  console.log("suggested stars: ", suggestedStars)
+  console.log("suggestedStars: ", suggestedStars)
 
   // Control settings for the star visualization
   const [controlSettings] = useState({
