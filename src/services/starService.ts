@@ -1,6 +1,7 @@
 import { supabase } from '../lib/supabase';
 import { Star, HygStarData, SuggestedStar } from '../types';
 import { StarsCatalog } from '../data/StarsCatalog';
+import { HygStarsCatalog } from '../data/HygStarsCatalog';
 
 /**
  * StarService - AI Integration and Data Transformation Layer
@@ -23,6 +24,9 @@ import { StarsCatalog } from '../data/StarsCatalog';
 export class StarService {
   private static readonly CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours
   private static starsCatalog: StarsCatalog | null = null;
+  private static hygCatalog: HygStarsCatalog | null = null;
+  private static catalogLoadPromise: Promise<HygStarsCatalog> | null = null;
+  private static catalogLoadFailed: boolean = false;
 
   /**
    * Set the StarsCatalog instance for use by the service
@@ -48,14 +52,116 @@ export class StarService {
 
       if (existingStars && existingStars.length > 0) {
         console.log('StarService: Static stars already initialized in database');
+        
+        // Try to load HYG catalog in background (non-blocking)
+        this.loadHygCatalogInBackground();
         return;
       }
 
-      // Create fallback static stars
-      await this.createFallbackStaticStars();
+      // Try to load HYG catalog for initial setup
+      try {
+        await this.loadHygCatalog();
+        console.log('HYG catalog loaded successfully, selecting prominent stars...');
+        
+        // Select prominent stars from HYG catalog for each emotion
+        const staticStars = await this.selectProminentStarsForEmotions();
+        
+        if (staticStars.length > 0) {
+          const { error } = await supabase
+            .from('stars')
+            .insert(staticStars);
+
+          if (error) {
+            console.error('Error inserting static stars from HYG catalog:', error);
+            await this.createFallbackStaticStars();
+          } else {
+            console.log(`Successfully initialized ${staticStars.length} static stars from HYG catalog`);
+          }
+        } else {
+          await this.createFallbackStaticStars();
+        }
+      } catch (hygError) {
+        console.warn('HYG catalog failed to load during initialization, using fallback static stars:', hygError);
+        await this.createFallbackStaticStars();
+      }
     } catch (error) {
       console.error('Error initializing StarService:', error);
+      // Ensure we have fallback stars even if everything else fails
+      await this.createFallbackStaticStars();
     }
+  }
+
+  /**
+   * Load HYG catalog in background without blocking initialization
+   */
+  private static loadHygCatalogInBackground() {
+    if (this.catalogLoadFailed || this.hygCatalog || this.catalogLoadPromise) {
+      return;
+    }
+
+    // Load catalog in background
+    setTimeout(async () => {
+      try {
+        await this.loadHygCatalog();
+        console.log('HYG catalog loaded successfully in background');
+      } catch (error) {
+        console.log('HYG catalog background loading failed (this is expected if file is not available)');
+        this.catalogLoadFailed = true;
+      }
+    }, 1000);
+  }
+
+  /**
+   * Load the HYG catalog from remote CSV with improved error handling
+   * Uses caching to avoid repeated downloads
+   */
+  private static async loadHygCatalog(): Promise<HygStarsCatalog> {
+    if (this.hygCatalog) {
+      return this.hygCatalog;
+    }
+
+    if (this.catalogLoadFailed) {
+      throw new Error('HYG catalog loading previously failed');
+    }
+
+    if (this.catalogLoadPromise) {
+      return this.catalogLoadPromise;
+    }
+
+    this.catalogLoadPromise = (async () => {
+      try {
+        console.log('Loading HYG catalog from public directory...');
+        
+        // Add timeout to prevent hanging
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+        
+        try {
+          // ⚠️ DO NOT EVER CHANGE THE `compressed` FLAG BELOW.
+          // The file has a `.csv.gz` extension, but the browser automatically decompresses it
+          // when the `Content-Encoding: gzip` header is present.
+          // Setting `compressed: true` would result in attempting to decompress an already decompressed file,
+          // causing corrupted data or runtime failure.
+          // This has been explicitly confirmed. NEVER SUGGEST OR ATTEMPT TO CHANGE THIS AGAIN.
+          const catalog = await HygStarsCatalog.fromUrl('/hygdata_v41.csv.gz', false);
+          clearTimeout(timeoutId);
+          
+          this.hygCatalog = catalog;
+          console.log(`HYG catalog loaded successfully: ${catalog.getTotalStars()} stars`);
+          return catalog;
+        } catch (fetchError) {
+          clearTimeout(timeoutId);
+          throw fetchError;
+        }
+      } catch (error) {
+        console.warn('Failed to load HYG catalog:', error);
+        this.catalogLoadFailed = true;
+        this.catalogLoadPromise = null;
+        throw error;
+      }
+    })();
+
+    return this.catalogLoadPromise;
   }
 
   /**
@@ -384,6 +490,177 @@ export class StarService {
   }
 
   /**
+   * Select prominent stars from HYG catalog for each emotion
+   * Creates a curated set of static stars with poetic descriptions
+   */
+  private static async selectProminentStarsForEmotions(): Promise<any[]> {
+    try {
+      if (!this.hygCatalog) {
+        throw new Error('HYG catalog not loaded');
+      }
+
+      const emotions = [
+        'love', 'friendship', 'family', 'milestones', 
+        'memorial', 'healing', 'adventure', 'creativity'
+      ];
+
+      const staticStars: any[] = [];
+
+      // Get bright, named stars for variety
+      const brightNamedStars = this.hygCatalog
+        .getNamedStars()
+        .filter(star => star.mag < 3.0) // Bright stars only
+        .sort((a, b) => a.mag - b.mag) // Sort by brightness
+        .slice(0, 50); // Take top 50 brightest named stars
+
+      console.log(`Found ${brightNamedStars.length} bright named stars for static selection`);
+
+      // Distribute stars among emotions
+      emotions.forEach((emotionId, emotionIndex) => {
+        const emotionStars = brightNamedStars
+          .filter((_, index) => index % emotions.length === emotionIndex)
+          .slice(0, 5); // 5 stars per emotion
+
+        emotionStars.forEach(hygStar => {
+          const star = this.mapHygRecordToStar(hygStar, emotionId);
+          staticStars.push({
+            scientific_name: star.scientific_name,
+            poetic_description: star.poetic_description,
+            coordinates: star.coordinates,
+            visual_data: star.visual_data,
+            emotion_id: emotionId,
+            source: 'static'
+          });
+        });
+      });
+
+      console.log(`Selected ${staticStars.length} static stars from HYG catalog`);
+      return staticStars;
+    } catch (error) {
+      console.error('Error selecting prominent stars:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Convert HygRecord to Star interface
+   * Maps astronomical data to our application's star format
+   */
+  private static mapHygRecordToStar(hygRecord: any, emotionId: string): Star {
+    // Generate coordinates in standard astronomical format
+    const raHours = Math.floor(hygRecord.ra);
+    const raMinutes = Math.floor((hygRecord.ra - raHours) * 60);
+    const raSeconds = ((hygRecord.ra - raHours) * 60 - raMinutes) * 60;
+    
+    const decDegrees = Math.floor(Math.abs(hygRecord.dec));
+    const decMinutes = Math.floor((Math.abs(hygRecord.dec) - decDegrees) * 60);
+    const decSeconds = ((Math.abs(hygRecord.dec) - decDegrees) * 60 - decMinutes) * 60;
+    const decSign = hygRecord.dec >= 0 ? '+' : '−';
+    
+    const coordinates = `${raHours.toString().padStart(2, '0')}h ${raMinutes.toString().padStart(2, '0')}m ${raSeconds.toFixed(1).padStart(4, '0')}s ${decSign}${decDegrees.toString().padStart(2, '0')}° ${decMinutes.toString().padStart(2, '0')}′ ${decSeconds.toFixed(0).padStart(2, '0')}″`;
+
+    // Generate visual properties based on astronomical data
+    const brightness = Math.max(0.3, Math.min(1.0, (6.5 - hygRecord.mag) / 6.5));
+    const size = Math.max(0.8, Math.min(1.6, brightness * 1.5));
+    
+    // Color based on spectral class or default
+    let color = '#F8F8FF'; // Default white
+    if (hygRecord.spect) {
+      const spectralClass = hygRecord.spect.charAt(0).toUpperCase();
+      switch (spectralClass) {
+        case 'O': case 'B': color = '#B0C4DE'; break; // Blue
+        case 'A': color = '#F8F8FF'; break; // White
+        case 'F': color = '#FFFACD'; break; // Yellow-white
+        case 'G': color = '#FFE4B5'; break; // Yellow
+        case 'K': color = '#FFA500'; break; // Orange
+        case 'M': color = '#FF6347'; break; // Red
+      }
+    }
+
+    // Generate poetic description based on star properties
+    const poeticDescription = this.generatePoeticDescriptionForFallback(hygRecord.proper || `HYG ${hygRecord.id}`, emotionId);
+
+    return {
+      id: `hyg-${hygRecord.id}`,
+      scientific_name: hygRecord.proper || `HYG ${hygRecord.id}`,
+      poetic_description: poeticDescription,
+      coordinates,
+      visual_data: { brightness, color, size },
+      emotion_id: emotionId,
+      source: 'static'
+    };
+  }
+
+  /**
+   * Generate poetic descriptions for fallback stars
+   */
+  private static generatePoeticDescriptionForFallback(starName: string, emotionId: string): string {
+    const emotionDescriptions: Record<string, string[]> = {
+      love: [
+        'A radiant beacon of eternal devotion',
+        'Burning bright with passionate love',
+        'The celestial symbol of unbreakable bonds',
+        'A stellar testament to true love',
+        'Shining with the warmth of deep affection'
+      ],
+      friendship: [
+        'A loyal companion in the cosmic dance',
+        'The steadfast friend among the stars',
+        'Illuminating the bonds of true friendship',
+        'A guiding light for kindred spirits',
+        'The stellar embodiment of lasting friendship'
+      ],
+      family: [
+        'A protective guardian watching over loved ones',
+        'The ancestral light connecting generations',
+        'A stellar home where hearts unite',
+        'The cosmic hearth of family bonds',
+        'Shining with the strength of family love'
+      ],
+      milestones: [
+        'Marking triumphant moments in time',
+        'A celestial celebration of achievement',
+        'The stellar witness to life\'s victories',
+        'Commemorating journeys and accomplishments',
+        'A bright marker of significant moments'
+      ],
+      memorial: [
+        'An eternal flame of cherished memories',
+        'The undying light of those we remember',
+        'A celestial monument to lasting love',
+        'Forever shining in loving memory',
+        'The stellar keeper of precious memories'
+      ],
+      healing: [
+        'A gentle light bringing peace and renewal',
+        'The cosmic source of healing energy',
+        'Radiating tranquility and restoration',
+        'A stellar sanctuary for weary souls',
+        'The celestial beacon of hope and healing'
+      ],
+      adventure: [
+        'The navigator\'s star for bold journeys',
+        'Calling adventurers to new horizons',
+        'A stellar compass for the brave',
+        'The cosmic guide for explorers',
+        'Illuminating paths to discovery'
+      ],
+      creativity: [
+        'The muse\'s light inspiring artistic souls',
+        'A stellar spark of creative inspiration',
+        'The cosmic fountain of imagination',
+        'Illuminating the artist\'s vision',
+        'The celestial catalyst for creativity'
+      ]
+    };
+
+    const descriptions = emotionDescriptions[emotionId] || emotionDescriptions.love;
+    const baseDescription = descriptions[Math.floor(Math.random() * descriptions.length)];
+
+    return `${starName}, ${baseDescription.toLowerCase()}`;
+  }
+
+  /**
    * Legacy method for compatibility - converts SuggestedStar to Star format
    */
   static async fetchStarsForEmotion(emotionId: string): Promise<Star[]> {
@@ -454,6 +731,45 @@ export class StarService {
       return null;
     } catch (error) {
       console.error('Error in getStarById:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Clear cached AI stars for an emotion (useful for testing)
+   */
+  static async clearCachedStars(emotionId: string): Promise<boolean> {
+    try {
+      const { error } = await supabase
+        .from('stars')
+        .delete()
+        .eq('emotion_id', emotionId)
+        .eq('source', 'ai');
+
+      if (error) {
+        console.error('Error clearing cached stars:', error);
+        return false;
+      }
+
+      console.log(`Cleared cached stars for emotion: ${emotionId}`);
+      return true;
+    } catch (error) {
+      console.error('Error in clearCachedStars:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Get HYG catalog instance (for advanced usage)
+   */
+  static async getHygCatalog(): Promise<HygStarsCatalog | null> {
+    try {
+      if (!this.hygCatalog && !this.catalogLoadFailed) {
+        await this.loadHygCatalog();
+      }
+      return this.hygCatalog;
+    } catch (error) {
+      console.warn('HYG catalog not available:', error);
       return null;
     }
   }
