@@ -15,9 +15,8 @@ import { HygRecord, HygStarData } from '../types';
  * - Manages astronomical metadata for 3D visualization
  * - Caches processed data for performance
  * - IMMUTABLE: No updateStarRender, highlightStars, or clearHighlights methods
- * - FIXED: Proper coordinate system mapping for Three.js Y-up orientation
  * 
- * Confidence Rating: High - Clean immutable abstraction with corrected coordinates
+ * Confidence Rating: High - Clean immutable abstraction
  */
 
 export class StarsCatalog {
@@ -67,14 +66,7 @@ export class StarsCatalog {
 
   /**
    * Convert HygRecord to enriched HygStarData format
-   * FIXED: Proper coordinate system mapping for Three.js Y-up orientation
-   * 
-   * The coordinate system mapping has been corrected to align with Three.js conventions:
-   * - X: Right ascension (RA) mapped to horizontal plane
-   * - Y: Declination (Dec) mapped to vertical axis (up/down)
-   * - Z: Right ascension (RA) mapped to depth plane
-   * 
-   * This ensures the full starfield is visible and properly distributed in 3D space.
+   * IMMUTABLE: Does not set isHighlighted or emotionColor in render object
    */
   private enrichHygRecord(hygRecord: HygRecord): HygStarData {
     // Convert spherical coordinates to Cartesian for 3D positioning
@@ -82,13 +74,9 @@ export class StarsCatalog {
     const raRad = hygRecord.rarad;
     const decRad = hygRecord.decrad;
     
-    // FIXED: Corrected coordinate system mapping for Three.js Y-up orientation
-    // Previous mapping had Y and Z swapped, causing half the starfield to be missing
     const x = distance * Math.cos(decRad) * Math.cos(raRad);
-    const y = distance * Math.sin(decRad); // FIXED: Declination now maps to Y-axis (vertical)
-    const z = distance * Math.cos(decRad) * Math.sin(raRad); // FIXED: RA component now maps to Z-axis
-
-    console.log(`StarsCatalog: Star ${hygRecord.id} - RA: ${hygRecord.ra.toFixed(2)}°, Dec: ${hygRecord.dec.toFixed(2)}° -> Position: [${x.toFixed(2)}, ${y.toFixed(2)}, ${z.toFixed(2)}]`);
+    const y = distance * Math.cos(decRad) * Math.sin(raRad);
+    const z = distance * Math.sin(decRad);
 
     // Calculate visual properties based on astronomical data
     const brightness = Math.max(0.3, Math.min(1.0, 1.2 - 0.07 * hygRecord.mag));
