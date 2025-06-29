@@ -3,109 +3,80 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, X, Star as StarIcon, MapPin, Heart, Sparkles, ChevronRight } from 'lucide-react';
 import { useStarsForEmotion } from '../hooks/useStarsCatalog';
-import { useSuggestedStars } from '../context/SuggestedStarsContext';
 import { useStarviewCamera } from '../hooks/useStarviewCamera';
 import { emotions } from '../data/emotions';
-import { HygStarData } from '../types';
+import { HygStarData, SuggestedStar } from '../types';
 import { STAR_SETTINGS } from '../config/starConfig';
 
 /**
- * StarSelection Component - Enhanced with STAR_SETTINGS Configuration
+ * StarSelection Component - Updated to Receive Props from App
  * 
- * Purpose: Emotion-based star selection interface with STAR_SETTINGS color management.
- * UPDATED: Uses STAR_SETTINGS configuration with comprehensive star settings.
+ * Purpose: Emotion-based star selection interface that receives suggested stars
+ * and loading state as props from the App component.
+ * 
+ * UPDATED: No longer directly manages star suggestion fetching - receives data via props
  * 
  * Features:
- * - Emotion-based star catalog browsing
- * - 3D visualization integration
+ * - Receives suggestedStars and isLoadingSuggestions as props
+ * - Displays loading state from parent
+ * - Renders suggested stars in sidebar
+ * - Maintains camera focus control for user interactions
  * - Star detail modal using selectedStar from parent
- * - Camera focus control
- * - Suggested stars context integration
- * - STAR_SETTINGS configuration with size and glow multipliers
- * - Star particle image indicators with STAR_SETTINGS colors
  * 
- * Confidence Rating: High - Enhanced with comprehensive star configuration
+ * Confidence Rating: High - Clean props-based architecture
  */
 
 interface StarSelectionProps {
   selectedStar: HygStarData | null;
   setSelectedStar: (star: HygStarData | null) => void;
   onStarClick: (star: HygStarData) => void;
+  suggestedStars: SuggestedStar[];
+  isLoadingSuggestions: boolean;
 }
 
-export function StarSelection({ selectedStar, setSelectedStar, onStarClick }: StarSelectionProps) {
+export function StarSelection({ 
+  selectedStar, 
+  setSelectedStar, 
+  onStarClick, 
+  suggestedStars, 
+  isLoadingSuggestions 
+}: StarSelectionProps) {
   const { emotionId } = useParams<{ emotionId: string }>();
   const navigate = useNavigate();
-  const { stars: catalogStars, loading, error } = useStarsForEmotion(emotionId, 5);
-  const { fetchSuggestionsForEmotion } = useSuggestedStars();
+  const { stars: catalogStars, loading: catalogLoading, error: catalogError } = useStarsForEmotion(emotionId, 5);
   const { focusOnStar, centerView } = useStarviewCamera();
-  
-  // Track which emotion we've processed to prevent duplicate calls
-  const processedEmotionRef = useRef<string | null>(null);
-  const isUnmountingRef = useRef(false);
   
   const emotion = emotions.find(e => e.id === emotionId);
 
-  // Simplified suggestion fetching - only depends on catalogStars having data
+  console.log('StarSelection: Rendered with props:', {
+    emotionId,
+    suggestedStarsCount: suggestedStars.length,
+    isLoadingSuggestions,
+    catalogStarsCount: catalogStars.length,
+    catalogLoading
+  });
+
+  // Log suggested star names for debugging
+  if (suggestedStars.length > 0) {
+    console.log('StarSelection: Received suggested star names:', 
+      suggestedStars.map(s => s.name || 'Unnamed').join(', '));
+  }
+
+  // Center view when suggested stars are available (only once per emotion)
+  const centeredForEmotionRef = useRef<string | null>(null);
   useEffect(() => {
-    async function processSuggestions() {
-      // Wait for stars to be loaded and available
-      if (!emotionId || loading || catalogStars.length === 0) {
-        return;
-      }
-
-      // Check if we've already processed this emotion
-      if (processedEmotionRef.current === emotionId) {
-        return;
-      }
-
-      // Check if component is unmounting
-      if (isUnmountingRef.current) {
-        return;
-      }
-
-      try {
-        // Mark this emotion as processed BEFORE the async call
-        processedEmotionRef.current = emotionId;
-        
-        await fetchSuggestionsForEmotion(emotionId);
-        
-        // Only center view if component is still mounted and this is still the current emotion
-        if (!isUnmountingRef.current && processedEmotionRef.current === emotionId) {
-          centerView();
-        }
-        
-      } catch (error) {
-        // Reset processed emotion on error to allow retry
-        if (processedEmotionRef.current === emotionId) {
-          processedEmotionRef.current = null;
-        }
-      }
+    if (suggestedStars.length > 0 && emotionId && centeredForEmotionRef.current !== emotionId) {
+      console.log(`StarSelection: Centering view for emotion ${emotionId} with ${suggestedStars.length} suggested stars`);
+      centerView();
+      centeredForEmotionRef.current = emotionId;
     }
+  }, [suggestedStars.length, emotionId, centerView]);
 
-    processSuggestions();
-  }, [emotionId, catalogStars.length, loading, fetchSuggestionsForEmotion, centerView]);
-
-  // Reset processing state when emotion changes
+  // Reset centered emotion when emotion changes
   useEffect(() => {
-    if (emotionId && processedEmotionRef.current && processedEmotionRef.current !== emotionId) {
-      processedEmotionRef.current = null;
+    if (emotionId && centeredForEmotionRef.current && centeredForEmotionRef.current !== emotionId) {
+      centeredForEmotionRef.current = null;
     }
-  }, [emotionId]);
-
-  // Cleanup function with proper state management
-  useEffect(() => {
-    return () => {
-      isUnmountingRef.current = true;
-      
-      // Reset processing state on unmount
-      processedEmotionRef.current = null;
-      
-      // Reset unmounting flag after cleanup
-      setTimeout(() => {
-        isUnmountingRef.current = false;
-      }, 100);
-    };
   }, [emotionId]);
 
   if (!emotion) {
@@ -123,10 +94,8 @@ export function StarSelection({ selectedStar, setSelectedStar, onStarClick }: St
   const handleStarSelect = (catalogStar: HygStarData, index: number) => {
     console.log('StarSelection: Star selected for modal display:', catalogStar.hyg.proper || catalogStar.hyg.id);
     
-    // Update global selected star state (this will show the modal)
     setSelectedStar(catalogStar);
     
-    // Focus camera on selected star using direct camera control
     const catalogId = catalogStar.hyg.id.toString();
     focusOnStar(catalogId);
   };
@@ -140,7 +109,10 @@ export function StarSelection({ selectedStar, setSelectedStar, onStarClick }: St
     navigate(`/dedicate/catalog-${catalogStar.hyg.id}?emotion=${emotionId}`);
   };
 
-  if (loading) {
+  // Show loading state if either catalog or suggestions are loading
+  const isLoading = catalogLoading || isLoadingSuggestions;
+
+  if (isLoading) {
     return (
       <div className="absolute inset-0 pointer-events-none">
         <div className="relative z-10 flex items-center justify-center min-h-screen pointer-events-auto">
@@ -150,20 +122,22 @@ export function StarSelection({ selectedStar, setSelectedStar, onStarClick }: St
             animate={{ opacity: 1 }}
           >
             <div className="w-12 h-12 border-2 border-cosmic-cherenkov-blue border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-cosmic-observation text-lg font-light">Scanning the cosmic depths...</p>
+            <p className="text-cosmic-observation text-lg font-light">
+              {isLoadingSuggestions ? 'Loading suggested stars...' : 'Scanning the cosmic depths...'}
+            </p>
           </motion.div>
         </div>
       </div>
     );
   }
 
-  if (error) {
+  if (catalogError) {
     return (
       <div className="absolute inset-0 pointer-events-none">
         <div className="relative z-10 flex items-center justify-center min-h-screen pointer-events-auto">
           <div className="text-center">
             <p className="text-red-400 text-xl mb-4">Unable to access star catalog</p>
-            <p className="text-cosmic-stellar-wind text-sm mb-4">{error}</p>
+            <p className="text-cosmic-stellar-wind text-sm mb-4">{catalogError}</p>
             <button 
               onClick={handleBack}
               className="text-cosmic-cherenkov-blue hover:text-cosmic-plasma-glow transition-colors font-light"
@@ -175,6 +149,15 @@ export function StarSelection({ selectedStar, setSelectedStar, onStarClick }: St
       </div>
     );
   }
+
+  // Determine which stars to display in sidebar
+  const starsToDisplay = suggestedStars.length > 0 
+    ? suggestedStars.map(suggested => suggested.starCatalogRef)
+    : catalogStars;
+
+  const displaySource = suggestedStars.length > 0 ? 'AI Suggested' : 'Catalog';
+
+  console.log(`StarSelection: Displaying ${starsToDisplay.length} stars from ${displaySource}`);
 
   return (
     <div className="absolute inset-0 pointer-events-none">
@@ -201,7 +184,7 @@ export function StarSelection({ selectedStar, setSelectedStar, onStarClick }: St
           Return to emotions
         </button>
 
-        {/* STAR_SETTINGS Color Indicators with star_particle.png */}
+        {/* STAR_SETTINGS Color Indicators */}
         <motion.div
           className="frosted-glass px-4 py-3 rounded-lg space-y-3"
           initial={{ opacity: 0, y: 20 }}
@@ -212,7 +195,6 @@ export function StarSelection({ selectedStar, setSelectedStar, onStarClick }: St
             Star colors in 3D view:
           </p>
           
-          {/* Highlighted Stars - Using STAR_SETTINGS */}
           <div className="flex items-center gap-3">
             <div className="w-4 h-4 relative">
               <div 
@@ -225,7 +207,6 @@ export function StarSelection({ selectedStar, setSelectedStar, onStarClick }: St
             <span className="text-cosmic-light-echo text-xs font-light">Highlighted stars</span>
           </div>
           
-          {/* Selected Star - Using STAR_SETTINGS */}
           <div className="flex items-center gap-3">
             <div className="w-4 h-4 relative">
               <div 
@@ -238,7 +219,6 @@ export function StarSelection({ selectedStar, setSelectedStar, onStarClick }: St
             <span className="text-cosmic-light-echo text-xs font-light">Selected star</span>
           </div>
           
-          {/* Other Stars - Using STAR_SETTINGS */}
           <div className="flex items-center gap-3">
             <div className="w-4 h-4 relative">
               <div 
@@ -287,7 +267,7 @@ export function StarSelection({ selectedStar, setSelectedStar, onStarClick }: St
                     {emotion.name} Stars
                   </h3>
                   <p className="text-cosmic-stellar-wind text-xs font-light opacity-70">
-                    {catalogStars?.length || 0} celestial beacons
+                    {starsToDisplay.length} celestial beacons ({displaySource})
                   </p>
                 </div>
               </motion.div>
@@ -295,7 +275,7 @@ export function StarSelection({ selectedStar, setSelectedStar, onStarClick }: St
 
             {/* Star List */}
             <div className="flex-1 overflow-y-auto space-y-2 pr-2">
-              {catalogStars?.map((catalogStar, index) => (
+              {starsToDisplay.map((catalogStar, index) => (
                 <motion.div
                   key={catalogStar.hyg.id}
                   className="rounded-lg p-3 cursor-pointer transition-all duration-300 border group"
@@ -348,7 +328,7 @@ export function StarSelection({ selectedStar, setSelectedStar, onStarClick }: St
         </div>
       </div>
 
-      {/* Star Detail Modal - NOW USES selectedStar FROM PARENT */}
+      {/* Star Detail Modal */}
       <AnimatePresence>
         {selectedStar && (
           <motion.div
@@ -442,7 +422,7 @@ export function StarSelection({ selectedStar, setSelectedStar, onStarClick }: St
                     </div>
                   </div>
 
-                  {/* Dedicate Button - Using STAR_SETTINGS */}
+                  {/* Dedicate Button */}
                   <div className="flex-shrink-0">
                     <motion.button
                       onClick={() => handleDedicate(selectedStar)}

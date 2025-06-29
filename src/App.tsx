@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { StarviewCanvas } from './render/StarviewCanvas';
 import { StarviewCameraProvider } from './hooks/useStarviewCamera';
@@ -13,28 +13,36 @@ import { StarService } from './services/starService';
 import { HygStarData } from './types';
 
 /**
- * AppContent Component - Central State Management
+ * AppContent Component - Enhanced with Centralized Star Suggestion Logic
  * 
- * Purpose: Holds global selectedStar state and orchestrates data flow between components.
- * No longer handles camera control or side effects - focuses only on shared state.
- * 
- * UPDATED: Uses starCatalogRef.hyg.id for highlightedStarIds derivation
+ * Purpose: Central orchestrator that manages star suggestion fetching based on URL changes.
+ * UPDATED: Now handles star suggestion triggering from App level instead of StarSelection.
  * 
  * Features:
- * - Central selectedStar state (HygStarData | null)
- * - Derives highlightedStarIds from SuggestedStarsContext using starCatalogRef
- * - Passes data to StarviewCanvas without triggering camera effects
- * - Clean separation of concerns
+ * - URL-based emotion detection and star suggestion triggering
+ * - Centralized data flow management
+ * - Loading state propagation to child components
+ * - Automatic cleanup when navigating away from emotion routes
+ * - Enhanced logging for debugging data flow
  * 
- * Confidence Rating: High - Enhanced with direct catalog reference support
+ * Confidence Rating: High - Centralized orchestration with comprehensive logging
  */
 function AppContent() {
+  const location = useLocation();
   const { catalog, loading: catalogLoading, error: catalogError } = useStarsCatalog();
-  const { suggestedStars } = useSuggestedStars();
+  const { 
+    suggestedStars, 
+    isLoading: suggestionsLoading, 
+    fetchSuggestionsForEmotion, 
+    clearSuggestedStars 
+  } = useSuggestedStars();
+  
   const [selectedStar, setSelectedStar] = useState<HygStarData | null>(null);
   const [cameraCommand, setCameraCommand] = useState<any>(null);
 
-  console.log("suggestedStars: ", suggestedStars)
+  console.log("App: Current location.pathname:", location.pathname);
+  console.log("App: suggestedStars.length:", suggestedStars.length);
+  console.log("App: suggestionsLoading:", suggestionsLoading);
 
   // Control settings for the star visualization
   const [controlSettings] = useState({
@@ -57,8 +65,49 @@ function AppContent() {
     StarService.initializeStars().catch(console.error);
   }, []);
 
-  // UPDATED: Derive highlighted star IDs from suggested stars using starCatalogRef
+  // CENTRALIZED STAR SUGGESTION LOGIC: Monitor URL changes and trigger fetches
+  useEffect(() => {
+    console.log(`=== App: URL change detected: ${location.pathname} ===`);
+    
+    // Extract emotionId from /stars/:emotionId route
+    const starsRouteMatch = location.pathname.match(/^\/stars\/([^\/]+)$/);
+    
+    if (starsRouteMatch) {
+      const emotionId = starsRouteMatch[1];
+      console.log(`App: Detected emotion route with emotionId: ${emotionId}`);
+      console.log(`App: Current suggestedStars.length: ${suggestedStars.length}`);
+      console.log(`App: Current suggestionsLoading: ${suggestionsLoading}`);
+      
+      // Only fetch if we don't already have suggestions for this emotion
+      // This prevents unnecessary refetches when navigating within the same emotion
+      const currentEmotionStars = suggestedStars.filter(star => 
+        star.metadata?.emotion === emotionId
+      );
+      
+      if (currentEmotionStars.length === 0 && !suggestionsLoading) {
+        console.log(`App: No suggestions found for emotion ${emotionId}, triggering fetch`);
+        
+        fetchSuggestionsForEmotion(emotionId).catch(error => {
+          console.error(`App: Failed to fetch suggestions for emotion ${emotionId}:`, error);
+        });
+      } else {
+        console.log(`App: Already have ${currentEmotionStars.length} suggestions for emotion ${emotionId}, skipping fetch`);
+      }
+    } else {
+      // Not on a stars route - clear suggestions if we have any
+      if (suggestedStars.length > 0) {
+        console.log(`App: Not on stars route (${location.pathname}), clearing ${suggestedStars.length} suggestions`);
+        clearSuggestedStars();
+      } else {
+        console.log(`App: Not on stars route (${location.pathname}), no suggestions to clear`);
+      }
+    }
+  }, [location.pathname, fetchSuggestionsForEmotion, clearSuggestedStars, suggestedStars, suggestionsLoading]);
+
+  // Derive highlighted star IDs from suggested stars using starCatalogRef
   const highlightedStarIds = suggestedStars.map(star => star.starCatalogRef.hyg.id.toString());
+  
+  console.log("App: Derived highlightedStarIds:", highlightedStarIds);
 
   const handleStarSelect = (star: HygStarData | null, index: number | null) => {
     console.log('App: Star selected:', star?.hyg.proper || star?.hyg.id, 'at index:', index);
@@ -113,49 +162,49 @@ function AppContent() {
   }
 
   return (
-    <Router>
-      <div className="App cosmic-viewport">
-        <StarviewCameraProvider onCommand={handleCameraCommand}>
-          {/* Global 3D background canvas with props-based data flow */}
-          <StarviewCanvas
-            starsCatalog={catalog}
-            catalogLoading={catalogLoading}
-            selectedStar={selectedStar}
-            highlightedStarIds={highlightedStarIds}
-            onStarSelect={handleStarSelect}
-            onStarClick={handleStarClick}
-            starSize={controlSettings.starSize}
-            glowMultiplier={controlSettings.glowMultiplier}
-            showLabels={controlSettings.showLabels}
-            renderingMode={controlSettings.renderingMode}
-            cameraCommand={cameraCommand}
-            onCameraCommandComplete={() => setCameraCommand(null)}
-          />
-          
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
-          >
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route 
-                path="/stars/:emotionId" 
-                element={
-                  <StarSelection 
-                    selectedStar={selectedStar}
-                    setSelectedStar={setSelectedStar}
-                    onStarClick={handleStarClick}
-                  />
-                } 
-              />
-              <Route path="/dedicate/:starId" element={<Dedication />} />
-              <Route path="/star/:dedicationId" element={<SharedStar />} />
-            </Routes>
-          </motion.div>
-        </StarviewCameraProvider>
-      </div>
-    </Router>
+    <div className="App cosmic-viewport">
+      <StarviewCameraProvider onCommand={handleCameraCommand}>
+        {/* Global 3D background canvas with props-based data flow */}
+        <StarviewCanvas
+          starsCatalog={catalog}
+          catalogLoading={catalogLoading}
+          selectedStar={selectedStar}
+          highlightedStarIds={highlightedStarIds}
+          onStarSelect={handleStarSelect}
+          onStarClick={handleStarClick}
+          starSize={controlSettings.starSize}
+          glowMultiplier={controlSettings.glowMultiplier}
+          showLabels={controlSettings.showLabels}
+          renderingMode={controlSettings.renderingMode}
+          cameraCommand={cameraCommand}
+          onCameraCommandComplete={() => setCameraCommand(null)}
+        />
+        
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+        >
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route 
+              path="/stars/:emotionId" 
+              element={
+                <StarSelection 
+                  selectedStar={selectedStar}
+                  setSelectedStar={setSelectedStar}
+                  onStarClick={handleStarClick}
+                  suggestedStars={suggestedStars}
+                  isLoadingSuggestions={suggestionsLoading}
+                />
+              } 
+            />
+            <Route path="/dedicate/:starId" element={<Dedication />} />
+            <Route path="/star/:dedicationId" element={<SharedStar />} />
+          </Routes>
+        </motion.div>
+      </StarviewCameraProvider>
+    </div>
   );
 }
 
@@ -165,7 +214,9 @@ function AppContent() {
 function App() {
   return (
     <SuggestedStarsProvider>
-      <AppContent />
+      <Router>
+        <AppContent />
+      </Router>
     </SuggestedStarsProvider>
   );
 }
