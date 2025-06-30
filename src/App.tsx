@@ -12,6 +12,7 @@ import { useStarsCatalog } from './hooks/useStarsCatalog';
 import { StarService } from './services/starService';
 import { HygStarData } from './types';
 import { BurgerMenu } from './components/BurgerMenu';
+import { MusicPlayer } from './components/MusicPlayer';
 
 /**
  * AppContent Component - Enhanced with Home Navigation State Clearing
@@ -139,11 +140,20 @@ function AppContent() {
 
   // Determine burger menu position based on current route
   const getBurgerMenuPosition = () => {
-    // On StarSelection page, move burger menu to avoid conflict with right sidebar
+    // On StarSelection page, move burger menu to top-right corner
     if (location.pathname.startsWith('/stars/')) {
-      return 'right-96'; // Position it to the left of the 320px (w-80) sidebar
+      return 'right-4'; // Position it in the top-right corner as requested
     }
     return 'right-4'; // Default position
+  };
+
+  // Determine music player position based on current route
+  const getMusicPlayerPosition = () => {
+    // On StarSelection page, position music player to avoid conflict with burger menu
+    if (location.pathname.startsWith('/stars/')) {
+      return 'right-20'; // Position it to the left of the burger menu
+    }
+    return 'right-4'; // Default position when burger menu is not conflicting
   };
 
   if (catalogLoading) {
@@ -204,6 +214,9 @@ function AppContent() {
         
         {/* Burger Menu with dynamic positioning */}
         <BurgerMenu className={getBurgerMenuPosition()} />
+        
+        {/* Music Player with dynamic positioning */}
+        <MusicPlayer className={getMusicPlayerPosition()} />
         
         <motion.div
           initial={{ opacity: 0 }}
