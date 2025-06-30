@@ -172,7 +172,7 @@ export function StarSelection({
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: "easeOut" }}
         >
-          <h1 className="text-3xl font-light text-cosmic-observation text-center">
+          <h1 className="text-5xl font-light text-cosmic-cherenkov-blue text-center">
             Pick your star
           </h1>
         </motion.div>
@@ -444,7 +444,7 @@ export function StarSelection({
                       whileTap={{ scale: 0.98 }}
                     >
                       <Heart className="w-4 h-4" />
-                      Dedicate This Star
+                      Write in the star
                     </motion.button>
                   </div>
                 </div>

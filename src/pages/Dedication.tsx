@@ -95,7 +95,7 @@ export function Dedication() {
               transition={{ delay: 0.3, duration: 0.8 }}
             >
               <motion.h1 
-                className="text-4xl md:text-5xl font-light text-cosmic-observation mb-6 cosmic-float"
+                className="text-4xl md:text-5xl font-light text-cosmic-cherenkov-blue mb-6 cosmic-float"
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.3, duration: 0.8 }}
@@ -104,7 +104,7 @@ export function Dedication() {
               </motion.h1>
               
               <motion.p 
-                className="text-xl text-cosmic-light-echo font-light leading-relaxed particle-drift"
+                className="text-xl text-cosmic-stellar-wind font-light leading-relaxed particle-drift"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.5 }}

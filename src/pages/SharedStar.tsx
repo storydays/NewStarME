@@ -106,7 +106,7 @@ export function SharedStar() {
     <div className="min-h-screen bg-gradient-to-br from-cosmic-dark-matter via-cosmic-deep-space to-cosmic-quantum-field relative overflow-hidden">
       {/* Removed gravitational lensing effect */}
 
-      <div className="relative z-10 container mx-auto px-6 py-12">
+      <div className="relative z-10 container mx-auto px-6 py-8 h-full flex flex-col justify-center">
         {/* Enhanced Header */}
         <motion.div
           className="text-center mb-16"
