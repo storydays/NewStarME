@@ -11,8 +11,6 @@ import { SuggestedStarsProvider, useSuggestedStars } from './context/SuggestedSt
 import { useStarsCatalog } from './hooks/useStarsCatalog';
 import { StarService } from './services/starService';
 import { HygStarData } from './types';
-import { BurgerMenu } from './components/BurgerMenu';
-import { MusicPlayer } from './components/MusicPlayer';
 
 /**
  * AppContent Component - Enhanced with Home Navigation State Clearing
@@ -138,15 +136,6 @@ function AppContent() {
     setCameraCommand(command);
   };
 
-  // Position functions now return empty strings as requested
-  const getBurgerMenuPosition = () => {
-    return '';
-  };
-
-  const getMusicPlayerPosition = () => {
-    return '';
-  };
-
   if (catalogLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-cosmic-dark-matter via-cosmic-deep-space to-cosmic-quantum-field relative">
@@ -202,12 +191,6 @@ function AppContent() {
           cameraCommand={cameraCommand}
           onCameraCommandComplete={() => setCameraCommand(null)}
         />
-        
-        {/* Top buttons aligned together */}
-        <div className="fixed top-4 right-4 z-50 flex items-center space-x-4">
-          <MusicPlayer />
-          <BurgerMenu />
-        </div>
         
         <motion.div
           initial={{ opacity: 0 }}

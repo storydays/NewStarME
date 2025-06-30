@@ -17,10 +17,9 @@ const iconMap = {
 
 interface EmotionWheelProps {
   onEmotionSelect: (emotion: Emotion) => void;
-  onHoverChange: (emotionName: string | null) => void;
 }
 
-export function EmotionWheel({ onEmotionSelect, onHoverChange }: EmotionWheelProps) {
+export function EmotionWheel({ onEmotionSelect }: EmotionWheelProps) {
   const [hoveredEmotion, setHoveredEmotion] = useState<string | null>(null);
   const [selectedEmotion, setSelectedEmotion] = useState<string | null>(null);
   
@@ -35,16 +34,6 @@ export function EmotionWheel({ onEmotionSelect, onHoverChange }: EmotionWheelPro
     setTimeout(() => {
       onEmotionSelect(emotion);
     }, 400);
-  };
-
-  const handleMouseEnter = (emotion: Emotion) => {
-    setHoveredEmotion(emotion.id);
-    onHoverChange(emotion.name);
-  };
-
-  const handleMouseLeave = () => {
-    setHoveredEmotion(null);
-    onHoverChange(null);
   };
 
   return (
@@ -78,7 +67,7 @@ export function EmotionWheel({ onEmotionSelect, onHoverChange }: EmotionWheelPro
         className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-24 h-24 rounded-full frosted-glass-strong flex items-center justify-center orbital-slow"
         whileHover={{ scale: 1.05 }}
         animate={selectedEmotion ? { scale: [1, 1.3, 1] } : {}}
-        transition={{ duration: 0.8, ease: "easeOut" }}
+        transition={{ duration: 0.8, ease: "backOut" }}
       >
         <div className="text-center relative">
           <motion.div
@@ -143,14 +132,14 @@ export function EmotionWheel({ onEmotionSelect, onHoverChange }: EmotionWheelPro
                 stiffness: 100
               }}
               whileHover={{ 
-                scale: 1.02,
-                y: -2,
+                scale: 1.05,
+                y: -4,
                 transition: { duration: 0.3, ease: "easeOut" }
               }}
               whileTap={{ scale: 0.95 }}
               onClick={() => handleEmotionClick(emotion)}
-              onMouseEnter={() => handleMouseEnter(emotion)}
-              onMouseLeave={handleMouseLeave}
+              onMouseEnter={() => setHoveredEmotion(emotion.id)}
+              onMouseLeave={() => setHoveredEmotion(null)}
             >
               {/* Orbital motion container */}
               <motion.div
@@ -166,10 +155,10 @@ export function EmotionWheel({ onEmotionSelect, onHoverChange }: EmotionWheelPro
                   className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-40 transition-opacity duration-300 blur-xl"
                   style={{ 
                     backgroundColor: emotion.color,
-                    transform: 'scale(2)',
+                    transform: 'scale(2.5)',
                   }}
                   animate={isHovered ? {
-                    scale: [2, 2.2, 2],
+                    scale: [2.5, 3, 2.5],
                     opacity: [0.4, 0.6, 0.4]
                   } : {}}
                   transition={{ duration: 2, repeat: Infinity }}
@@ -186,7 +175,7 @@ export function EmotionWheel({ onEmotionSelect, onHoverChange }: EmotionWheelPro
                   />
                 )}
                 
-                {/* Main emotion circle with minimal size changes */}
+                {/* Main emotion circle */}
                 <motion.div
                   className="relative w-20 h-20 rounded-full flex items-center justify-center transition-all duration-300 frosted-glass border-2"
                   style={{
@@ -227,8 +216,8 @@ export function EmotionWheel({ onEmotionSelect, onHoverChange }: EmotionWheelPro
                         scale: 0
                       }}
                       animate={{
-                        x: (Math.random() - 0.5) * 30,
-                        y: (Math.random() - 0.5) * 30,
+                        x: (Math.random() - 0.5) * 40,
+                        y: (Math.random() - 0.5) * 40,
                         opacity: [0, 1, 0],
                         scale: [0, 1.5, 0]
                       }}

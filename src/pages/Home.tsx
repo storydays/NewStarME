@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { EmotionWheel } from '../components/EmotionWheel';
 import { useSuggestedStars } from '../context/SuggestedStarsContext';
@@ -8,7 +8,6 @@ import { Emotion } from '../types';
 export function Home() {
   const navigate = useNavigate();
   const { clearSuggestedStars } = useSuggestedStars();
-  const [hoveredEmotionName, setHoveredEmotionName] = useState<string | null>(null);
 
   // FIXED: Clear suggested stars when Home page is displayed
   useEffect(() => {
@@ -20,35 +19,14 @@ export function Home() {
     navigate(`/stars/${emotion.id}`);
   };
 
-  const handleEmotionHoverChange = (emotionName: string | null) => {
-    setHoveredEmotionName(emotionName);
-  };
-
   return (
     <div className="min-h-screen relative overflow-hidden">
-      {/* Hover message positioned above the wheel */}
-      {hoveredEmotionName === null && (
-        <motion.div
-          className="absolute top-48 left-1/2 -translate-x-1/2 z-40 pointer-events-none"
-          initial={{ opacity: 0, y: -10, scale: 0.9 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: -10, scale: 0.9 }}
-          transition={{ duration: 0.3, ease: "easeOut" }}
-        >
-          <div className="frosted-glass-strong rounded-lg px-4 py-2 border border-cosmic-particle-trace">
-            <p className="text-cosmic-observation text-sm font-light text-center whitespace-nowrap">
-              Pick an emotional moment to write in the star
-            </p>
-          </div>
-        </motion.div>
-      )}
-
       {/* Main content with refined physics-based layout */}
-      <div className="relative z-10 flex flex-col justify-between px-6 py-stellar">
+      <div className="relative z-10 flex flex-col justify-between min-h-screen px-6 py-8">
         
         {/* Header with standardized cosmic typography - TOP SECTION */}
         <motion.div 
-          className="text-center max-w-2xl mx-auto mb-stellar"
+          className="text-center max-w-2xl mx-auto"
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: "easeOut" }}
@@ -81,10 +59,7 @@ export function Home() {
             <div className="absolute inset-0 rounded-full bg-quantum-field opacity-30 blur-2xl scale-125 animate-pulse" />
             
             <div className="relative z-10">
-              <EmotionWheel 
-                onEmotionSelect={handleEmotionSelect} 
-                onHoverChange={handleEmotionHoverChange}
-              />
+              <EmotionWheel onEmotionSelect={handleEmotionSelect} />
             </div>
           </motion.div>
         </div>

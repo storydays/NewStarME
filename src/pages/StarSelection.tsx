@@ -15,7 +15,6 @@ import { STAR_SETTINGS } from '../config/starConfig';
  * and loading state as props from the App component.
  * 
  * UPDATED: No longer directly manages star suggestion fetching - receives data via props
- * UPDATED: Added top padding to avoid overlap with burger menu
  * 
  * Features:
  * - Receives suggestedStars and isLoadingSuggestions as props
@@ -23,9 +22,8 @@ import { STAR_SETTINGS } from '../config/starConfig';
  * - Renders suggested stars in sidebar
  * - Maintains camera focus control for user interactions
  * - Star detail modal using selectedStar from parent
- * - Added top padding to prevent overlap with burger menu
  * 
- * Confidence Rating: High - Clean props-based architecture with layout adjustments
+ * Confidence Rating: High - Clean props-based architecture
  */
 
 interface StarSelectionProps {
@@ -163,8 +161,8 @@ export function StarSelection({
 
   return (
     <div className="absolute inset-0 pointer-events-none">
-      {/* Page Title - Centered at Top with padding to avoid burger menu */}
-      <div className="absolute top-6 left-1/2 transform -translate-x-1/2 z-20 pointer-events-auto pt-24">
+      {/* Page Title - Centered at Top */}
+      <div className="absolute top-6 left-1/2 transform -translate-x-1/2 z-20 pointer-events-auto">
         <motion.h1 
           className="text-3xl font-light text-cosmic-observation text-center"
           initial={{ opacity: 0, y: -20 }}
@@ -175,8 +173,8 @@ export function StarSelection({
         </motion.h1>
       </div>
 
-      {/* Back Button and Color Indicators - Left Side with padding to avoid burger menu */}
-      <div className="absolute top-6 left-6 z-20 pointer-events-auto space-y-4 pt-24">
+      {/* Back Button and Color Indicators - Left Side */}
+      <div className="absolute top-6 left-6 z-20 pointer-events-auto space-y-4">
         {/* Back Button */}
         <button
           onClick={handleBack}
@@ -235,8 +233,8 @@ export function StarSelection({
         </motion.div>
       </div>
 
-      {/* Enhanced Right Sidebar with padding to avoid burger menu */}
-      <div className="fixed right-0 top-0 h-full w-80 z-30 pointer-events-auto pt-24">
+      {/* Enhanced Right Sidebar */}
+      <div className="fixed right-0 top-0 h-full w-80 z-30 pointer-events-auto">
         <div 
           className="h-full border-l"
           style={{
