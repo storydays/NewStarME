@@ -19,7 +19,7 @@ export interface Star {
     size: number;
   };
   emotion_id: string;
-  source?: 'static' | 'ai' | 'fallback';
+  source?: 'static' | 'ai' | 'fallback' | 'catalog';
   generated_at?: string;
 }
 

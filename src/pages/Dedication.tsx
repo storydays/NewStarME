@@ -13,7 +13,7 @@ export function Dedication() {
   const navigate = useNavigate();
   
   const emotionId = searchParams.get('emotion');
-  const { star, loading: starLoading } = useStar(starId);
+  const { star, loading: starLoading } = useStar(starId, emotionId);
   const { createDedication, loading: dedicationLoading } = useDedications();
   
   const emotion = emotions.find(e => e.id === emotionId);
@@ -28,7 +28,7 @@ export function Dedication() {
 
   const handleDedicationSubmit = async (dedicationData: any) => {
     try {
-      const dedication = await createDedication(dedicationData);
+      const dedication = await createDedication(dedicationData, star);
       navigate(`/star/${dedication.id}`);
     } catch (error) {
       console.error('Failed to create dedication:', error);

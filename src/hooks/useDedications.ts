@@ -1,21 +1,37 @@
 import { useState, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
-import { Dedication, DedicationWithStar } from '../types';
+import { Dedication, DedicationWithStar, Star } from '../types';
+import { StarService } from '../services/starService';
 
 export function useDedications() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const createDedication = useCallback(async (dedication: Omit<Dedication, 'id' | 'created_at'>) => {
+  const createDedication = useCallback(async (
+    dedication: Omit<Dedication, 'id' | 'created_at' | 'star_id'>, 
+    star: Star
+  ) => {
     try {
       setLoading(true);
       setError(null);
 
-      console.log('Creating dedication:', dedication);
+      console.log('Creating dedication for star:', star.scientific_name);
+
+      // Ensure the star exists in the database and get its UUID
+      const starUuid = await StarService.ensureStarInDatabase(star);
+      console.log('Star UUID obtained:', starUuid);
+
+      // Create the dedication with the proper UUID
+      const dedicationData = {
+        ...dedication,
+        star_id: starUuid
+      };
+
+      console.log('Creating dedication with data:', dedicationData);
 
       const { data, error: supabaseError } = await supabase
         .from('dedications')
-        .insert([dedication])
+        .insert([dedicationData])
         .select()
         .single();
 

@@ -740,9 +740,9 @@ export class StarService {
 
   /**
    * Get star by ID (legacy support)
-   * FIXED: Handle catalog-prefixed IDs properly and use .limit(1) instead of .single()
+   * UPDATED: Accept emotionId parameter and handle catalog stars properly
    */
-  static async getStarById(starId: string): Promise<Star | null> {
+  static async getStarById(starId: string, emotionId?: string | null): Promise<Star | null> {
     try {
       // Handle catalog-prefixed IDs first (before attempting database query)
       if (starId.startsWith('catalog-') && this.starsCatalog) {
@@ -766,18 +766,18 @@ export class StarService {
             return dbStars[0]; // Return first match
           }
 
-          // If not found in database, return catalog star in legacy format
+          // If not found in database, return catalog star in legacy format with proper emotion_id
           return {
             id: starId,
             scientific_name: starName,
-            poetic_description: 'A magnificent star from the cosmic catalog',
+            poetic_description: this.generatePoeticDescription(catalogStar, emotionId || 'unknown'),
             coordinates: formattedCoordinates,
             visual_data: {
               brightness: catalogStar.render.brightness,
               color: catalogStar.render.color,
               size: catalogStar.render.size
             },
-            emotion_id: 'unknown',
+            emotion_id: emotionId || 'unknown',
             source: 'catalog'
           };
         }
@@ -801,6 +801,66 @@ export class StarService {
     } catch (error) {
       console.error('Error in getStarById:', error);
       return null;
+    }
+  }
+
+  /**
+   * Ensure star exists in database and return its UUID
+   * NEW: Method to handle catalog stars that need to be inserted into database
+   */
+  static async ensureStarInDatabase(star: Star): Promise<string> {
+    try {
+      console.log('StarService: Ensuring star exists in database:', star.scientific_name);
+
+      // First, check if star already exists in database
+      const { data: existingStars, error: searchError } = await supabase
+        .from('stars')
+        .select('id')
+        .eq('scientific_name', star.scientific_name)
+        .eq('coordinates', star.coordinates)
+        .limit(1);
+
+      if (searchError) {
+        console.error('Error searching for existing star:', searchError);
+        throw searchError;
+      }
+
+      // If star exists, return its UUID
+      if (existingStars && existingStars.length > 0) {
+        console.log('StarService: Star already exists in database with ID:', existingStars[0].id);
+        return existingStars[0].id;
+      }
+
+      // Star doesn't exist, insert it into database
+      console.log('StarService: Inserting new star into database');
+      const { data: insertedStar, error: insertError } = await supabase
+        .from('stars')
+        .insert([{
+          scientific_name: star.scientific_name,
+          poetic_description: star.poetic_description,
+          coordinates: star.coordinates,
+          visual_data: star.visual_data,
+          emotion_id: star.emotion_id,
+          source: star.source || 'catalog'
+        }])
+        .select('id')
+        .single();
+
+      if (insertError) {
+        console.error('Error inserting star into database:', insertError);
+        throw insertError;
+      }
+
+      if (!insertedStar) {
+        throw new Error('Failed to insert star: no data returned');
+      }
+
+      console.log('StarService: Star inserted successfully with ID:', insertedStar.id);
+      return insertedStar.id;
+
+    } catch (error) {
+      console.error('Error in ensureStarInDatabase:', error);
+      throw error;
     }
   }
 

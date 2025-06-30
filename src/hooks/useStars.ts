@@ -119,7 +119,7 @@ export function useStars(emotionId?: string) {
 }
 
 // Hook for getting a single star by ID
-export function useStar(starId?: string) {
+export function useStar(starId?: string, emotionId?: string | null) {
   const [star, setStar] = useState<Star | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -136,7 +136,7 @@ export function useStar(starId?: string) {
         setLoading(true);
         setError(null);
 
-        const fetchedStar = await StarService.getStarById(starId);
+        const fetchedStar = await StarService.getStarById(starId, emotionId);
         setStar(fetchedStar);
       } catch (err) {
         console.error('Error fetching star:', err);
@@ -149,7 +149,7 @@ export function useStar(starId?: string) {
     }
 
     fetchStar();
-  }, [starId]);
+  }, [starId, emotionId]);
 
   return { star, loading, error };
 }
