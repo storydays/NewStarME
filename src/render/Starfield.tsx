@@ -61,8 +61,8 @@ export function Starfield({
   const [starTexture, glowTexture] = useMemo(() => {
     const loader = new TextureLoader();
     return [
-      loader.load('/src/assets/star_particle.png'),
-      loader.load('/src/assets/star_glow.png')
+      loader.load('/star_particle.png'),
+      loader.load('/star_glow.png')
     ];
   }, []);
 

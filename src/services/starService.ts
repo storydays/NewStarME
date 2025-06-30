@@ -141,7 +141,7 @@ export class StarService {
         
         try {
           // FIXED: Changed compressed flag from true to false to handle uncompressed file
-          const catalog = await HygStarsCatalog.fromUrl('/hygdata_v41.csv.gz', false);
+          const catalog = await HygStarsCatalog.fromUrl('/hygdata_v41.csv.gz', true);
           clearTimeout(timeoutId);
           
           this.hygCatalog = catalog;

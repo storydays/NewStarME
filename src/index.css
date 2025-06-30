@@ -28,11 +28,11 @@ body {
   overflow-x: hidden;
 }
 
-/* Cosmic Viewport Containment - FIXED: Added constraints to prevent scrolling */
+/* Cosmic Viewport Containment - UPDATED: Removed overflow: hidden to allow scrolling */
 .cosmic-viewport {
   min-height: 100vh;
   max-height: 100vh;
-  overflow: hidden;
+  /* Removed overflow: hidden to allow content to scroll when needed */
 }
 
 /* Typography with Cosmic Scale */

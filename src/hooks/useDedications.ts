@@ -41,6 +41,43 @@ export function useDedications() {
       }
 
       console.log('Dedication created successfully:', data);
+
+      // Send dedication email
+      try {
+        console.log('Sending dedication email...');
+        
+        const emailData = {
+          recipientEmail: dedication.email,
+          recipientName: dedication.custom_name,
+          starName: star.scientific_name,
+          message: dedication.message,
+          dedicationUrl: `${window.location.origin}/star/${data.id}`,
+          giftTier: dedication.gift_tier,
+          senderName: undefined // Could be added later for gifting features
+        };
+
+        const emailResponse = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-dedication-email`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(emailData)
+        });
+
+        if (emailResponse.ok) {
+          const emailResult = await emailResponse.json();
+          console.log('Dedication email sent successfully:', emailResult.emailId);
+        } else {
+          const emailError = await emailResponse.text();
+          console.warn('Failed to send dedication email:', emailError);
+          // Don't throw error here - dedication was created successfully
+        }
+      } catch (emailError) {
+        console.warn('Email sending failed, but dedication was created:', emailError);
+        // Don't throw error here - dedication was created successfully
+      }
+
       return data;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to create dedication';

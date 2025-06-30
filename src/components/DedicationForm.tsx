@@ -7,7 +7,6 @@ interface DedicationFormProps {
   star: Star;
   emotion: Emotion;
   onSubmit: (dedication: {
-    star_id: string;
     custom_name: string;
     message: string;
     gift_tier: 'basic' | 'premium' | 'deluxe';
@@ -54,19 +53,19 @@ export function DedicationForm({ star, emotion, onSubmit, loading = false }: Ded
     const newErrors: Record<string, string> = {};
     
     if (!formData.custom_name.trim()) {
-      newErrors.custom_name = 'Please name your celestial beacon';
+      newErrors.custom_name = 'Please enter the recipient\'s name';
     }
     
     if (!formData.message.trim()) {
-      newErrors.message = 'Please inscribe your cosmic message';
+      newErrors.message = 'Please write your cosmic message';
     } else if (formData.message.length < 10) {
       newErrors.message = 'Message should be at least 10 characters';
     }
     
     if (!formData.email.trim()) {
-      newErrors.email = 'Email coordinates required';
+      newErrors.email = 'Email address is required';
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = 'Please enter valid email coordinates';
+      newErrors.email = 'Please enter a valid email address';
     }
     
     setErrors(newErrors);
@@ -78,10 +77,7 @@ export function DedicationForm({ star, emotion, onSubmit, loading = false }: Ded
     
     if (!validateForm()) return;
     
-    onSubmit({
-      star_id: star.id,
-      ...formData
-    });
+    onSubmit(formData);
   };
 
   return (
@@ -140,20 +136,20 @@ export function DedicationForm({ star, emotion, onSubmit, loading = false }: Ded
       </motion.div>
 
       <form onSubmit={handleSubmit} className="space-y-8">
-        {/* Enhanced Star Name Input */}
+        {/* Enhanced Recipient Name Input */}
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.1 }}
         >
           <label className="block text-cosmic-observation font-light mb-3 text-lg">
-            Name of the Person
+            Recipient's Name
           </label>
           <input
             type="text"
             value={formData.custom_name}
             onChange={(e) => setFormData({ ...formData, custom_name: e.target.value })}
-            placeholder="Eternal Light, Cosmic Memory, Stellar Hope..."
+            placeholder="Who is this star dedication for?"
             className="w-full px-6 py-4 frosted-glass border border-cosmic-particle-trace rounded-xl text-cosmic-observation placeholder-cosmic-stellar-wind focus:border-cosmic-cherenkov-blue focus:ring-2 focus:ring-cosmic-cherenkov-blue/20 transition-all font-light"
           />
           {errors.custom_name && (
@@ -173,7 +169,7 @@ export function DedicationForm({ star, emotion, onSubmit, loading = false }: Ded
           <textarea
             value={formData.message}
             onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-            placeholder="Inscribe a message that will resonate through the cosmic void for eternity..."
+            placeholder="Write a heartfelt message that will be remembered forever..."
             rows={4}
             className="w-full px-6 py-4 frosted-glass border border-cosmic-particle-trace rounded-xl text-cosmic-observation placeholder-cosmic-stellar-wind focus:border-cosmic-cherenkov-blue focus:ring-2 focus:ring-cosmic-cherenkov-blue/20 transition-all resize-none font-light"
           />
@@ -262,7 +258,7 @@ export function DedicationForm({ star, emotion, onSubmit, loading = false }: Ded
           transition={{ delay: 0.4 }}
         >
           <label className="block text-cosmic-observation font-light mb-3 text-lg">
-            Email Coordinates
+            Email Address
           </label>
           <div className="relative">
             <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-cosmic-stellar-wind" />
@@ -270,7 +266,7 @@ export function DedicationForm({ star, emotion, onSubmit, loading = false }: Ded
               type="email"
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              placeholder="your@cosmic.coordinates"
+              placeholder="recipient@email.com"
               className="w-full pl-12 pr-6 py-4 frosted-glass border border-cosmic-particle-trace rounded-xl text-cosmic-observation placeholder-cosmic-stellar-wind focus:border-cosmic-cherenkov-blue focus:ring-2 focus:ring-cosmic-cherenkov-blue/20 transition-all font-light"
             />
           </div>
@@ -278,7 +274,7 @@ export function DedicationForm({ star, emotion, onSubmit, loading = false }: Ded
             <p className="text-red-400 text-sm mt-2 font-light">{errors.email}</p>
           )}
           <p className="text-cosmic-stellar-wind text-sm mt-2 font-light">
-            We'll transmit your star certificate to these coordinates
+            We'll send the star dedication certificate to this email address
           </p>
         </motion.div>
 
@@ -300,7 +296,7 @@ export function DedicationForm({ star, emotion, onSubmit, loading = false }: Ded
                 animate={{ rotate: 360 }}
                 transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
               />
-              Inscribing your cosmic dedication...
+              Creating your cosmic dedication...
             </>
           ) : (
             <>
@@ -310,6 +306,21 @@ export function DedicationForm({ star, emotion, onSubmit, loading = false }: Ded
             </>
           )}
         </motion.button>
+
+        {/* Email notification info */}
+        <motion.div
+          className="frosted-glass rounded-lg p-4 border border-cosmic-particle-trace"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.6 }}
+        >
+          <div className="flex items-center gap-3 text-cosmic-stellar-wind text-sm font-light">
+            <Mail className="w-4 h-4 text-cosmic-cherenkov-blue" />
+            <span>
+              After creating your dedication, we'll send a beautiful email with the star certificate and a link to view the dedication online.
+            </span>
+          </div>
+        </motion.div>
       </form>
     </div>
   );

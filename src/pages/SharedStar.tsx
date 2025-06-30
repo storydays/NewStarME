@@ -103,10 +103,9 @@ export function SharedStar() {
   const emotionColor = dedication.emotion?.color || '#6366F1';
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-cosmic-dark-matter via-cosmic-deep-space to-cosmic-quantum-field relative overflow-hidden">
-      {/* Removed gravitational lensing effect */}
-
-      <div className="relative z-10 container mx-auto px-6 py-8 h-full flex flex-col justify-center">
+    <div className="min-h-screen bg-gradient-to-br from-cosmic-dark-matter via-cosmic-deep-space to-cosmic-quantum-field relative overflow-y-auto">
+      {/* UPDATED: Changed container to allow scrolling and align content to top */}
+      <div className="relative z-10 container mx-auto px-6 py-8 min-h-screen">
         {/* Enhanced Header */}
         <motion.div
           className="text-center mb-16"
@@ -301,7 +300,7 @@ export function SharedStar() {
 
         {/* Enhanced Call to Action */}
         <motion.div
-          className="text-center"
+          className="text-center pb-16"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 2 }}
