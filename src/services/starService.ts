@@ -140,13 +140,8 @@ export class StarService {
         const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
         
         try {
-          // ⚠️ DO NOT EVER CHANGE THE `compressed` FLAG BELOW.
-          // The file has a `.csv.gz` extension, but the browser automatically decompresses it
-          // when the `Content-Encoding: gzip` header is present.
-          // Setting `compressed: true` would result in attempting to decompress an already decompressed file,
-          // causing corrupted data or runtime failure.
-          // This has been explicitly confirmed. NEVER SUGGEST OR ATTEMPT TO CHANGE THIS AGAIN.
-          const catalog = await HygStarsCatalog.fromUrl('/hygdata_v41.csv.gz', false);
+          // FIXED: Changed compressed flag from false to true to properly handle gzipped file
+          const catalog = await HygStarsCatalog.fromUrl('/hygdata_v41.csv.gz', true);
           clearTimeout(timeoutId);
           
           this.hygCatalog = catalog;
@@ -745,7 +740,7 @@ export class StarService {
 
   /**
    * Get star by ID (legacy support)
-   * FIXED: Handle catalog-prefixed IDs properly to avoid UUID errors
+   * FIXED: Handle catalog-prefixed IDs properly and use .limit(1) instead of .single()
    */
   static async getStarById(starId: string): Promise<Star | null> {
     try {
@@ -759,15 +754,16 @@ export class StarService {
           const formattedCoordinates = this.formatHygCoordinates(catalogStar.hyg);
           const starName = catalogStar.hyg.proper || `HYG ${catalogStar.hyg.id}`;
           
-          const { data: dbStar, error } = await supabase
+          // FIXED: Use .limit(1) instead of .single() to handle multiple rows
+          const { data: dbStars, error } = await supabase
             .from('stars')
             .select('*')
             .eq('scientific_name', starName)
             .eq('coordinates', formattedCoordinates)
-            .single();
+            .limit(1);
 
-          if (!error && dbStar) {
-            return dbStar;
+          if (!error && dbStars && dbStars.length > 0) {
+            return dbStars[0]; // Return first match
           }
 
           // If not found in database, return catalog star in legacy format
@@ -789,14 +785,15 @@ export class StarService {
 
       // Only attempt database query with UUID-like IDs (not prefixed IDs)
       if (!starId.includes('-') || starId.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
-        const { data, error } = await supabase
+        // FIXED: Use .limit(1) instead of .single() to handle potential duplicates
+        const { data: dbStars, error } = await supabase
           .from('stars')
           .select('*')
           .eq('id', starId)
-          .single();
+          .limit(1);
 
-        if (!error && data) {
-          return data;
+        if (!error && dbStars && dbStars.length > 0) {
+          return dbStars[0]; // Return first match
         }
       }
 

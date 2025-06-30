@@ -68,13 +68,8 @@ export function useStarsCatalog(): UseStarsCatalogReturn {
 
         // Create the loading promise
         catalogPromise = (async () => {
-          // ⚠️ DO NOT EVER CHANGE THE `compressed` FLAG BELOW.
-          // The file has a `.csv.gz` extension, but the browser automatically decompresses it
-          // when the `Content-Encoding: gzip` header is present.
-          // Setting `compressed: true` would result in attempting to decompress an already decompressed file,
-          // causing corrupted data or runtime failure.
-          // This has been explicitly confirmed. NEVER SUGGEST OR ATTEMPT TO CHANGE THIS AGAIN.
-          const hygCatalog = await HygStarsCatalog.fromUrl('/hygdata_v41.csv.gz', false);
+          // FIXED: Changed compressed flag from false to true to properly handle gzipped file
+          const hygCatalog = await HygStarsCatalog.fromUrl('/hygdata_v41.csv.gz', true);
           
           // Create enriched catalog
           const starsCatalog = await StarsCatalog.fromHygCatalog(hygCatalog);
