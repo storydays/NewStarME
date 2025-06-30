@@ -20,10 +20,8 @@ export function Home() {
   };
 
   return (
-    {/* Outer container: Handles full screen height, main flex direction, and overall centering */}
     <div className="min-h-screen relative overflow-hidden flex flex-col items-center justify-between">
       {/* Main content with refined physics-based layout */}
-      {/* Removed min-h-screen from here; outer div handles it. Added w-full for full width. */}
       <div className="relative z-10 flex flex-col justify-between w-full px-6 py-8 md:px-8 lg:px-12">
         
         {/* Header with standardized cosmic typography - TOP SECTION */}
@@ -50,7 +48,6 @@ export function Home() {
         </motion.div>
 
         {/* Enhanced Emotion Wheel - MIDDLE SECTION - Centered with proper spacing */}
-        {/* Added mb-auto and mt-auto to push it to the middle effectively using flex-grow */}
         <div className="flex-grow flex items-center justify-center mb-auto mt-auto">
           <motion.div
             className="relative flex-shrink-0"
@@ -59,7 +56,6 @@ export function Home() {
             transition={{ delay: 0.4, duration: 0.8, ease: "backOut" }}
           >
             {/* Quantum field effect around wheel */}
-            {/* Reduced blur and opacity for subtlety, as per my earlier suggestion */}
             <div className="absolute inset-0 rounded-full bg-quantum-field opacity-20 blur-xl scale-125 animate-pulse" />
             
             <div className="relative z-10">
@@ -69,14 +65,12 @@ export function Home() {
         </div>
 
         {/* Enhanced explanation with standardized text - BOTTOM SECTION */}
-        {/* Changed positioning to be more explicit at the bottom */}
         <motion.div
           className="text-center w-full max-w-lg mx-auto mb-8"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.8, duration: 0.8 }}
         >
-          {/* Removed cosmic-float-card to stop text rotation, as discussed */}
           <div className="frosted-glass rounded-2xl p-6">
             <motion.p 
               className="text-lg md:text-xl text-cosmic-light-echo font-light leading-relaxed mb-3"
