@@ -17,12 +17,12 @@ const iconMap = {
 
 interface EmotionWheelProps {
   onEmotionSelect: (emotion: Emotion) => void;
+  onHoverChange: (emotionName: string | null) => void;
 }
 
-export function EmotionWheel({ onEmotionSelect }: EmotionWheelProps) {
+export function EmotionWheel({ onEmotionSelect, onHoverChange }: EmotionWheelProps) {
   const [hoveredEmotion, setHoveredEmotion] = useState<string | null>(null);
   const [selectedEmotion, setSelectedEmotion] = useState<string | null>(null);
-  const [showHoverText, setShowHoverText] = useState(false);
   
   const radius = 140;
   const centerX = 200;
@@ -37,9 +37,14 @@ export function EmotionWheel({ onEmotionSelect }: EmotionWheelProps) {
     }, 400);
   };
 
-  const handleEmotionHover = (emotionId: string | null) => {
-    setHoveredEmotion(emotionId);
-    setShowHoverText(emotionId !== null);
+  const handleMouseEnter = (emotion: Emotion) => {
+    setHoveredEmotion(emotion.id);
+    onHoverChange(emotion.name);
+  };
+
+  const handleMouseLeave = () => {
+    setHoveredEmotion(null);
+    onHoverChange(null);
   };
 
   return (
@@ -68,43 +73,21 @@ export function EmotionWheel({ onEmotionSelect }: EmotionWheelProps) {
         ))}
       </svg>
 
-      {/* Hover Text Display */}
-      <AnimatePresence>
-        {showHoverText && (
-          <motion.div
-            className="absolute top-8 left-1/2 transform -translate-x-1/2 z-20 pointer-events-none"
-            initial={{ opacity: 0, y: -10, scale: 0.9 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -10, scale: 0.9 }}
-            transition={{ duration: 0.3, ease: "easeOut" }}
-          >
-            <div className="frosted-glass-strong rounded-lg px-4 py-2 border border-cosmic-particle-trace">
-              <p className="text-cosmic-observation text-sm font-light text-center whitespace-nowrap">
-                Pick an emotional moment to write in the star
-              </p>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Central hub with enhanced cosmic design - NO TEXT ROTATION */}
+      {/* Central hub with enhanced cosmic design */}
       <motion.div 
-        className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-24 h-24 rounded-full frosted-glass-strong flex items-center justify-center"
+        className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-24 h-24 rounded-full frosted-glass-strong flex items-center justify-center orbital-slow"
         whileHover={{ scale: 1.05 }}
         animate={selectedEmotion ? { scale: [1, 1.3, 1] } : {}}
-        transition={{ duration: 0.8, ease: "backOut" }}
+        transition={{ duration: 0.8, ease: "easeOut" }}
       >
         <div className="text-center relative">
-          {/* Rotating star icon ONLY */}
           <motion.div
             animate={{ rotate: 360 }}
             transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-            className="mb-1"
           >
-            <Sparkles className="w-8 h-8 text-cosmic-cherenkov-blue mx-auto" />
+            <Sparkles className="w-8 h-8 text-cosmic-cherenkov-blue mx-auto mb-1" />
           </motion.div>
-          {/* Static text - NO ROTATION */}
-          <div className="text-cosmic-observation text-xs font-light">Eternal</div>
+          <span className="text-cosmic-observation text-xs font-light">Eternal</span>
           <div className="text-cosmic-observation text-xs font-light">Memories</div>
         </div>
         
@@ -128,7 +111,7 @@ export function EmotionWheel({ onEmotionSelect }: EmotionWheelProps) {
         ))}
       </motion.div>
 
-      {/* Enhanced emotion segments with visible labels - NO TEXT ROTATION */}
+      {/* Enhanced emotion segments with minimal size changes */}
       <AnimatePresence>
         {emotions.map((emotion, index) => {
           const angle = (index * 360) / emotions.length;
@@ -166,99 +149,121 @@ export function EmotionWheel({ onEmotionSelect }: EmotionWheelProps) {
               }}
               whileTap={{ scale: 0.95 }}
               onClick={() => handleEmotionClick(emotion)}
-              onMouseEnter={() => handleEmotionHover(emotion.id)}
-              onMouseLeave={() => handleEmotionHover(null)}
+              onMouseEnter={() => handleMouseEnter(emotion)}
+              onMouseLeave={handleMouseLeave}
             >
-              {/* Gravitational lensing glow effect */}
-              <motion.div 
-                className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-40 transition-opacity duration-300 blur-xl"
-                style={{ 
-                  backgroundColor: emotion.color,
-                  transform: 'scale(2)',
-                }}
-                animate={isHovered ? {
-                  scale: [2, 2.2, 2],
-                  opacity: [0.4, 0.6, 0.4]
-                } : {}}
-                transition={{ duration: 2, repeat: Infinity }}
-              />
-              
-              {/* Cherenkov radiation trail */}
-              {isHovered && (
-                <motion.div
-                  className="absolute top-1/2 left-full w-8 h-0.5 -translate-y-1/2 cherenkov-trail"
-                  initial={{ scaleX: 0, opacity: 0 }}
-                  animate={{ scaleX: 1, opacity: 0.8 }}
-                  exit={{ scaleX: 0, opacity: 0 }}
-                  transition={{ duration: 0.5 }}
-                />
-              )}
-              
-              {/* Main emotion circle - NO ROTATION ON TEXT */}
+              {/* Orbital motion container */}
               <motion.div
-                className="relative w-20 h-20 rounded-full flex flex-col items-center justify-center transition-all duration-300 frosted-glass border-2"
-                style={{
-                  borderColor: emotion.color,
-                  boxShadow: isHovered 
-                    ? `0 0 30px ${emotion.color}60, 0 0 60px ${emotion.color}30`
-                    : `0 0 15px ${emotion.color}30`
-                }}
-                animate={isSelected ? {
-                  scale: [1, 1.5, 1],
-                  rotate: [0, 180, 360],
-                } : isHovered ? {
-                  backgroundColor: `${emotion.color}20`,
-                } : {}}
+                animate={{ rotate: 360 }}
                 transition={{ 
-                  duration: isSelected ? 0.8 : 0.3,
-                  ease: isSelected ? "backOut" : "easeOut"
+                  duration: 30 + index * 5, 
+                  repeat: Infinity, 
+                  ease: "linear" 
                 }}
               >
-                <IconComponent 
-                  className="w-6 h-6 text-cosmic-observation drop-shadow-lg transition-all duration-300 mb-1" 
+                {/* Gravitational lensing glow effect */}
+                <motion.div 
+                  className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-40 transition-opacity duration-300 blur-xl"
                   style={{ 
-                    color: isHovered ? emotion.color : '#F8FAFC',
-                    filter: isHovered ? `drop-shadow(0 0 8px ${emotion.color})` : 'none'
+                    backgroundColor: emotion.color,
+                    transform: 'scale(2)',
                   }}
+                  animate={isHovered ? {
+                    scale: [2, 2.2, 2],
+                    opacity: [0.4, 0.6, 0.4]
+                  } : {}}
+                  transition={{ duration: 2, repeat: Infinity }}
                 />
                 
-                {/* Emotion name label - STATIC, NO ROTATION */}
-                <div 
-                  className="text-xs font-light text-cosmic-observation text-center leading-tight"
-                  style={{ 
-                    color: isHovered ? emotion.color : '#F8FAFC',
-                    textShadow: '0 0 4px rgba(0,0,0,0.8)'
+                {/* Cherenkov radiation trail */}
+                {isHovered && (
+                  <motion.div
+                    className="absolute top-1/2 left-full w-8 h-0.5 -translate-y-1/2 cherenkov-trail"
+                    initial={{ scaleX: 0, opacity: 0 }}
+                    animate={{ scaleX: 1, opacity: 0.8 }}
+                    exit={{ scaleX: 0, opacity: 0 }}
+                    transition={{ duration: 0.5 }}
+                  />
+                )}
+                
+                {/* Main emotion circle with minimal size changes */}
+                <motion.div
+                  className="relative w-20 h-20 rounded-full flex items-center justify-center transition-all duration-300 frosted-glass border-2"
+                  style={{
+                    borderColor: emotion.color,
+                    boxShadow: isHovered 
+                      ? `0 0 30px ${emotion.color}60, 0 0 60px ${emotion.color}30`
+                      : `0 0 15px ${emotion.color}30`
+                  }}
+                  animate={isSelected ? {
+                    scale: [1, 1.5, 1],
+                    rotate: [0, 180, 360],
+                  } : isHovered ? {
+                    backgroundColor: `${emotion.color}20`,
+                  } : {}}
+                  transition={{ 
+                    duration: isSelected ? 0.8 : 0.3,
+                    ease: isSelected ? "backOut" : "easeOut"
                   }}
                 >
-                  {emotion.name}
-                </div>
-                
-                {/* Quantum fluctuation particles */}
-                {isHovered && [...Array(3)].map((_, i) => (
-                  <motion.div
-                    key={i}
-                    className="absolute w-1 h-1 rounded-full"
-                    style={{ backgroundColor: emotion.color }}
-                    initial={{ 
-                      x: 0, 
-                      y: 0, 
-                      opacity: 0,
-                      scale: 0
-                    }}
-                    animate={{
-                      x: (Math.random() - 0.5) * 30,
-                      y: (Math.random() - 0.5) * 30,
-                      opacity: [0, 1, 0],
-                      scale: [0, 1.5, 0]
-                    }}
-                    transition={{
-                      duration: 2,
-                      delay: i * 0.2,
-                      repeat: Infinity,
-                      ease: "easeOut"
+                  <IconComponent 
+                    className="w-8 h-8 text-cosmic-observation drop-shadow-lg transition-all duration-300" 
+                    style={{ 
+                      color: isHovered ? emotion.color : '#F8FAFC',
+                      filter: isHovered ? `drop-shadow(0 0 8px ${emotion.color})` : 'none'
                     }}
                   />
-                ))}
+                  
+                  {/* Quantum fluctuation particles */}
+                  {isHovered && [...Array(3)].map((_, i) => (
+                    <motion.div
+                      key={i}
+                      className="absolute w-1 h-1 rounded-full"
+                      style={{ backgroundColor: emotion.color }}
+                      initial={{ 
+                        x: 0, 
+                        y: 0, 
+                        opacity: 0,
+                        scale: 0
+                      }}
+                      animate={{
+                        x: (Math.random() - 0.5) * 30,
+                        y: (Math.random() - 0.5) * 30,
+                        opacity: [0, 1, 0],
+                        scale: [0, 1.5, 0]
+                      }}
+                      transition={{
+                        duration: 2,
+                        delay: i * 0.2,
+                        repeat: Infinity,
+                        ease: "easeOut"
+                      }}
+                    />
+                  ))}
+                </motion.div>
+
+                {/* Enhanced emotion label with cosmic styling */}
+                <motion.div 
+                  className="absolute top-full mt-6 left-1/2 transform -translate-x-1/2 text-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-10"
+                  initial={{ y: 10, opacity: 0 }}
+                  whileHover={{ y: 0, opacity: 1 }}
+                >
+                  <div className="frosted-glass-strong rounded-lg px-4 py-3 border border-cosmic-particle-trace">
+                    <div className="font-medium text-cosmic-observation text-sm mb-2">
+                      {emotion.name}
+                    </div>
+                    <div className="text-cosmic-light-echo text-xs max-w-32 leading-relaxed">
+                      {emotion.description.split(' ').slice(0, 6).join(' ')}...
+                    </div>
+                    
+                    {/* Particle trail under label */}
+                    <motion.div
+                      className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-8 h-0.5 bg-gradient-to-r from-transparent via-cosmic-cherenkov-blue to-transparent"
+                      animate={{ opacity: [0.3, 1, 0.3] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                    />
+                  </div>
+                </motion.div>
               </motion.div>
             </motion.div>
           );

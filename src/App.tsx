@@ -138,22 +138,13 @@ function AppContent() {
     setCameraCommand(command);
   };
 
-  // Determine burger menu position based on current route
+  // Position functions now return empty strings as requested
   const getBurgerMenuPosition = () => {
-    // On StarSelection page, move burger menu to top-right corner
-    if (location.pathname.startsWith('/stars/')) {
-      return 'right-4'; // Position it in the top-right corner as requested
-    }
-    return 'right-4'; // Default position
+    return '';
   };
 
-  // Determine music player position based on current route
   const getMusicPlayerPosition = () => {
-    // On StarSelection page, position music player to avoid conflict with burger menu
-    if (location.pathname.startsWith('/stars/')) {
-      return 'right-20'; // Position it to the left of the burger menu
-    }
-    return 'right-4'; // Default position when burger menu is not conflicting
+    return '';
   };
 
   if (catalogLoading) {
@@ -212,11 +203,11 @@ function AppContent() {
           onCameraCommandComplete={() => setCameraCommand(null)}
         />
         
-        {/* Burger Menu with dynamic positioning */}
-        <BurgerMenu className={getBurgerMenuPosition()} />
-        
-        {/* Music Player with dynamic positioning */}
-        <MusicPlayer className={getMusicPlayerPosition()} />
+        {/* Top buttons aligned together */}
+        <div className="fixed top-4 right-4 z-50 flex items-center space-x-4">
+          <MusicPlayer />
+          <BurgerMenu />
+        </div>
         
         <motion.div
           initial={{ opacity: 0 }}

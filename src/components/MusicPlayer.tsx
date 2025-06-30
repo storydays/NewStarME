@@ -82,7 +82,7 @@ export function MusicPlayer({ className = '' }: MusicPlayerProps) {
 
       {/* Music Player Button */}
       <motion.div
-        className={`fixed top-4 z-50 flex items-center gap-2 ${className}`}
+        className={`flex items-center gap-2 ${className}`}
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ delay: 0.5, duration: 0.3 }}

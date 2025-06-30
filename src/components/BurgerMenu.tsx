@@ -28,7 +28,7 @@ export function BurgerMenu({ className = '' }: BurgerMenuProps) {
       {/* Hamburger Button */}
       <motion.button
         onClick={toggleMenu}
-        className={`fixed top-4 z-50 p-3 rounded-lg frosted-glass border border-cosmic-particle-trace hover:border-cosmic-energy-flux transition-all duration-300 ${className}`}
+        className={`p-3 rounded-lg frosted-glass border border-cosmic-particle-trace hover:border-cosmic-energy-flux transition-all duration-300 ${className}`}
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         animate={isOpen ? { rotate: 90 } : { rotate: 0 }}

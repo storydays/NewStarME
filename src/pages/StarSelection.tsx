@@ -164,7 +164,7 @@ export function StarSelection({
   return (
     <div className="absolute inset-0 pointer-events-none">
       {/* Page Title - Centered at Top with padding to avoid burger menu */}
-      <div className="absolute top-6 left-1/2 transform -translate-x-1/2 z-20 pointer-events-auto pt-16">
+      <div className="absolute top-6 left-1/2 transform -translate-x-1/2 z-20 pointer-events-auto pt-24">
         <motion.h1 
           className="text-3xl font-light text-cosmic-observation text-center"
           initial={{ opacity: 0, y: -20 }}
@@ -176,7 +176,7 @@ export function StarSelection({
       </div>
 
       {/* Back Button and Color Indicators - Left Side with padding to avoid burger menu */}
-      <div className="absolute top-6 left-6 z-20 pointer-events-auto space-y-4 pt-16">
+      <div className="absolute top-6 left-6 z-20 pointer-events-auto space-y-4 pt-24">
         {/* Back Button */}
         <button
           onClick={handleBack}
@@ -236,7 +236,7 @@ export function StarSelection({
       </div>
 
       {/* Enhanced Right Sidebar with padding to avoid burger menu */}
-      <div className="fixed right-0 top-0 h-full w-80 z-30 pointer-events-auto pt-16">
+      <div className="fixed right-0 top-0 h-full w-80 z-30 pointer-events-auto pt-24">
         <div 
           className="h-full border-l"
           style={{
