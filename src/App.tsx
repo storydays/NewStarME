@@ -158,7 +158,7 @@ function AppContent() {
             animate={{ opacity: 1 }}
           >
             <div className="w-12 h-12 border-2 border-cosmic-cherenkov-blue border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-cosmic-observation text-lg font-light">Loading star catalog...</p>
+            <p className="text-cosmic-observation text-lg font-light">Loading the stars for you...</p>
             <p className="text-cosmic-stellar-wind text-sm font-light mt-2">
               Initializing {catalog?.getTotalStars() || 0} celestial bodies
             </p>

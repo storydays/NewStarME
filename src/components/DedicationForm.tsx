@@ -147,7 +147,7 @@ export function DedicationForm({ star, emotion, onSubmit, loading = false }: Ded
           transition={{ delay: 0.1 }}
         >
           <label className="block text-cosmic-observation font-light mb-3 text-lg">
-            Name Your Celestial Beacon
+            Name of the Person
           </label>
           <input
             type="text"
@@ -305,7 +305,7 @@ export function DedicationForm({ star, emotion, onSubmit, loading = false }: Ded
           ) : (
             <>
               <Heart className="w-5 h-5 group-hover:scale-110 transition-transform" />
-              Dedicate Your Celestial Beacon
+              Dedicate this message for eternity
               <Send className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </>
           )}

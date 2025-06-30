@@ -20,7 +20,7 @@ import { Star } from '../types';
  * - Prev/Next navigation through suggested stars
  * - Current star information display
  * - Smooth animations and transitions
- * - "Dedicate this Star" action button
+ * - "Write in the star" action button
  * - Progress indicator showing current position
  * - Auto-hide when no stars available
  * - UPDATED: More compact and transparent design for clearer view
@@ -224,7 +224,7 @@ export function StarNavigationPanel({
               whileTap={{ scale: 0.98 }}
             >
               <Heart className="w-4 h-4 group-hover:scale-110 transition-transform" />
-              Dedicate This Star
+              Write in the star
               <Sparkles className="w-4 h-4 group-hover:rotate-12 transition-transform" />
             </motion.button>
 

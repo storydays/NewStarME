@@ -88,23 +88,30 @@ export function Dedication() {
           </button>
           
           <div className="text-center max-w-2xl mx-auto">
-            <motion.h1 
-              className="text-4xl md:text-5xl font-light text-cosmic-observation mb-6 cosmic-float"
+            <motion.div 
+              className="frosted-glass p-8 rounded-2xl mb-16"
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.3, duration: 0.8 }}
             >
-              Create Your Cosmic Dedication
-            </motion.h1>
-            
-            <motion.p 
-              className="text-xl text-cosmic-light-echo font-light leading-relaxed particle-drift"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.5 }}
-            >
-              Inscribe a message that will resonate through the cosmic void for eternity
-            </motion.p>
+              <motion.h1 
+                className="text-4xl md:text-5xl font-light text-cosmic-observation mb-6 cosmic-float"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.3, duration: 0.8 }}
+              >
+                Create Your Cosmic Message
+              </motion.h1>
+              
+              <motion.p 
+                className="text-xl text-cosmic-light-echo font-light leading-relaxed particle-drift"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.5 }}
+              >
+                Inscribe a note they will remember for their lifetime
+              </motion.p>
+            </motion.div>
           </div>
         </motion.div>
 

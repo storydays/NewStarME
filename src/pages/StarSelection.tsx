@@ -164,16 +164,18 @@ export function StarSelection({
 
   return (
     <div className="absolute inset-0 pointer-events-none">
-      {/* Page Title - Centered at Top with padding to avoid burger menu */}
+      {/* Page Title - Centered at Top with padding to avoid burger menu and wrapped in glass panel */}
       <div className="absolute top-6 left-1/2 transform -translate-x-1/2 z-20 pointer-events-auto pt-16">
-        <motion.h1 
-          className="text-3xl font-light text-cosmic-observation text-center"
+        <motion.div 
+          className="frosted-glass p-4 rounded-lg"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: "easeOut" }}
         >
-          Pick your star
-        </motion.h1>
+          <h1 className="text-3xl font-light text-cosmic-observation text-center">
+            Pick your star
+          </h1>
+        </motion.div>
       </div>
 
       {/* Back Button and Color Indicators - Left Side with padding to avoid burger menu */}
