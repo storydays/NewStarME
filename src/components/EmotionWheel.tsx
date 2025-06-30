@@ -70,13 +70,15 @@ export function EmotionWheel({ onEmotionSelect }: EmotionWheelProps) {
         transition={{ duration: 0.8, ease: "backOut" }}
       >
         <div className="text-center relative">
+          {/* Rotating star icon */}
           <motion.div
             animate={{ rotate: 360 }}
             transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
           >
             <Sparkles className="w-8 h-8 text-cosmic-cherenkov-blue mx-auto mb-1" />
           </motion.div>
-          <span className="text-cosmic-observation text-xs font-light">Eternal</span>
+          {/* Static text */}
+          <div className="text-cosmic-observation text-xs font-light">Eternal</div>
           <div className="text-cosmic-observation text-xs font-light">Memories</div>
         </div>
         
@@ -100,7 +102,7 @@ export function EmotionWheel({ onEmotionSelect }: EmotionWheelProps) {
         ))}
       </motion.div>
 
-      {/* Enhanced emotion segments with minimal size changes */}
+      {/* Enhanced emotion segments with visible labels */}
       <AnimatePresence>
         {emotions.map((emotion, index) => {
           const angle = (index * 360) / emotions.length;
@@ -132,8 +134,8 @@ export function EmotionWheel({ onEmotionSelect }: EmotionWheelProps) {
                 stiffness: 100
               }}
               whileHover={{ 
-                scale: 1.02, // Further reduced from 1.05 to 1.02
-                y: -2, // Further reduced from -4 to -2
+                scale: 1.02,
+                y: -2,
                 transition: { duration: 0.3, ease: "easeOut" }
               }}
               whileTap={{ scale: 0.95 }}
@@ -150,16 +152,16 @@ export function EmotionWheel({ onEmotionSelect }: EmotionWheelProps) {
                   ease: "linear" 
                 }}
               >
-                {/* Gravitational lensing glow effect - keeping intensity but smaller scale */}
+                {/* Gravitational lensing glow effect */}
                 <motion.div 
                   className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-40 transition-opacity duration-300 blur-xl"
                   style={{ 
                     backgroundColor: emotion.color,
-                    transform: 'scale(2)', // Further reduced from 2.5 to 2
+                    transform: 'scale(2)',
                   }}
                   animate={isHovered ? {
-                    scale: [2, 2.2, 2], // Further reduced from [2.5, 3, 2.5] to [2, 2.2, 2]
-                    opacity: [0.4, 0.6, 0.4] // Keeping original intensity
+                    scale: [2, 2.2, 2],
+                    opacity: [0.4, 0.6, 0.4]
                   } : {}}
                   transition={{ duration: 2, repeat: Infinity }}
                 />
@@ -175,20 +177,20 @@ export function EmotionWheel({ onEmotionSelect }: EmotionWheelProps) {
                   />
                 )}
                 
-                {/* Main emotion circle with minimal size changes */}
+                {/* Main emotion circle */}
                 <motion.div
-                  className="relative w-20 h-20 rounded-full flex items-center justify-center transition-all duration-300 frosted-glass border-2"
+                  className="relative w-20 h-20 rounded-full flex flex-col items-center justify-center transition-all duration-300 frosted-glass border-2"
                   style={{
                     borderColor: emotion.color,
                     boxShadow: isHovered 
-                      ? `0 0 30px ${emotion.color}60, 0 0 60px ${emotion.color}30` // Keeping original intensity
+                      ? `0 0 30px ${emotion.color}60, 0 0 60px ${emotion.color}30`
                       : `0 0 15px ${emotion.color}30`
                   }}
                   animate={isSelected ? {
                     scale: [1, 1.5, 1],
                     rotate: [0, 180, 360],
                   } : isHovered ? {
-                    backgroundColor: `${emotion.color}20`, // Keeping original intensity
+                    backgroundColor: `${emotion.color}20`,
                   } : {}}
                   transition={{ 
                     duration: isSelected ? 0.8 : 0.3,
@@ -196,14 +198,25 @@ export function EmotionWheel({ onEmotionSelect }: EmotionWheelProps) {
                   }}
                 >
                   <IconComponent 
-                    className="w-8 h-8 text-cosmic-observation drop-shadow-lg transition-all duration-300" 
+                    className="w-6 h-6 text-cosmic-observation drop-shadow-lg transition-all duration-300 mb-1" 
                     style={{ 
-                      color: isHovered ? emotion.color : '#F8FAFC', // Keeping original intensity
-                      filter: isHovered ? `drop-shadow(0 0 8px ${emotion.color})` : 'none' // Keeping original intensity
+                      color: isHovered ? emotion.color : '#F8FAFC',
+                      filter: isHovered ? `drop-shadow(0 0 8px ${emotion.color})` : 'none'
                     }}
                   />
                   
-                  {/* Quantum fluctuation particles - smaller movement */}
+                  {/* Emotion name label */}
+                  <div 
+                    className="text-xs font-light text-cosmic-observation text-center leading-tight"
+                    style={{ 
+                      color: isHovered ? emotion.color : '#F8FAFC',
+                      textShadow: '0 0 4px rgba(0,0,0,0.8)'
+                    }}
+                  >
+                    {emotion.name}
+                  </div>
+                  
+                  {/* Quantum fluctuation particles */}
                   {isHovered && [...Array(3)].map((_, i) => (
                     <motion.div
                       key={i}
@@ -216,10 +229,10 @@ export function EmotionWheel({ onEmotionSelect }: EmotionWheelProps) {
                         scale: 0
                       }}
                       animate={{
-                        x: (Math.random() - 0.5) * 30, // Further reduced from 40 to 30
-                        y: (Math.random() - 0.5) * 30, // Further reduced from 40 to 30
-                        opacity: [0, 1, 0], // Keeping original intensity
-                        scale: [0, 1.5, 0] // Keeping original intensity
+                        x: (Math.random() - 0.5) * 30,
+                        y: (Math.random() - 0.5) * 30,
+                        opacity: [0, 1, 0],
+                        scale: [0, 1.5, 0]
                       }}
                       transition={{
                         duration: 2,
@@ -229,29 +242,6 @@ export function EmotionWheel({ onEmotionSelect }: EmotionWheelProps) {
                       }}
                     />
                   ))}
-                </motion.div>
-
-                {/* Enhanced emotion label with cosmic styling */}
-                <motion.div 
-                  className="absolute top-full mt-6 left-1/2 transform -translate-x-1/2 text-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-10"
-                  initial={{ y: 10, opacity: 0 }}
-                  whileHover={{ y: 0, opacity: 1 }}
-                >
-                  <div className="frosted-glass-strong rounded-lg px-4 py-3 border border-cosmic-particle-trace">
-                    <div className="font-medium text-cosmic-observation text-sm mb-2">
-                      {emotion.name}
-                    </div>
-                    <div className="text-cosmic-light-echo text-xs max-w-32 leading-relaxed">
-                      {emotion.description.split(' ').slice(0, 6).join(' ')}...
-                    </div>
-                    
-                    {/* Particle trail under label */}
-                    <motion.div
-                      className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-8 h-0.5 bg-gradient-to-r from-transparent via-cosmic-cherenkov-blue to-transparent"
-                      animate={{ opacity: [0.3, 1, 0.3] }}
-                      transition={{ duration: 2, repeat: Infinity }}
-                    />
-                  </div>
                 </motion.div>
               </motion.div>
             </motion.div>

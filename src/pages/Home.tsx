@@ -20,11 +20,11 @@ export function Home() {
   };
 
   return (
-    <div className="min-h-screen relative overflow-hidden flex flex-col items-center justify-between">
+    <div className="min-h-screen relative overflow-hidden">
       {/* Main content with refined physics-based layout */}
-      <div className="relative z-10 flex flex-col justify-between w-full px-6 py-8 md:px-8 lg:px-12">
+      <div className="relative z-10 flex flex-col justify-between min-h-screen px-6 py-8">
         
-        {/* Header with standardized cosmic typography - TOP SECTION */}
+        {/* Header with enhanced cosmic typography - TOP SECTION */}
         <motion.div 
           className="text-center max-w-2xl mx-auto flex-shrink-0"
           initial={{ opacity: 0, y: 30 }}
@@ -32,8 +32,12 @@ export function Home() {
           transition={{ duration: 0.8, ease: "easeOut" }}
         >
           <motion.h1 
-            className="text-4xl md:text-5xl font-light text-cosmic-observation mb-4 tracking-tight cosmic-float"
-            style={{ fontVariationSettings: "'wght' 300" }}
+            className="text-6xl md:text-8xl font-light bg-gradient-to-r from-cosmic-cherenkov-blue via-cosmic-plasma-glow to-cosmic-stellar-wind bg-clip-text text-transparent mb-4 tracking-wider cosmic-float"
+            style={{ 
+              fontVariationSettings: "'wght' 300",
+              textShadow: '0 0 30px rgba(37, 99, 235, 0.5), 0 0 60px rgba(59, 130, 246, 0.3)',
+              filter: 'drop-shadow(0 0 20px rgba(37, 99, 235, 0.4))'
+            }}
           >
             StarMe
           </motion.h1>
@@ -43,12 +47,12 @@ export function Home() {
             animate={{ opacity: 1 }}
             transition={{ delay: 0.3, duration: 0.8 }}
           >
-            Where memories live forever – not die in feeds
+            Dedicate a star to someone special
           </motion.p>
         </motion.div>
 
         {/* Enhanced Emotion Wheel - MIDDLE SECTION - Centered with proper spacing */}
-        <div className="flex-grow flex items-center justify-center mb-auto mt-auto">
+        <div className="flex-grow flex items-center justify-center flex-shrink-0">
           <motion.div
             className="relative flex-shrink-0"
             initial={{ opacity: 0, scale: 0.9 }}
@@ -56,7 +60,7 @@ export function Home() {
             transition={{ delay: 0.4, duration: 0.8, ease: "backOut" }}
           >
             {/* Quantum field effect around wheel */}
-            <div className="absolute inset-0 rounded-full bg-quantum-field opacity-20 blur-xl scale-125 animate-pulse" />
+            <div className="absolute inset-0 rounded-full bg-quantum-field opacity-30 blur-2xl scale-125 animate-pulse" />
             
             <div className="relative z-10">
               <EmotionWheel onEmotionSelect={handleEmotionSelect} />
@@ -64,28 +68,8 @@ export function Home() {
           </motion.div>
         </div>
 
-        {/* Enhanced explanation with standardized text - BOTTOM SECTION */}
-        <motion.div
-          className="text-center w-full max-w-lg mx-auto mb-8 flex-shrink-0"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.8, duration: 0.8 }}
-        >
-          <div className="frosted-glass rounded-2xl p-6">
-            <motion.p 
-              className="text-lg md:text-xl text-cosmic-light-echo font-light leading-relaxed mb-3"
-              animate={{ opacity: [0.8, 1, 0.8] }}
-              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-            >
-              Every star tells a story. Every dedication creates a lasting memory.
-            </motion.p>
-            <motion.p 
-              className="text-sm text-cosmic-stellar-wind font-light quantum-fluctuation"
-            >
-              Select an emotion above to begin your cosmic journey
-            </motion.p>
-          </div>
-        </motion.div>
+        {/* Spacer for bottom section - removed explanation text */}
+        <div className="flex-shrink-0 h-16"></div>
 
       </div>
     </div>
