@@ -22,6 +22,7 @@ interface EmotionWheelProps {
 export function EmotionWheel({ onEmotionSelect }: EmotionWheelProps) {
   const [hoveredEmotion, setHoveredEmotion] = useState<string | null>(null);
   const [selectedEmotion, setSelectedEmotion] = useState<string | null>(null);
+  const [showHoverText, setShowHoverText] = useState(false);
   
   const radius = 140;
   const centerX = 200;
@@ -34,6 +35,11 @@ export function EmotionWheel({ onEmotionSelect }: EmotionWheelProps) {
     setTimeout(() => {
       onEmotionSelect(emotion);
     }, 400);
+  };
+
+  const handleEmotionHover = (emotionId: string | null) => {
+    setHoveredEmotion(emotionId);
+    setShowHoverText(emotionId !== null);
   };
 
   return (
@@ -61,6 +67,25 @@ export function EmotionWheel({ onEmotionSelect }: EmotionWheelProps) {
           />
         ))}
       </svg>
+
+      {/* Hover Text Display */}
+      <AnimatePresence>
+        {showHoverText && (
+          <motion.div
+            className="absolute top-8 left-1/2 transform -translate-x-1/2 z-20 pointer-events-none"
+            initial={{ opacity: 0, y: -10, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -10, scale: 0.9 }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
+          >
+            <div className="frosted-glass-strong rounded-lg px-4 py-2 border border-cosmic-particle-trace">
+              <p className="text-cosmic-observation text-sm font-light text-center whitespace-nowrap">
+                Pick an emotional moment to write in the star
+              </p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Central hub with enhanced cosmic design - NO TEXT ROTATION */}
       <motion.div 
@@ -141,8 +166,8 @@ export function EmotionWheel({ onEmotionSelect }: EmotionWheelProps) {
               }}
               whileTap={{ scale: 0.95 }}
               onClick={() => handleEmotionClick(emotion)}
-              onMouseEnter={() => setHoveredEmotion(emotion.id)}
-              onMouseLeave={() => setHoveredEmotion(null)}
+              onMouseEnter={() => handleEmotionHover(emotion.id)}
+              onMouseLeave={() => handleEmotionHover(null)}
             >
               {/* Gravitational lensing glow effect */}
               <motion.div 

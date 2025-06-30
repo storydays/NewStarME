@@ -11,6 +11,7 @@ import { SuggestedStarsProvider, useSuggestedStars } from './context/SuggestedSt
 import { useStarsCatalog } from './hooks/useStarsCatalog';
 import { StarService } from './services/starService';
 import { HygStarData } from './types';
+import { BurgerMenu } from './components/BurgerMenu';
 
 /**
  * AppContent Component - Enhanced with Home Navigation State Clearing
@@ -136,6 +137,15 @@ function AppContent() {
     setCameraCommand(command);
   };
 
+  // Determine burger menu position based on current route
+  const getBurgerMenuPosition = () => {
+    // On StarSelection page, move burger menu to avoid conflict with right sidebar
+    if (location.pathname.startsWith('/stars/')) {
+      return 'right-96'; // Position it to the left of the 320px (w-80) sidebar
+    }
+    return 'right-4'; // Default position
+  };
+
   if (catalogLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-cosmic-dark-matter via-cosmic-deep-space to-cosmic-quantum-field relative">
@@ -191,6 +201,9 @@ function AppContent() {
           cameraCommand={cameraCommand}
           onCameraCommandComplete={() => setCameraCommand(null)}
         />
+        
+        {/* Burger Menu with dynamic positioning */}
+        <BurgerMenu className={getBurgerMenuPosition()} />
         
         <motion.div
           initial={{ opacity: 0 }}
