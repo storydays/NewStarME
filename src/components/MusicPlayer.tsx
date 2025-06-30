@@ -12,8 +12,8 @@ export function MusicPlayer({ className = '' }: MusicPlayerProps) {
   const [volume, setVolume] = useState(0.3);
   const audioRef = useRef<HTMLAudioElement>(null);
 
-  // Space-themed audio track URL (using a royalty-free space ambient track)
-  const audioSrc = 'https://www.soundjay.com/misc/sounds/bell-ringing-05.wav'; // Placeholder - replace with actual space music
+  // UPDATED: Space ambient music instead of sound effect
+  const audioSrc = 'https://www.nasa.gov/wp-content/uploads/2023/03/voyager-interstellar-space-sounds.mp3'; // NASA Voyager space sounds
 
   useEffect(() => {
     const audio = audioRef.current;

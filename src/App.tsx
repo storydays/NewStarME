@@ -138,22 +138,14 @@ function AppContent() {
     setCameraCommand(command);
   };
 
-  // Determine burger menu position based on current route
+  // FIXED: Determine burger menu and music player positions to avoid overlap
   const getBurgerMenuPosition = () => {
-    // On StarSelection page, move burger menu to top-right corner
-    if (location.pathname.startsWith('/stars/')) {
-      return 'right-4'; // Position it in the top-right corner as requested
-    }
-    return 'right-4'; // Default position
+    return 'right-4'; // Always in top-right corner
   };
 
-  // Determine music player position based on current route
   const getMusicPlayerPosition = () => {
-    // On StarSelection page, position music player to avoid conflict with burger menu
-    if (location.pathname.startsWith('/stars/')) {
-      return 'right-20'; // Position it to the left of the burger menu
-    }
-    return 'right-4'; // Default position when burger menu is not conflicting
+    // FIXED: Position music player to the left of burger menu to avoid overlap
+    return 'right-20'; // Always positioned to the left of the burger menu
   };
 
   if (catalogLoading) {
@@ -212,10 +204,10 @@ function AppContent() {
           onCameraCommandComplete={() => setCameraCommand(null)}
         />
         
-        {/* Burger Menu with dynamic positioning */}
+        {/* Burger Menu with fixed positioning */}
         <BurgerMenu className={getBurgerMenuPosition()} />
         
-        {/* Music Player with dynamic positioning */}
+        {/* Music Player with fixed positioning to avoid overlap */}
         <MusicPlayer className={getMusicPlayerPosition()} />
         
         <motion.div

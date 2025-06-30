@@ -125,7 +125,8 @@ export function StarSelection({
           >
             <div className="w-12 h-12 border-2 border-cosmic-cherenkov-blue border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
             <p className="text-cosmic-observation text-lg font-light">
-              {isLoadingSuggestions ? 'Loading suggested stars...' : 'Scanning the cosmic depths...'}
+              {/* UPDATED: Changed loading message */}
+              {isLoadingSuggestions ? 'Searching the cosmic depths...' : 'Scanning the cosmic depths...'}
             </p>
           </motion.div>
         </div>
@@ -230,7 +231,8 @@ export function StarSelection({
                 }}
               />
             </div>
-            <span className="text-cosmic-light-echo text-xs font-light">Other stars</span>
+            {/* UPDATED: Changed "Other stars" to "Available stars" */}
+            <span className="text-cosmic-light-echo text-xs font-light">Available stars</span>
           </div>
         </motion.div>
       </div>

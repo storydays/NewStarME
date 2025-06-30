@@ -45,6 +45,25 @@ export function EmotionWheel({ onEmotionSelect }: EmotionWheelProps) {
   return (
     <div className="relative w-[400px] h-[400px] mx-auto">
       
+      {/* FIXED: Hover Text Display - positioned above wheel with proper spacing */}
+      <AnimatePresence>
+        {showHoverText && (
+          <motion.div
+            className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-16 z-20 pointer-events-none"
+            initial={{ opacity: 0, y: -10, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -10, scale: 0.9 }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
+          >
+            <div className="frosted-glass-strong rounded-lg px-4 py-2 border border-cosmic-particle-trace">
+              <p className="text-cosmic-observation text-sm font-light text-center whitespace-nowrap">
+                Pick an emotional moment to write in the star
+              </p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      
       {/* Gravitational field lines */}
       <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-20">
         <defs>
@@ -67,25 +86,6 @@ export function EmotionWheel({ onEmotionSelect }: EmotionWheelProps) {
           />
         ))}
       </svg>
-
-      {/* Hover Text Display */}
-      <AnimatePresence>
-        {showHoverText && (
-          <motion.div
-            className="absolute top-8 left-1/2 transform -translate-x-1/2 z-20 pointer-events-none"
-            initial={{ opacity: 0, y: -10, scale: 0.9 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -10, scale: 0.9 }}
-            transition={{ duration: 0.3, ease: "easeOut" }}
-          >
-            <div className="frosted-glass-strong rounded-lg px-4 py-2 border border-cosmic-particle-trace">
-              <p className="text-cosmic-observation text-sm font-light text-center whitespace-nowrap">
-                Pick an emotional moment to write in the star
-              </p>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {/* Central hub with enhanced cosmic design - NO TEXT ROTATION */}
       <motion.div 
