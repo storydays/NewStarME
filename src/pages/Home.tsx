@@ -21,12 +21,12 @@ export function Home() {
 
   return (
     <div className="min-h-screen relative overflow-hidden">
-      {/* Main content with physics-based layout */}
-      <div className="relative z-10 flex flex-col min-h-screen px-6 py-8">
+      {/* Main content with refined physics-based layout */}
+      <div className="relative z-10 flex flex-col justify-between min-h-screen px-6 py-8">
         
-        {/* Header with cosmic typography - TOP SECTION */}
+        {/* Header with standardized cosmic typography - TOP SECTION */}
         <motion.div 
-          className="text-center mb-8 max-w-2xl mx-auto"
+          className="text-center max-w-2xl mx-auto"
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: "easeOut" }}
@@ -47,8 +47,8 @@ export function Home() {
           </motion.p>
         </motion.div>
 
-        {/* Enhanced Emotion Wheel - MIDDLE SECTION - Lifted higher with more space above */}
-        <div className="flex-grow flex items-start justify-center pt-16">
+        {/* Enhanced Emotion Wheel - MIDDLE SECTION - Centered with proper spacing */}
+        <div className="flex-grow flex items-center justify-center">
           <motion.div
             className="relative flex-shrink-0"
             initial={{ opacity: 0, scale: 0.9 }}
@@ -64,23 +64,23 @@ export function Home() {
           </motion.div>
         </div>
 
-        {/* Enhanced explanation with frosted glass - BOTTOM SECTION - Fixed at bottom */}
+        {/* Enhanced explanation with standardized text - BOTTOM SECTION */}
         <motion.div
-          className="text-center max-w-lg mx-auto mb-8 mt-auto"
+          className="text-center max-w-lg mx-auto"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.8, duration: 0.8 }}
         >
           <div className="frosted-glass rounded-2xl p-6 cosmic-float-card">
             <motion.p 
-              className="text-cosmic-light-echo text-base font-light leading-relaxed mb-3"
+              className="text-lg md:text-xl text-cosmic-light-echo font-light leading-relaxed mb-3"
               animate={{ opacity: [0.8, 1, 0.8] }}
               transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
             >
               Every star tells a story. Every dedication creates a lasting memory.
             </motion.p>
             <motion.p 
-              className="text-cosmic-stellar-wind text-xs font-light quantum-fluctuation"
+              className="text-xs text-cosmic-stellar-wind font-light quantum-fluctuation"
             >
               Select an emotion above to begin your cosmic journey
             </motion.p>
