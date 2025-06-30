@@ -68,8 +68,8 @@ export function useStarsCatalog(): UseStarsCatalogReturn {
 
         // Create the loading promise
         catalogPromise = (async () => {
-          // FIXED: Changed compressed flag from false to true to properly handle gzipped file
-          const hygCatalog = await HygStarsCatalog.fromUrl('/hygdata_v41.csv.gz', true);
+          // FIXED: Changed compressed flag from true to false to handle uncompressed file
+          const hygCatalog = await HygStarsCatalog.fromUrl('/hygdata_v41.csv.gz', false);
           
           // Create enriched catalog
           const starsCatalog = await StarsCatalog.fromHygCatalog(hygCatalog);

@@ -140,8 +140,8 @@ export class StarService {
         const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
         
         try {
-          // FIXED: Changed compressed flag from false to true to properly handle gzipped file
-          const catalog = await HygStarsCatalog.fromUrl('/hygdata_v41.csv.gz', true);
+          // FIXED: Changed compressed flag from true to false to handle uncompressed file
+          const catalog = await HygStarsCatalog.fromUrl('/hygdata_v41.csv.gz', false);
           clearTimeout(timeoutId);
           
           this.hygCatalog = catalog;
