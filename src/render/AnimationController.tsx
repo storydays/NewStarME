@@ -4,11 +4,11 @@ import { CameraControls } from '@react-three/drei';
 import { ORBIT_SPEED } from '../config/starConfig';
 
 /**
- * AnimationController Component - Fixed Dynamic smoothTime Control
+ * AnimationController Component - Restored Previous Camera Focus Behavior
  * 
  * Purpose: Manages camera animations including discrete movements and continuous orbiting.
  * Now uses ORBIT_SPEED from starConfig for consistent orbit speed configuration.
- * FIXED: Properly manages CameraControls smoothTime to respect duration parameter.
+ * RESTORED: Removed dynamic smoothTime management to restore previous working behavior.
  * 
  * Features:
  * - Discrete animations: focusStar, resetView, moveTo, centerView
@@ -16,9 +16,9 @@ import { ORBIT_SPEED } from '../config/starConfig';
  * - Optimal camera positioning for star groups
  * - Smooth transitions between animation modes
  * - Enhanced error handling and completion callbacks
- * - FIXED: Proper smoothTime management without losing original value
+ * - RESTORED: Simple camera focus without duration-based smoothTime changes
  * 
- * Confidence Rating: High - Fixed smoothTime management for proper duration handling
+ * Confidence Rating: High - Restored to previous working state
  */
 
 interface AnimationCommand {
@@ -53,9 +53,6 @@ export const AnimationController: React.FC<AnimationControllerProps> = ({
   // Prevent overlapping discrete animations using a ref
   const isAnimatingRef = useRef(false);
   
-  // FIXED: Store original smoothTime once and reuse it
-  const originalSmoothTimeRef = useRef<number | null>(null);
-  
   // Orbit state management using refs to avoid re-renders
   const orbitState = useRef({
     isOrbiting: false,
@@ -66,14 +63,6 @@ export const AnimationController: React.FC<AnimationControllerProps> = ({
     currentAngle: 0,
     lastTime: 0
   });
-
-  // FIXED: Initialize original smoothTime once when controls become available
-  useEffect(() => {
-    if (cameraControlsRef.current && originalSmoothTimeRef.current === null) {
-      originalSmoothTimeRef.current = cameraControlsRef.current.smoothTime;
-      console.log(`AnimationController: Initialized original smoothTime: ${originalSmoothTimeRef.current}`);
-    }
-  }, [cameraControlsRef.current]);
 
   // Handle discrete animations (focusStar, resetView, moveTo, centerView)
   useEffect(() => {
@@ -100,19 +89,6 @@ export const AnimationController: React.FC<AnimationControllerProps> = ({
 
     const executeAnimation = async () => {
       try {
-        // FIXED: Store original smoothTime only if not already stored
-        if (originalSmoothTimeRef.current === null) {
-          originalSmoothTimeRef.current = controls.smoothTime;
-          console.log(`AnimationController: Stored original smoothTime: ${originalSmoothTimeRef.current}`);
-        }
-
-        // FIXED: Set custom smoothTime based on duration parameter
-        if (animationCommand.duration) {
-          const customSmoothTime = animationCommand.duration / 1000; // Convert milliseconds to seconds
-          controls.smoothTime = customSmoothTime;
-          console.log(`AnimationController: Set custom smoothTime to ${customSmoothTime}s for ${animationCommand.duration}ms duration`);
-        }
-
         switch (animationCommand.type) {
           case 'focusStar': {
             // Enhanced star focusing with optimal viewing distance
@@ -131,7 +107,7 @@ export const AnimationController: React.FC<AnimationControllerProps> = ({
               z + optimalDistance
             ];
             
-            console.log(`AnimationController: Focusing on star at [${x}, ${y}, ${z}], camera at [${cameraPos.join(', ')}] with duration ${animationCommand.duration}ms`);
+            console.log(`AnimationController: Focusing on star at [${x}, ${y}, ${z}], camera at [${cameraPos.join(', ')}]`);
             
             // Execute smooth camera movement with optimal positioning
             await controls.setLookAt(
@@ -170,7 +146,7 @@ export const AnimationController: React.FC<AnimationControllerProps> = ({
               centerZ + viewDistance
             ];
             
-            console.log(`AnimationController: Centering view at [${centerX}, ${centerY}, ${centerZ}], camera at [${cameraPos.join(', ')}] with duration ${animationCommand.duration}ms`);
+            console.log(`AnimationController: Centering view at [${centerX}, ${centerY}, ${centerZ}], camera at [${cameraPos.join(', ')}]`);
             
             await controls.setLookAt(
               ...cameraPos,
@@ -182,7 +158,7 @@ export const AnimationController: React.FC<AnimationControllerProps> = ({
 
           case 'resetView': {
             // Return camera to default position
-            console.log(`AnimationController: Resetting camera to default view with duration ${animationCommand.duration}ms`);
+            console.log('AnimationController: Resetting camera to default view');
             
             await controls.setLookAt(
               2, 2, 2,
@@ -200,7 +176,7 @@ export const AnimationController: React.FC<AnimationControllerProps> = ({
             }
             
             const [x, y, z] = animationCommand.target.position;
-            console.log(`AnimationController: Moving camera to [${x}, ${y}, ${z}] with duration ${animationCommand.duration}ms`);
+            console.log(`AnimationController: Moving camera to [${x}, ${y}, ${z}]`);
             
             await controls.setPosition(x, y, z, true);
             break;
@@ -215,13 +191,6 @@ export const AnimationController: React.FC<AnimationControllerProps> = ({
       } catch (error) {
         console.error('AnimationController: Discrete animation failed:', error);
       } finally {
-        // FIXED: Restore original smoothTime but don't reset the stored value
-        if (originalSmoothTimeRef.current !== null) {
-          controls.smoothTime = originalSmoothTimeRef.current;
-          console.log(`AnimationController: Restored original smoothTime: ${originalSmoothTimeRef.current}`);
-          // DON'T reset originalSmoothTimeRef.current to null here - keep it for future use
-        }
-
         // Always reset animation state and call completion callback
         isAnimatingRef.current = false;
         
