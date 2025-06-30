@@ -728,33 +728,54 @@ export class StarService {
   }
 
   /**
+   * Format HYG coordinates for database queries
+   */
+  private static formatHygCoordinates(hygRecord: any): string {
+    const raHours = Math.floor(hygRecord.ra);
+    const raMinutes = Math.floor((hygRecord.ra - raHours) * 60);
+    const raSeconds = ((hygRecord.ra - raHours) * 60 - raMinutes) * 60;
+    
+    const decDegrees = Math.floor(Math.abs(hygRecord.dec));
+    const decMinutes = Math.floor((Math.abs(hygRecord.dec) - decDegrees) * 60);
+    const decSeconds = ((Math.abs(hygRecord.dec) - decDegrees) * 60 - decMinutes) * 60;
+    const decSign = hygRecord.dec >= 0 ? '+' : '−';
+    
+    return `${raHours.toString().padStart(2, '0')}h ${raMinutes.toString().padStart(2, '0')}m ${raSeconds.toFixed(1).padStart(4, '0')}s ${decSign}${decDegrees.toString().padStart(2, '0')}° ${decMinutes.toString().padStart(2, '0')}′ ${decSeconds.toFixed(0).padStart(2, '0')}″`;
+  }
+
+  /**
    * Get star by ID (legacy support)
+   * FIXED: Handle catalog-prefixed IDs properly to avoid UUID errors
    */
   static async getStarById(starId: string): Promise<Star | null> {
     try {
-      // Try database first
-      const { data, error } = await supabase
-        .from('stars')
-        .select('*')
-        .eq('id', starId)
-        .single();
-
-      if (!error && data) {
-        return data;
-      }
-
-      // Try catalog lookup if it's a catalog ID
+      // Handle catalog-prefixed IDs first (before attempting database query)
       if (starId.startsWith('catalog-') && this.starsCatalog) {
         const catalogId = parseInt(starId.replace('catalog-', ''));
         const catalogStar = this.starsCatalog.getStarById(catalogId);
         
         if (catalogStar) {
-          // Convert to legacy Star format
+          // Try to find matching star in database using scientific name and coordinates
+          const formattedCoordinates = this.formatHygCoordinates(catalogStar.hyg);
+          const starName = catalogStar.hyg.proper || `HYG ${catalogStar.hyg.id}`;
+          
+          const { data: dbStar, error } = await supabase
+            .from('stars')
+            .select('*')
+            .eq('scientific_name', starName)
+            .eq('coordinates', formattedCoordinates)
+            .single();
+
+          if (!error && dbStar) {
+            return dbStar;
+          }
+
+          // If not found in database, return catalog star in legacy format
           return {
             id: starId,
-            scientific_name: catalogStar.hyg.proper || `HYG ${catalogStar.hyg.id}`,
+            scientific_name: starName,
             poetic_description: 'A magnificent star from the cosmic catalog',
-            coordinates: `${catalogStar.hyg.ra.toFixed(3)}° ${catalogStar.hyg.dec.toFixed(3)}°`,
+            coordinates: formattedCoordinates,
             visual_data: {
               brightness: catalogStar.render.brightness,
               color: catalogStar.render.color,
@@ -763,6 +784,19 @@ export class StarService {
             emotion_id: 'unknown',
             source: 'catalog'
           };
+        }
+      }
+
+      // Only attempt database query with UUID-like IDs (not prefixed IDs)
+      if (!starId.includes('-') || starId.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
+        const { data, error } = await supabase
+          .from('stars')
+          .select('*')
+          .eq('id', starId)
+          .single();
+
+        if (!error && data) {
+          return data;
         }
       }
 
