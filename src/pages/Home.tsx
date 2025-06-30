@@ -26,7 +26,7 @@ export function Home() {
         
         {/* Header with standardized cosmic typography - TOP SECTION */}
         <motion.div 
-          className="text-center max-w-2xl mx-auto"
+          className="text-center max-w-2xl mx-auto flex-shrink-0"
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: "easeOut" }}
@@ -66,7 +66,7 @@ export function Home() {
 
         {/* Enhanced explanation with standardized text - BOTTOM SECTION */}
         <motion.div
-          className="text-center w-full max-w-lg mx-auto mb-8"
+          className="text-center w-full max-w-lg mx-auto mb-8 flex-shrink-0"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.8, duration: 0.8 }}
