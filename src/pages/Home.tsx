@@ -20,9 +20,11 @@ export function Home() {
   };
 
   return (
-    <div className="min-h-screen relative overflow-hidden">
+    {/* Outer container: Handles full screen height, main flex direction, and overall centering */}
+    <div className="min-h-screen relative overflow-hidden flex flex-col items-center justify-between">
       {/* Main content with refined physics-based layout */}
-      <div className="relative z-10 flex flex-col justify-between min-h-screen px-6 py-8">
+      {/* Removed min-h-screen from here; outer div handles it. Added w-full for full width. */}
+      <div className="relative z-10 flex flex-col justify-between w-full px-6 py-8 md:px-8 lg:px-12">
         
         {/* Header with standardized cosmic typography - TOP SECTION */}
         <motion.div 
@@ -43,12 +45,13 @@ export function Home() {
             animate={{ opacity: 1 }}
             transition={{ delay: 0.3, duration: 0.8 }}
           >
-            Dedicate a star to someone special
+            Where memories live forever – not die in feeds
           </motion.p>
         </motion.div>
 
         {/* Enhanced Emotion Wheel - MIDDLE SECTION - Centered with proper spacing */}
-        <div className="flex-grow flex items-center justify-center">
+        {/* Added mb-auto and mt-auto to push it to the middle effectively using flex-grow */}
+        <div className="flex-grow flex items-center justify-center mb-auto mt-auto">
           <motion.div
             className="relative flex-shrink-0"
             initial={{ opacity: 0, scale: 0.9 }}
@@ -56,7 +59,8 @@ export function Home() {
             transition={{ delay: 0.4, duration: 0.8, ease: "backOut" }}
           >
             {/* Quantum field effect around wheel */}
-            <div className="absolute inset-0 rounded-full bg-quantum-field opacity-30 blur-2xl scale-125 animate-pulse" />
+            {/* Reduced blur and opacity for subtlety, as per my earlier suggestion */}
+            <div className="absolute inset-0 rounded-full bg-quantum-field opacity-20 blur-xl scale-125 animate-pulse" />
             
             <div className="relative z-10">
               <EmotionWheel onEmotionSelect={handleEmotionSelect} />
@@ -65,13 +69,15 @@ export function Home() {
         </div>
 
         {/* Enhanced explanation with standardized text - BOTTOM SECTION */}
+        {/* Changed positioning to be more explicit at the bottom */}
         <motion.div
-          className="text-center max-w-lg mx-auto"
+          className="text-center w-full max-w-lg mx-auto mb-8"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.8, duration: 0.8 }}
         >
-          <div className="frosted-glass rounded-2xl p-6 cosmic-float-card">
+          {/* Removed cosmic-float-card to stop text rotation, as discussed */}
+          <div className="frosted-glass rounded-2xl p-6">
             <motion.p 
               className="text-lg md:text-xl text-cosmic-light-echo font-light leading-relaxed mb-3"
               animate={{ opacity: [0.8, 1, 0.8] }}
@@ -80,7 +86,7 @@ export function Home() {
               Every star tells a story. Every dedication creates a lasting memory.
             </motion.p>
             <motion.p 
-              className="text-xs text-cosmic-stellar-wind font-light quantum-fluctuation"
+              className="text-sm text-cosmic-stellar-wind font-light quantum-fluctuation"
             >
               Select an emotion above to begin your cosmic journey
             </motion.p>
